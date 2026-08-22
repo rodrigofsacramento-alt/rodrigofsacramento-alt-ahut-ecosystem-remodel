@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  telegram_bot:
+    build: .
+    container_name: ahut_jarvis_bot
+    restart: always # Garante que o bot volte se der crash ou o VPS reiniciar
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    # Mapear volumes da pasta .agents/skills se necessário no futuro

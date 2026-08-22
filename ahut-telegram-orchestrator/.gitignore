@@ -1,0 +1,5 @@
+# Ignora o ambiente virtual e variáveis de ambiente reais
+.env
+venv/
+__pycache__/
+*.pyc

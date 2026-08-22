@@ -1,0 +1,157 @@
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Sidebar, Header } from './components/Layout';
+import Dashboard from './components/Dashboard';
+import Leads from './components/Leads';
+import Atendimento from './pages/Atendimento';
+import Agenda from './components/Agenda';
+import Properties from './components/Properties';
+import Proposals from './components/Proposals';
+import Contracts from './components/Contracts';
+import Finance from './components/Finance';
+import Tecnologia from './pages/Tecnologia';
+import Notificacoes from './pages/Notificacoes';
+import Vendas from './pages/Vendas';
+import Login from './pages/Login';
+import { Configuracoes } from './pages/Configuracoes';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 2, // 2 minutos
+      retry: 1
+    }
+  }
+});
+
+function AppLayout({ children, title, subtitle }: { children: React.ReactNode; title: string; subtitle?: string }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header title={title} subtitle={subtitle} />
+        <main className="p-6 flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          {/* Auth Route */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Main App Routes */}
+          <Route
+            path="/"
+            element={
+              <AppLayout title="Dashboard" subtitle="Visão geral de desempenho imobiliário.">
+                <Dashboard />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/leads"
+            element={
+              <AppLayout title="Leads" subtitle="Gerencie seus potenciais clientes.">
+                <Leads />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/atendimento"
+            element={
+              <AppLayout title="Central de Atendimento" subtitle="Chat em tempo real e integração com WhatsApp.">
+                <Atendimento />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/agenda"
+            element={
+              <AppLayout title="Agenda & Visitas" subtitle="Organize seus compromissos e visitas a imóveis.">
+                <Agenda />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/imoveis"
+            element={
+              <AppLayout title="Imóveis" subtitle="Catálogo completo de propriedades.">
+                <Properties />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/propostas"
+            element={
+              <AppLayout title="Propostas" subtitle="Acompanhamento e negociações ativas.">
+                <Proposals />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/contratos"
+            element={
+              <AppLayout title="Contratos" subtitle="Gestão de contratos e documentação jurídica.">
+                <Contracts />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/financeiro"
+            element={
+              <AppLayout title="Financeiro" subtitle="Fluxo de caixa, recebíveis e comissões.">
+                <Finance />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/vendas"
+            element={
+              <AppLayout title="Contratos e Vendas" subtitle="Acompanhe os contratos assinados e imóveis vendidos">
+                <Vendas />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/tecnologia"
+            element={
+              <AppLayout title="Squad de Tecnologia & Chamados" subtitle="Kanban de acompanhamento e triagem inteligente com Agente de IA.">
+                <Tecnologia />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/notificacoes"
+            element={
+              <AppLayout title="Notificações" subtitle="Acompanhe seus alertas e autorizações.">
+                <Notificacoes />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/configuracoes"
+            element={
+              <AppLayout title="Configurações" subtitle="Gerencie as preferências e segurança do sistema.">
+                <Configuracoes />
+              </AppLayout>
+            }
+          />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </QueryClientProvider>
+  );
+}
