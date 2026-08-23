@@ -38,4 +38,21 @@ Este arquivo é a memória de longo prazo de todos os agentes (Atom, Ada, Aura, 
 - **Código reverso TSX (implementar aqui):** `/opt/data/ahut-ecosystem/04_CODIGOS_FONTE_LOCAIS_E_DESENVOLVIMENTO/ahut-ecosystem-active/codigo_engenharia_reversa_tsx`
 - **Repo de trabalho (commit/push):** `/opt/data/ahut-ecosystem` (= remote `ahut-ecosystem-remodel`)
 - **Supabase dev do protótipo:** `ldfcqxeehgaftxsgxkag.supabase.co` (projeto de TESTE, NÃO é o produtivo). Banco produtivo real: `ptochsyoyatsydfysacc`.
-- **Dev server:** porta 5173 (não 5174). `tsc --noEmit` e `npm run build` PASSAM (build ~6s, 2803 modules). Bundle ~1.24MB (acima de 500KB — pendente code-split).
+- **Dev server:** porta 5173 (não 5174). `tsc --noEmit` e `npm run build` PASSAM (build ~6s, 2807 modules). Bundle ~1.3MB (acima de 500KB — pendente code-split).
+
+### 6. LEMBRETES DE AGENDA — como as funções se conectam
+- **Autor:** Jarvis / ATOM
+- **Data:** 23/08/2026
+- **Fluxo completo de lembrete:**
+  1. **`useAgendaEvents` / `useCreateAgendaEvent`** (`src/hooks/useAgendaEvents.ts`) — insere evento na tabela **`agenda_events`** com `status='pending'`, `user_id`, `scheduled_at`, `type`, `sub_type`. Obrigatório `status='pending'` e `user_id` para o lembrete disparar.
+  2. **`useReminders`** (`src/hooks/useReminders.ts`, chamado globalmente no `App.tsx`) — varre `agenda_events` (status `pending`, janela -15min/+130min a cada 30s) e, quando cruza os triggers (2h, 1h, 30min, 5min antes; no horário; atrasado), dispara: **som (Web Audio) + notificação do browser (permite/perto do horário) + insert na tabela `notifications`** (para o painel).
+- **Regras:**
+  - Para o lembrete tocar, o evento precisa de `scheduled_at` e `status='pending'` e o `user_id` do usuário logado (agents veem só os seus, admin/manager veem todos).
+  - Se o evento for salvo como `status != 'pending'` ou sem `user_id`, o lembrete NÃO dispara.
+  - A Agenda (modal "Novo Evento" → "Salvar Evento") agora insere via `useCreateAgendaEvent` → conecta ao lembrete end-to-end.
+- **Pitfall:** usar `supabase.from('agenda_events').insert({...})` com `status:'pending'` + `user_id` (ex: igual Atendimento.tsx) — requisito para o `.notification` e alarme.
+
+### 7. Refinamentos Ciclo 2 (paridade com produção)
+- **Atendimento:** hooks `useAcceptConversation`, `useMarkConversationRead`, `useTransferConversation`, `useIgnoreConversation`, `useUpdateClientContact` adicionados em `src/hooks/useWhatsapp.ts` (RPCs de produção), com botões Aceitar/Transferir/Ignorar no header do chat.
+- **Corretores:** aba "Performance" com ranking por score (leads + visitas + vendas*3) + barras realizado vs melhor.
+- **Agenda:** conectada a `useVisits` (fonte real) + `useCreateAgendaEvent` (lembrete).

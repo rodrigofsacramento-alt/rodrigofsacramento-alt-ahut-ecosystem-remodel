@@ -18,6 +18,7 @@ import {
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { useVisits, useCreateVisit, Visit } from '../hooks/useVisits';
+import { useCreateAgendaEvent } from '../hooks/useAgendaEvents';
 
 const days = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -39,9 +40,46 @@ export default function Agenda() {
   const { user } = useAuth();
   const { data: visits = [], isLoading } = useVisits();
   const createVisit = useCreateVisit();
+  const createAgendaEvent = useCreateAgendaEvent();
   const [modalType, setModalType] = useState<EventType | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date(2023, 9, 1)); // Outubro 2023
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // Estado do formulário de novo evento (com lembrete)
+  const [eventForm, setEventForm] = useState({
+    date: '',
+    time: '10:00',
+    leadName: '',
+    property: '',
+    message: '',
+    meetingType: 'Online (Google Meet/Zoom)',
+    saving: false
+  });
+
+  const handleSaveEvent = async () => {
+    if (!modalType || !eventForm.date) {
+      alert('Preencha a data do evento.');
+      return;
+    }
+    setEventForm((f) => ({ ...f, saving: true }));
+    try {
+      const scheduledAt = new Date(`${eventForm.date}T${eventForm.time}:00`).toISOString();
+      await createAgendaEvent.mutateAsync({
+        type: modalType,
+        sub_type: modalType === 'reuniao' ? eventForm.meetingType : modalType === 'mensagem' ? eventForm.message : undefined,
+        scheduled_at: scheduledAt,
+        notes: eventForm.leadName || eventForm.message || null,
+      });
+      alert('✅ Evento agendado! Um lembrete será disparado antes do compromisso.');
+      setModalType(null);
+      setEventForm({ date: '', time: '10:00', leadName: '', property: '', message: '', meetingType: 'Online (Google Meet/Zoom)', saving: false });
+    } catch (err: any) {
+      console.error('Erro ao salvar evento:', err);
+      alert('Erro ao salvar evento: ' + (err?.message || 'tente novamente'));
+    } finally {
+      setEventForm((f) => ({ ...f, saving: false }));
+    }
+  };
 
   // MOCK RBAC: Filtering events by current user id. Falls back a todas para visitoria.
   const currentUserId = user?.id || 'any';
@@ -243,7 +281,7 @@ export default function Agenda() {
                 <label className="text-xs font-bold text-slate-700">Lead *</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input type="text" placeholder="Buscar lead pelo nome, email ou telefone..." className="w-full bg-slate-50 border border-slate-200 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
+                  <input type="text" placeholder="Buscar lead pelo nome, email ou telefone..." value={eventForm.leadName} onChange={(e) => setEventForm({ ...eventForm, leadName: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
                 </div>
               </div>
 
@@ -252,7 +290,7 @@ export default function Agenda() {
                   <label className="text-xs font-bold text-slate-700">Imóvel *</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="text" placeholder="Buscar imóvel..." className="w-full bg-slate-50 border border-slate-200 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-orange-500" />
+                    <input type="text" placeholder="Buscar imóvel..." value={eventForm.property} onChange={(e) => setEventForm({ ...eventForm, property: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-orange-500" />
                   </div>
                 </div>
               )}
@@ -260,7 +298,7 @@ export default function Agenda() {
               {modalType === 'reuniao' && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">Tipo de Reunião *</label>
-                  <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-purple-500">
+                  <select value={eventForm.meetingType} onChange={(e) => setEventForm({ ...eventForm, meetingType: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-purple-500">
                     <option>Online (Google Meet/Zoom)</option>
                     <option>Presencial (Escritório)</option>
                     <option>Presencial (Cliente)</option>
@@ -271,20 +309,19 @@ export default function Agenda() {
               {modalType === 'mensagem' && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">Mensagem (Template ou Texto Livre) *</label>
-                  <textarea rows={3} placeholder="Escreva a mensagem a ser enviada..." className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-emerald-500" />
+                  <textarea rows={3} placeholder="Escreva a mensagem a ser enviada..." value={eventForm.message} onChange={(e) => setEventForm({ ...eventForm, message: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-emerald-500" />
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">Data *</label>
-                  <input type="date" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
+                  <input type="date" value={eventForm.date} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">Horário *</label>
-                  <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400">
-                    <option>09:00</option><option>10:00</option><option>14:00</option>
-                  </select>
+                  <input type="time" value={eventForm.time} onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
+                  <p className="text-[10px] text-slate-400">💡 Lembretes: 2h, 1h, 30min e 5min antes.</p>
                 </div>
               </div>
             </div>
@@ -293,14 +330,15 @@ export default function Agenda() {
               <button onClick={() => setModalType(null)} className="px-6 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-100 transition-colors">
                 Cancelar
               </button>
-              <button onClick={() => setModalType(null)} className={cn(
-                "px-6 py-2 rounded-lg text-sm font-bold text-white transition-colors shadow-lg",
+              <button onClick={handleSaveEvent} disabled={eventForm.saving} className={cn(
+                "px-6 py-2 rounded-lg text-sm font-bold text-white transition-colors shadow-lg flex items-center gap-2 disabled:opacity-60",
                 modalType === 'visita' ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20' :
                 modalType === 'ligacao' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/20' :
                 modalType === 'reuniao' ? 'bg-purple-500 hover:bg-purple-600 shadow-purple-500/20' :
                 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
               )}>
-                Salvar Evento
+                {eventForm.saving ? 'Salvando...' : 'Salvar Evento'}
+                <Clock className="w-4 h-4" />
               </button>
             </div>
           </div>
