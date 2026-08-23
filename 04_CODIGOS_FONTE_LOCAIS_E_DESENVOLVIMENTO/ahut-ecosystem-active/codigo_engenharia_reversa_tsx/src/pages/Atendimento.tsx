@@ -103,6 +103,21 @@ export default function Atendimento() {
   const { user, profile } = useAuth();
   const isAgent = profile?.role === 'agent';
 
+  // ── Dados de demonstração (fallback p/ auditoria de UI quando o WhatsApp não está escaneado) ──
+  const demoConversations: Conversation[] = [
+    { id: 'demo-1', client_id: 'cl-1', agent_id: user?.id || null, subject: 'Conversa com Carlos Andrade', status: 'open', ai_enabled: true, unread_count: 3, last_message_at: new Date().toISOString(), priority: 'high', client: { id: 'cl-1', full_name: 'Carlos Andrade', phone: '5551941122' } },
+    { id: 'demo-2', client_id: 'cl-2', agent_id: user?.id || null, subject: 'Grupo Lançamento Villa dos Ipês', status: 'open', ai_enabled: true, unread_count: 12, last_message_at: new Date(Date.now() - 300000).toISOString(), whatsapp_contact: [{ is_group: true, remote_jid: '1203630000000@g.us', phone_number: '1203630000000' }], client: { id: 'cl-2', full_name: 'Grupo WhatsApp', phone: '1203630000000@g.us', is_group: true } },
+    { id: 'demo-3', client_id: 'cl-3', agent_id: null, subject: 'Conversa com Marina Souza', status: 'pending', unread_count: 1, last_message_at: new Date(Date.now() - 3600000).toISOString(), client: { id: 'cl-3', full_name: 'Marina Souza', phone: '5551975566' } },
+  ];
+  const demoMessages: Record<string, Message[]> = {
+    'demo-1': [
+      { id: 'm1', conversation_id: 'demo-1', sender_id: user?.id, content: 'Olá Carlos! Tudo bem? Vi que você se interessou pelo lote na Villa dos Ipês.', message_type: 'bot', created_at: new Date(Date.now() - 60000).toISOString(), status: 'read' },
+      { id: 'm2', conversation_id: 'demo-1', sender_id: 'cl-1', content: 'Olá! Sim, quero mais informações sobre o financiamento.', message_type: 'text', created_at: new Date(Date.now() - 45000).toISOString(), sender: { id: 'cl-1', full_name: 'Carlos Andrade', role: 'client' } },
+      { id: 'm3', conversation_id: 'demo-1', sender_id: user?.id, content: 'Claro! Posso te enviar as condições hoje à tarde.', message_type: 'text', created_at: new Date(Date.now() - 20000).toISOString(), status: 'delivered' },
+    ],
+  };
+  const DEMO_MODE = true; // auditar UI com dados de exemplo (WhatsApp não escaneado)
+
   // Tabs: 'meus' | 'equipe' | 'grupos' | 'nao-lidas' | 'arquivadas'
   const [activeTab, setActiveTab] = useState<string>(() => {
     try {
@@ -214,10 +229,16 @@ export default function Atendimento() {
 
         const { data, error } = await query;
         if (error) throw error;
-        if (data) {
+        if (data && data.length > 0) {
           setConversations(data as Conversation[]);
-          if (!activeChatId && data.length > 0) {
+          if (!activeChatId) {
             setActiveChatId(data[0].id);
+          }
+        } else if (DEMO_MODE) {
+          // Fallback de auditoria: WhatsApp não escaneado → popula demonstração
+          setConversations(demoConversations);
+          if (!activeChatId && demoConversations.length > 0) {
+            setActiveChatId(demoConversations[0].id);
           }
         }
       } catch (err) {
@@ -310,9 +331,20 @@ export default function Atendimento() {
           .order('created_at', { ascending: true });
 
         if (error) throw error;
-        setMessages((data as Message[]) || []);
+        if (data && data.length > 0) {
+          setMessages(data as Message[]);
+        } else if (DEMO_MODE && demoMessages[activeChatId]) {
+          setMessages(demoMessages[activeChatId]);
+        } else {
+          setMessages([]);
+        }
       } catch (err) {
         console.error('Erro ao carregar mensagens:', err);
+        if (DEMO_MODE && demoMessages[activeChatId]) {
+          setMessages(demoMessages[activeChatId]);
+        } else {
+          setMessages([]);
+        }
       } finally {
         setIsLoadingMessages(false);
       }
