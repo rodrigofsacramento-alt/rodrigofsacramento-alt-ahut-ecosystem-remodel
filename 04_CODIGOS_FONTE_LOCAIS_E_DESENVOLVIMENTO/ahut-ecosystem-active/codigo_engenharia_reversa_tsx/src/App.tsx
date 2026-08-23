@@ -15,6 +15,7 @@ import GestaoClientes from './components/GestaoClientes';
 import ComissoesComercial from './components/Comissoes';
 import Marketing from './components/Marketing';
 import Treinamentos from './components/Treinamentos';
+import Gestao from './components/Gestao';
 import Finance from './components/Finance';
 import Tecnologia from './pages/Tecnologia';
 import Notificacoes from './pages/Notificacoes';
@@ -153,6 +154,14 @@ export default function App() {
             element={
               <AppLayout title="Treinamentos" subtitle="Curso de Neurovendas & capacitação da equipe.">
                 <Treinamentos />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/gestao"
+            element={
+              <AppLayout title="Painel de Gestão" subtitle="Gestão de tarefas e solicitações da Christiane Racanelli (Business Advisor).">
+                <Gestao />
               </AppLayout>
             }
           />

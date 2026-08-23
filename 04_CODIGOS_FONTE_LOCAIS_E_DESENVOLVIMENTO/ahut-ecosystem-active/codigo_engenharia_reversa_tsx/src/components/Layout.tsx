@@ -19,7 +19,8 @@ import {
   Megaphone,
   HandCoins,
   Contact,
-  GraduationCap
+  GraduationCap,
+  ClipboardList
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
   { id: 'comissoes', label: 'Comissões', icon: HandCoins, path: '/comissoes' },
   { id: 'marketing', label: 'Marketing', icon: Megaphone, path: '/marketing' },
   { id: 'treinamentos', label: 'Treinamentos', icon: GraduationCap, path: '/treinamentos' },
+  { id: 'gestao', label: 'Gestão', icon: ClipboardList, path: '/gestao' },
   { id: 'vendas', label: 'Vendas', icon: DollarSign, path: '/vendas' },
   { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro' },
   { id: 'corretores', label: 'Corretores', icon: UserCircle, path: '/corretores' },
