@@ -14,20 +14,19 @@ Vigiar continuamente a saúde e a estabilidade da integração do WhatsApp (util
 > ⛔ **NUNCA exponha estas credenciais em logs ou mensagens públicas.**
 
 ```
-Projeto:          ldfcqxeehgaftxsgxkag
-URL REST:         https://ldfcqxeehgaftxsgxkag.supabase.co
-Connection String: postgresql://postgres:[YOUR-PASSWORD]@db.ldfcqxeehgaftxsgxkag.supabase.co:6543/postgres
+Projeto:          ptochsyoyatsydfysacc
+URL REST:         https://ptochsyoyatsydfysacc.supabase.co
+Connection String: postgresql://postgres:[YOUR-PASSWORD]@db.ptochsyoyatsydfysacc.supabase.co:6543/postgres
 Senha DB:         Dir@124!@$!@$
-Anon Key:         sb_publishable_-y-THJEYisTiITNGLJehIw_3bWL4-ky
-Service Role Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZmNxeGVlaGdhZnR4c2d4a2FnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjQ4MDQyMywiZXhwIjoyMDg4MDU2NDIzfQ.KfaCh5JYefV5kVlZeRg-cg_-4QELo8vhDK5TqpShuNY
 ```
 
 **Como conectar via Node.js:**
 ```javascript
 const { createClient } = require('@supabase/supabase-js');
+// Use a chave anon/service_role correta disponível no .env
 const supabase = createClient(
-  'https://ldfcqxeehgaftxsgxkag.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZmNxeGVlaGdhZnR4c2d4a2FnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjQ4MDQyMywiZXhwIjoyMDg4MDU2NDIzfQ.KfaCh5JYefV5kVlZeRg-cg_-4QELo8vhDK5TqpShuNY'
+  'https://ptochsyoyatsydfysacc.supabase.co',
+  '[YOUR_KEY]'
 );
 ```
 
@@ -257,7 +256,7 @@ Ahut WhatsApp Broker (Express.js · porta 3000)
     │  5. Atualizar last_message_at e unread_count em conversations
     │
     ▼
-Supabase PostgreSQL (ldfcqxeehgaftxsgxkag)
+Supabase PostgreSQL (ptochsyoyatsydfysacc)
     │
     ▼
 Frontend React (ApeXfy CRM · localhost:5175 / estate.ahut.com.br)
@@ -355,6 +354,7 @@ const { data } = await supabase
 4. **Único contato de teste autorizado:** `+5511988192658` (Rodrigo Sacramento)
 5. **SEMPRE** use `upsert` com `on_conflict` ao invés de `insert` direto em `profiles`
 6. **SEMPRE** documente qualquer anomalia no `PIPELINE_STATUS.md` do Orquestrador
+7. **REGISTRO DE MUDANÇAS NO BD:** Toda e qualquer alteração que for feita na estrutura do banco de dados `ptochsyoyatsydfysacc` DEVE ser registrada de forma detalhada no knowledge pelo agente Atlas de forma que possa ser revertida. Se a ação não puder ser revertida, você relatará que essa atualização ficará para a posterioridade e NÃO a executará no momento.
 
 ---
 
