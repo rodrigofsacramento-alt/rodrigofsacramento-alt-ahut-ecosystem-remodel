@@ -10,6 +10,10 @@ import Agenda from './components/Agenda';
 import Properties from './components/Properties';
 import Proposals from './components/Proposals';
 import Contracts from './components/Contracts';
+import Juridico from './components/Juridico';
+import GestaoClientes from './components/GestaoClientes';
+import ComissoesComercial from './components/Comissoes';
+import Marketing from './components/Marketing';
 import Finance from './components/Finance';
 import Tecnologia from './pages/Tecnologia';
 import Notificacoes from './pages/Notificacoes';
@@ -108,6 +112,38 @@ export default function App() {
             element={
               <AppLayout title="Contratos" subtitle="Gestão de contratos e documentação jurídica.">
                 <Contracts />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/juridico"
+            element={
+              <AppLayout title="Jurídico & Contratos" subtitle="Processos jurídicos, validação de documentos e assinaturas.">
+                <Juridico />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/clientes"
+            element={
+              <AppLayout title="Gestão de Clientes" subtitle="Visualize e gerencie os clientes da imobiliária.">
+                <GestaoClientes />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/comissoes"
+            element={
+              <AppLayout title="Comissões" subtitle="Comissões de corretores, regras e câmbio.">
+                <ComissoesComercial />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/marketing"
+            element={
+              <AppLayout title="Marketing" subtitle="Postagens, mídias e engajamento.">
+                <Marketing />
               </AppLayout>
             }
           />

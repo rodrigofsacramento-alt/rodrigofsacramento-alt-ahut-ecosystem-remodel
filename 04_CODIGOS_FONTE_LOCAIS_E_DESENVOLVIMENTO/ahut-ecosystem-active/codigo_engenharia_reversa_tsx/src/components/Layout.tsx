@@ -15,7 +15,10 @@ import {
   Plus,
   Bell,
   LogOut,
-  Monitor
+  Monitor,
+  Megaphone,
+  HandCoins,
+  Contact
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -37,6 +40,10 @@ const navItems: NavItem[] = [
   { id: 'imoveis', label: 'Imóveis', icon: Home, path: '/imoveis' },
   { id: 'propostas', label: 'Propostas', icon: FileText, path: '/propostas', badge: 5 },
   { id: 'contratos', label: 'Contratos', icon: Scale, path: '/contratos', badge: 2 },
+  { id: 'juridico', label: 'Jurídico & Contratos', icon: Scale, path: '/juridico', badge: 2 },
+  { id: 'clientes', label: 'Clientes', icon: Contact, path: '/clientes' },
+  { id: 'comissoes', label: 'Comissões', icon: HandCoins, path: '/comissoes' },
+  { id: 'marketing', label: 'Marketing', icon: Megaphone, path: '/marketing' },
   { id: 'vendas', label: 'Vendas', icon: DollarSign, path: '/vendas' },
   { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro' },
   { id: 'corretores', label: 'Corretores', icon: UserCircle, path: '/corretores' },
