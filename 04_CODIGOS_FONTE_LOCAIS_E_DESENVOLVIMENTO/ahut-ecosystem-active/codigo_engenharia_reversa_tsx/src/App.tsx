@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useReminders } from './hooks/useReminders';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Sidebar, Header } from './components/Layout';
@@ -14,6 +15,7 @@ import Tecnologia from './pages/Tecnologia';
 import Notificacoes from './pages/Notificacoes';
 import Vendas from './pages/Vendas';
 import Login from './pages/Login';
+import Corretores from './pages/Corretores';
 import { Configuracoes } from './pages/Configuracoes';
 
 const queryClient = new QueryClient({
@@ -28,6 +30,8 @@ const queryClient = new QueryClient({
 
 function AppLayout({ children, title, subtitle }: { children: React.ReactNode; title: string; subtitle?: string }) {
   const [collapsed, setCollapsed] = useState(false);
+  // 🔔 Hook global de lembretes com alertas sonoros — roda em background para todas as telas
+  useReminders();
 
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
@@ -144,6 +148,14 @@ export default function App() {
             element={
               <AppLayout title="Configurações" subtitle="Gerencie as preferências e segurança do sistema.">
                 <Configuracoes />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/corretores"
+            element={
+              <AppLayout title="Corretores & Equipe" subtitle="Gestão de usuários, metas e performance.">
+                <Corretores />
               </AppLayout>
             }
           />

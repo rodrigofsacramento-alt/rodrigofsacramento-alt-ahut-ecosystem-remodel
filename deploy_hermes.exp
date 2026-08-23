@@ -1,0 +1,17 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Dir@5207411605"
+set ip "2.24.95.98"
+set user "root"
+
+# Passo 1: Fazer upload do script via SCP
+spawn scp -o StrictHostKeyChecking=no setup_vps.sh $user@$ip:/root/setup_vps.sh
+expect "*?assword:*"
+send "$password\r"
+expect eof
+
+# Passo 2: Acessar via SSH e rodar o script
+spawn ssh -o StrictHostKeyChecking=no $user@$ip "bash /root/setup_vps.sh"
+expect "*?assword:*"
+send "$password\r"
+expect eof

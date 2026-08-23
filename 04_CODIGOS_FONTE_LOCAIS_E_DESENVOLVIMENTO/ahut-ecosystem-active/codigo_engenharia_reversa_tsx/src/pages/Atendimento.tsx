@@ -122,6 +122,54 @@ export default function Atendimento() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   
+  // Dropdown States for Action Buttons
+  const [activeDropdown, setActiveDropdown] = useState<'message' | 'call' | 'visit' | 'meeting' | null>(null);
+  const [scheduleData, setScheduleData] = useState({
+    date: '', time: '', subType: '', propertyId: '', message: ''
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.action-dropdown-container')) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleScheduleEvent = async (type: string) => {
+    if (!activeChatId || !scheduleData.date || !scheduleData.time) return;
+    const chat = conversations.find(c => c.id === activeChatId);
+    
+    try {
+      // Formata a data e hora
+      const scheduledAt = new Date(`${scheduleData.date}T${scheduleData.time}:00`).toISOString();
+      
+      const { error } = await supabase.from('agenda_events').insert({
+        user_id: user?.id,
+        lead_id: chat?.lead_id || null,
+        type,
+        sub_type: scheduleData.subType,
+        scheduled_at: scheduledAt,
+        property_id: scheduleData.propertyId || null,
+        status: 'pending' // ou scheduled
+      });
+
+      if (error) {
+        console.error('Erro ao agendar:', error);
+        // Toast estático já que não temos o useToast importado perfeitamente no escopo
+        alert('Erro ao agendar evento!');
+      } else {
+        alert('Evento agendado com sucesso na Agenda!');
+        setActiveDropdown(null);
+        setScheduleData({ date: '', time: '', subType: '', propertyId: '', message: '' });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Real Data & Hooks
   const { data: whatsappSession, isLoading: isWhatsappLoading, refetch: refetchWhatsapp } = useWhatsapp();
   const startWhatsappMutation = useStartWhatsAppSession();
@@ -620,20 +668,83 @@ export default function Atendimento() {
 
             {/* Input de Mensagem e Ações */}
             <div className="border-t border-slate-200 bg-white">
-              {/* Atalhos Rápidos */}
-              <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 overflow-x-auto no-scrollbar bg-slate-50/50">
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
-                  <MessageSquare className="w-4 h-4" /> Agendar Mensagem
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
-                  <Phone className="w-4 h-4" /> Ligação
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
-                  <Calendar className="w-4 h-4" /> Visita
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
-                  <Users className="w-4 h-4" /> Reunião
-                </button>
+              {/* Atalhos Rápidos com Dropdown Segmentado */}
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 overflow-x-auto no-scrollbar bg-slate-50/50 action-dropdown-container">
+                
+                {/* Agendar Mensagem */}
+                <div className="relative">
+                  <button onClick={() => setActiveDropdown(activeDropdown === 'message' ? null : 'message')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
+                    <MessageSquare className="w-4 h-4" /> Agendar Mensagem
+                  </button>
+                  {activeDropdown === 'message' && (
+                    <div className="absolute bottom-full mb-2 left-0 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
+                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Mensagem</h4>
+                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
+                      <input type="time" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
+                      <textarea placeholder="Mensagem..." className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg resize-none" rows={2} value={scheduleData.message} onChange={e => setScheduleData({...scheduleData, message: e.target.value})} />
+                      <button onClick={() => handleScheduleEvent('mensagem')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ligação */}
+                <div className="relative">
+                  <button onClick={() => setActiveDropdown(activeDropdown === 'call' ? null : 'call')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
+                    <Phone className="w-4 h-4" /> Ligação
+                  </button>
+                  {activeDropdown === 'call' && (
+                    <div className="absolute bottom-full mb-2 left-0 w-56 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
+                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Ligação</h4>
+                      <select className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.subType} onChange={e => setScheduleData({...scheduleData, subType: e.target.value})}>
+                        <option value="">Selecione...</option>
+                        <option value="lead">Com Lead</option>
+                        <option value="cliente">Com Cliente</option>
+                      </select>
+                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
+                      <input type="time" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
+                      <button onClick={() => handleScheduleEvent('ligacao')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Visita */}
+                <div className="relative">
+                  <button onClick={() => setActiveDropdown(activeDropdown === 'visit' ? null : 'visit')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
+                    <Calendar className="w-4 h-4" /> Visita
+                  </button>
+                  {activeDropdown === 'visit' && (
+                    <div className="absolute bottom-full mb-2 left-0 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
+                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Visita</h4>
+                      <input type="text" placeholder="Código do Imóvel" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.propertyId} onChange={e => setScheduleData({...scheduleData, propertyId: e.target.value})} />
+                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
+                      <input type="time" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
+                      <button onClick={() => handleScheduleEvent('visita')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Reunião */}
+                <div className="relative">
+                  <button onClick={() => setActiveDropdown(activeDropdown === 'meeting' ? null : 'meeting')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
+                    <Users className="w-4 h-4" /> Reunião
+                  </button>
+                  {activeDropdown === 'meeting' && (
+                    <div className="absolute bottom-full mb-2 left-0 w-56 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
+                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Reunião</h4>
+                      <select className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.subType} onChange={e => setScheduleData({...scheduleData, subType: e.target.value})}>
+                        <option value="">Selecione o tipo...</option>
+                        <option value="interna_online">Interna (Online)</option>
+                        <option value="interna_presencial">Interna (Presencial)</option>
+                        <option value="cliente_online">Com Cliente (Online)</option>
+                        <option value="cliente_presencial">Com Cliente (Presencial)</option>
+                      </select>
+                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
+                      <input type="time" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
+                      <button onClick={() => handleScheduleEvent('reuniao')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                    </div>
+                  )}
+                </div>
+
               </div>
 
               <form onSubmit={handleSendMessage} className="p-4 flex items-end gap-3">
