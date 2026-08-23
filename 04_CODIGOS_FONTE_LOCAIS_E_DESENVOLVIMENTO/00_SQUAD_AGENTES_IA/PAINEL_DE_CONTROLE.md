@@ -1,7 +1,15 @@
 # 📊 Painel de Controle Consolidado do Squad IA
 
-**Última Atualização:** 20/08/2026 12:40 (Tempo Real)  
-**Ambiente Ativo:** Local Dev Server (`http://localhost:5174`)
+**Última Atualização:** 23/08/2026 07:20 (Ciclo 1 — Jarvis Hermes)  
+**Ambiente Ativo:** Local Dev Server (`http://localhost:5173`) | Repo: `ahut-ecosystem-remodel`
+
+## 🚨 INCIDENTE EM PRODUÇÃO — RECLAMAÇÕES DA DENISSE (Central de Atendimento)
+> Relato da usuária (23/08): (1) não vê quem responde no grupo; (2) muitas mensagens como "arquivo indisponível"; (3) não vê todos os contatos; (4) não consegue chamar contato no privado pelo sistema.
+> **Observação do comandante:** estas falhas afetam a PRODUÇÃO (não só o protótipo TSX).
+> **Responsável (ATLAS):** diagnóstico de causa-raiz em andamento (artefatos: patch_broker_groups.mjs, build_group_sidebar_v7.mjs, update_participant_loader.mjs, chunks de produção Atendimento).
+> **MAIOR GAP verificado localmente:** código reverso NÃO usa as RPCs de produção `accept_conversation`, `mark_conversation_read`, `transfer_conversation`, `ignore_conversation`, `update_client_contact` (essenciais p/ fila/aceite/transferência e chamada no privado).
+
+---
 
 ---
 
