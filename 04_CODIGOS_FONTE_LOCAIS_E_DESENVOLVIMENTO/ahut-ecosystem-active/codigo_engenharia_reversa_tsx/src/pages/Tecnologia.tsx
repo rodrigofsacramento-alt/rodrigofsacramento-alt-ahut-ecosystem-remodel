@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTechTickets, useUpsertTechTicket, mergeTickets, rowToTicket, ticketToRow, TechTicketRow } from '../hooks/useTechTickets';
 import {
   Monitor,
   Plus,
@@ -271,6 +272,8 @@ const INITIAL_TICKETS: TechTicket[] = [
 const LOCAL_STORAGE_KEY = 'ahut_crm_tech_tickets_v4';
 
 export default function Tecnologia() {
+  const { data: remoteTickets } = useTechTickets();
+  const upsertTicket = useUpsertTechTicket();
   const [tickets, setTickets] = useState<TechTicket[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<string>('todos');
@@ -309,23 +312,42 @@ export default function Tecnologia() {
     impact_level: 'Médio'
   });
 
+  // Sincroniza com o Supabase (real): seed initial + chamados do banco
   useEffect(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    let local: TechTicket[] = [];
     if (saved) {
-      try {
-        setTickets(JSON.parse(saved));
-      } catch {
-        setTickets(INITIAL_TICKETS);
-      }
-    } else {
-      setTickets(INITIAL_TICKETS);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_TICKETS));
+      try { local = JSON.parse(saved); } catch { local = INITIAL_TICKETS; }
     }
-  }, []);
+    // Merge: inicial (seed) + local (cache antigo, se houver) + remoto (Supabase)
+    const merged = mergeTickets(INITIAL_TICKETS as unknown as TechTicketRow[], remoteTickets as unknown as TechTicketRow[] | undefined) as unknown as TechTicket[];
+    const finalTickets = merged.length > 0 ? merged : (local.length > 0 ? local : INITIAL_TICKETS);
+    setTickets(finalTickets);
+  }, [remoteTickets]);
 
   const saveTickets = (updated: TechTicket[]) => {
     setTickets(updated);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    synchronizedSave(updated);
+  };
+
+  // Persiste remotamente (async, sem travar o fluxo local)
+  async function synchronizedSave(updated: TechTicket[]) {
+    try {
+      // Persiste apenas os chamados "do sistema" (não os seeds iniciais, para não poluir o banco)
+      const toSync = updated.filter((t) => !t.id.startsWith('ticket-10'));
+      if (toSync.length === 0) return;
+      for (const t of toSync) {
+        try {
+          await upsertTicket.mutateAsync(t as unknown as TechTicketRow);
+        } catch (err: any) {
+          console.warn('[Tecnologia] Falha ao sincronizar chamado', t.id, err?.message);
+        }
+      }
+      console.info(`[Tecnologia] ${toSync.length} chamado(s) sincronizado(s) com o Supabase`);
+    } catch (e) {
+      console.warn('[Tecnologia] Erro na sincronização remota:', e);
+    }
   };
 
   const handleOpenAddManualModal = (defaultStatus: TicketMainStatus = 'a_analisar', defaultSub: TicketSubcategory = 'nao_especificado') => {
