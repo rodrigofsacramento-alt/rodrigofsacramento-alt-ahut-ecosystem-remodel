@@ -48,7 +48,12 @@ import {
   useStartWhatsAppSession, 
   useDisconnectWhatsAppSession, 
   useSetWhatsAppAiEnabled, 
-  useSendWhatsAppMessage 
+  useSendWhatsAppMessage,
+  useAcceptConversation,
+  useMarkConversationRead,
+  useTransferConversation,
+  useIgnoreConversation,
+  useUpdateClientContact
 } from '../hooks/useWhatsapp';
 
 interface Client {
@@ -194,6 +199,24 @@ export default function Atendimento() {
   const { data: leads = [] } = useLeads();
   const { data: agents = [] } = useAgents();
   const createVisitMutation = useCreateVisit();
+  const acceptConversation = useAcceptConversation();
+  const markConversationRead = useMarkConversationRead();
+  const transferConversation = useTransferConversation();
+  const ignoreConversation = useIgnoreConversation();
+  const updateClientContact = useUpdateClientContact();
+
+  const handleAccept = async () => {
+    if (!activeChatId) return;
+    await acceptConversation.mutateAsync({ conversationId: activeChatId });
+  };
+  const handleIgnore = async () => {
+    if (!activeChatId) return;
+    await ignoreConversation.mutateAsync({ conversationId: activeChatId });
+  };
+  const handleTransfer = async (toAgentId: string) => {
+    if (!activeChatId) return;
+    await transferConversation.mutateAsync({ conversationId: activeChatId, toAgentId });
+  };
 
   // Local conversations state (synced with Supabase)
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -628,6 +651,34 @@ export default function Atendimento() {
 
               {/* Ações do Header */}
               <div className="flex items-center gap-4">
+                {/* Ações de fila: aceitar, transferir, ignorar (paridade com produção) */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleAccept}
+                    disabled={acceptConversation.isPending}
+                    className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+                    title="Aceitar atendimento"
+                  >
+                    Aceitar
+                  </button>
+                  <select
+                    onChange={(e) => e.target.value && handleTransfer(e.target.value)}
+                    defaultValue=""
+                    className="px-2 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 outline-none cursor-pointer"
+                  >
+                    <option value="" disabled>Transferir...</option>
+                    {agents.filter((a) => a.id !== activeChat?.agent_id).map((a) => (
+                      <option key={a.id} value={a.id}>{a.full_name || a.email}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleIgnore}
+                    className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                    title="Ignorar conversa"
+                  >
+                    Ignorar
+                  </button>
+                </div>
                 <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
                   <Bot className="w-4 h-4 text-emerald-600" />
                   <span className="text-xs font-bold text-emerald-600 mr-2">IA</span>

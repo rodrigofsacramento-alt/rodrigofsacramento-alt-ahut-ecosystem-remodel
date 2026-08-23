@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
+import { useVisits, useCreateVisit, Visit } from '../hooks/useVisits';
 
 const days = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -34,26 +35,32 @@ interface Event {
   user_id: string; // To mock RBAC
 }
 
-const mockEvents: Event[] = [
-  { id: 1, day: 2, time: '10:00', client: 'Ricardo Oliveira', property: 'Apto. Duplex', status: 'confirmed', type: 'visita', user_id: 'mock-user-id' },
-  { id: 2, day: 4, time: '14:30', client: 'Ana Clara Souza', property: 'Casa no Lago', status: 'completed', type: 'visita', user_id: 'mock-user-id' },
-  { id: 3, day: 4, time: '16:00', client: 'Marcos Silva', status: 'scheduled', type: 'ligacao', user_id: 'mock-user-id' },
-  { id: 4, day: 8, time: '09:00', client: 'Ana Clara Souza', property: 'Casa no Lago', status: 'completed', type: 'visita', user_id: 'mock-user-id' },
-  { id: 5, day: 8, time: '14:00', client: 'Ricardo Oliveira', property: 'Zoom Meeting', status: 'scheduled', type: 'reuniao', user_id: 'mock-user-id' },
-  { id: 6, day: 9, time: '11:00', client: 'Vila Nova', status: 'confirmed', type: 'mensagem', user_id: 'mock-user-id' },
-  { id: 7, day: 9, time: '12:00', client: 'Outro Corretor', status: 'confirmed', type: 'mensagem', user_id: 'other-user' }, // Should be hidden
-];
-
 export default function Agenda() {
   const { user } = useAuth();
+  const { data: visits = [], isLoading } = useVisits();
+  const createVisit = useCreateVisit();
   const [modalType, setModalType] = useState<EventType | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date(2023, 9, 1)); // Outubro 2023
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // MOCK RBAC: Filtering events by current user id. 
-  // Since we are mocking, we assume 'mock-user-id' represents the logged in user if user is null.
-  const currentUserId = user?.id || 'mock-user-id';
-  const myEvents = mockEvents.filter(e => e.user_id === currentUserId);
+  // MOCK RBAC: Filtering events by current user id. Falls back a todas para visitoria.
+  const currentUserId = user?.id || 'any';
+  // Converte Visit (Supabase) para o formato Event do calendário
+  const myEvents: Event[] = visits.map((v) => {
+    const d = new Date(v.scheduled_at);
+    const hh = String(d.getDate()).padStart(2, '0');
+    const time = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    return {
+      id: Number(v.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000),
+      day: Number(hh),
+      time,
+      client: v.lead?.name || v.property?.title || 'Cliente',
+      property: v.property?.title || v.notes || undefined,
+      status: (v.status === 'completed' ? 'completed' : v.status === 'confirmed' ? 'confirmed' : 'scheduled') as Event['status'],
+      type: 'visita' as EventType,
+      user_id: v.agent_id || currentUserId
+    };
+  });
 
   const getEventIcon = (type: EventType) => {
     switch (type) {

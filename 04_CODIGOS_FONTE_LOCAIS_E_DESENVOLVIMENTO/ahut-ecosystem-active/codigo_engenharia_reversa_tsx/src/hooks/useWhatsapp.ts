@@ -121,3 +121,94 @@ export function useSendWhatsAppMessage() {
     }
   });
 }
+
+// ── RPCs de fila/operação de atendimento (engenharia reversa do Atendimento de produção) ──
+
+export function useAcceptConversation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId }: { conversationId: string }) => {
+      const { data, error } = await supabase.rpc('accept_conversation', {
+        p_conversation_id: conversationId
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['sidebar-badges'] });
+    }
+  });
+}
+
+export function useMarkConversationRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId }: { conversationId: string }) => {
+      const { data, error } = await supabase.rpc('mark_conversation_read', {
+        p_conversation_id: conversationId
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    }
+  });
+}
+
+export function useTransferConversation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId, toAgentId }: { conversationId: string; toAgentId: string }) => {
+      const { data, error } = await supabase.rpc('transfer_conversation', {
+        p_conversation_id: conversationId,
+        p_to_agent_id: toAgentId
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    }
+  });
+}
+
+export function useIgnoreConversation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId }: { conversationId: string }) => {
+      const { data, error } = await supabase.rpc('ignore_conversation', {
+        p_conversation_id: conversationId
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    }
+  });
+}
+
+export function useUpdateClientContact() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ profileId, name, phone, email, leadId }: {
+      profileId: string; name?: string; phone?: string | null; email?: string | null; leadId?: string | null;
+    }) => {
+      const { data, error } = await supabase.rpc('update_client_contact', {
+        p_profile_id: profileId,
+        p_name: name || '',
+        p_phone: phone || null,
+        p_email: email?.trim() || null,
+        p_lead_id: leadId || null
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+    }
+  });
+}

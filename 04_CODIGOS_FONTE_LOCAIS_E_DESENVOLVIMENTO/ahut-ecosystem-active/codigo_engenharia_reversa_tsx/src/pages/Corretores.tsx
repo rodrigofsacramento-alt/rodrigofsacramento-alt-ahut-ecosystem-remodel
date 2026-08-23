@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
 import { useAgents } from '../hooks/useAgents';
-import { Search, Plus, Filter, MoreVertical, MapPin, Mail, Phone, Award, Briefcase, Star, Users, Trash2, Edit2, ShieldAlert } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, MapPin, Mail, Phone, Award, Briefcase, Star, Users, Trash2, Edit2, ShieldAlert, TrendingUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { cn } from '../lib/utils';
 
 export default function Corretores() {
   const { data: agents = [], isLoading } = useAgents();
   const [searchTerm, setSearchTerm] = useState('');
+  const [tab, setTab] = useState<'equipe' | 'performance'>('equipe');
   const { profile } = useAuth();
   
   const filteredAgents = agents.filter(agent => 
     agent.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     agent.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Ranking por desempenho acumulado (leads + visitas + vendas)
+  const ranking = [...agents]
+    .map((a) => ({ agent: a, score: (a.leads_count || 0) + (a.visits_count || 0) + (a.proposals_count || 0) * 3 }))
+    .sort((x, y) => y.score - x.score)
+    .slice(0, 6);
+    const maxScore = ranking[0]?.score || 1;
 
   return (
     <div className="h-full flex flex-col space-y-6">
@@ -22,6 +31,20 @@ export default function Corretores() {
         </div>
         
         <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+            {(['equipe', 'performance'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  'px-4 py-1.5 rounded-lg text-sm font-semibold capitalize transition-colors',
+                  tab === t ? 'bg-white shadow text-orange-600' : 'text-slate-500 hover:text-slate-700'
+                )}
+              >
+                {t === 'equipe' ? 'Equipe' : 'Performance'}
+              </button>
+            ))}
+          </div>
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
@@ -43,6 +66,48 @@ export default function Corretores() {
           )}
         </div>
       </div>
+
+      {tab === 'performance' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-6">
+            <TrendingUp className="w-5 h-5 text-orange-500" /> Ranking e Performance dos Corretores
+          </h3>
+          <div className="space-y-4">
+            {ranking.map(({ agent: a, score }, i) => (
+              <div key={a.id} className="flex items-center gap-4">
+                <span className={cn(
+                  'w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0',
+                  i === 0 ? 'bg-amber-100 text-amber-600' : i === 1 ? 'bg-slate-100 text-slate-600' : i === 2 ? 'bg-orange-100 text-orange-600' : 'bg-slate-50 text-slate-400'
+                )}>
+                  {i + 1}
+                </span>
+                <div className="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                  {a.full_name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">{a.full_name}</p>
+                  <div className="flex items-center gap-3 text-[10px] text-slate-500 mt-1">
+                    <span>{a.leads_count || 0} leads</span>
+                    <span>{a.visits_count || 0} visitas</span>
+                    <span>{a.proposals_count || 0} vendas</span>
+                  </div>
+                </div>
+                {/* Barra de meta (realizado vs melhor) */}
+                <div className="w-40 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
+                    style={{ width: `${Math.round((score / maxScore) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-sm font-bold text-slate-800 w-10 text-right">{score}</span>
+              </div>
+            ))}
+            {ranking.length === 0 && (
+              <p className="text-sm text-slate-400 py-6 text-center">Nenhum corretor com dados de performance ainda.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
