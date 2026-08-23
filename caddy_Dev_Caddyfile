@@ -1,0 +1,39 @@
+# ============================================================
+# CADDYFILE — Proxy do ambiente de DEV
+# dev.ahut-ecosystem.apexfyhub.com.br → localhost:5173 (Vite dev)
+#
+# COMO APLICAR (exige root na VPS 2.24.95.98):
+#   1. Criar registro DNS na Hostinger:
+#      Tipo: A | Nome: dev | Conteúdo/IP: 2.24.95.98 | TTL: 3600
+#   2. Instalar Caddy (root):
+#      sudo apt update && sudo apt install -y caddy
+#   3. Salvar este arquivo como /etc/caddy/Caddyfile (ou /opt/caddy/Caddyfile)
+#   4. sudo systemctl enable --now caddy
+#   5. O Caddy obtém SSL automático (Let's Encrypt) para o domínio.
+#
+# OBSERVAÇÃO: como é proxy para o Vite dev (hot reload), as alterações
+# aparecem em tempo real ao validar. Alternativa produtiva: servir o build
+# estático (Caddyfile file_server) apontando para /dist.
+# ============================================================
+
+dev.ahut-ecosystem.apexfyhub.com.br {
+    # Proxy para o Vite dev server (porta 5173) — atualizações em tempo real
+    reverse_proxy 127.0.0.1:5173
+
+    # Headers de segurança
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+    }
+}
+
+# ------------------------------------------------------------
+# ALTERNATIVA (produção estática, sem depender do Vite dev):
+# Serve o build gerado por `npm run build` (pasta dist/) direto.
+#
+# dev.ahut-ecosystem.apexfyhub.com.br {
+#     root * /opt/data/ahut-ecosystem/04_CODIGOS_FONTE_LOCAIS_E_DESENVOLVIMENTO/ahut-ecosystem-active/codigo_engenharia_reversa_tsx/dist
+#     file_server
+#     try_files {path} /index.html
+# }
+# ------------------------------------------------------------
