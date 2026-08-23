@@ -7,17 +7,17 @@ import {
   ArrowDownRight,
   Calendar,
   Filter,
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
+import { useFinance } from '../hooks/useFinance';
 
 export default function Finance() {
-  const transactions = [
-    { id: 1, description: 'Comissão Venda CTR-15243', type: 'income', value: 45000, date: '2023-10-24', status: 'received' },
-    { id: 2, description: 'Marketing Digital - Outubro', type: 'expense', value: 5000, date: '2023-10-22', status: 'paid' },
-    { id: 3, description: 'Aluguel Escritório', type: 'expense', value: 12000, date: '2023-10-20', status: 'paid' },
-    { id: 4, description: 'Comissão Locação CTR-88742', type: 'income', value: 2500, date: '2023-10-18', status: 'received' },
-  ];
+  const { data, isLoading } = useFinance();
+
+  const transactions = data?.transactions ?? [];
+  const cashflow = data?.cashflow;
 
   return (
     <div className="space-y-6">
@@ -45,30 +45,42 @@ export default function Finance() {
             <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
               <TrendingUp className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">+12%</span>
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+              {isLoading ? '...' : `${cashflow?.deltaReceita ?? 0 >= 0 ? '+' : ''}${cashflow?.deltaReceita ?? 0}%`}
+            </span>
           </div>
           <p className="text-sm text-slate-500 font-medium">Receita Total (Mês)</p>
-          <p className="text-2xl font-bold text-slate-900">{formatCurrency(124500)}</p>
+          <p className="text-2xl font-bold text-slate-900">
+            {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.receitaTotal ?? 0)}
+          </p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
               <TrendingDown className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full">-5%</span>
+            <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
+              {isLoading ? '...' : `${cashflow?.deltaDespesa ?? 0 >= 0 ? '+' : ''}${cashflow?.deltaDespesa ?? 0}%`}
+            </span>
           </div>
           <p className="text-sm text-slate-500 font-medium">Despesas Totais (Mês)</p>
-          <p className="text-2xl font-bold text-slate-900">{formatCurrency(32800)}</p>
+          <p className="text-2xl font-bold text-slate-900">
+            {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.despesasTotal ?? 0)}
+          </p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
               <DollarSign className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">+8%</span>
+            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
+              {isLoading ? '...' : `${cashflow?.deltaSaldo ?? 0 >= 0 ? '+' : ''}${cashflow?.deltaSaldo ?? 0}%`}
+            </span>
           </div>
           <p className="text-sm text-slate-500 font-medium">Saldo Previsto</p>
-          <p className="text-2xl font-bold text-slate-900">{formatCurrency(91700)}</p>
+          <p className="text-2xl font-bold text-slate-900">
+            {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.saldoPrevisto ?? 0)}
+          </p>
         </div>
       </div>
 
@@ -97,7 +109,20 @@ export default function Finance() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {transactions.map((t) => (
+              {isLoading && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-400">
+                    <Loader2 className="w-5 h-5 inline-block animate-spin mr-2 text-slate-300" />
+                    Carregando transações...
+                  </td>
+                </tr>
+              )}
+              {!isLoading && transactions.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-400">Nenhuma transação encontrada.</td>
+                </tr>
+              )}
+              {!isLoading && transactions.map((t) => (
                 <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
                     <span className="text-sm font-medium text-slate-900">{t.description}</span>
