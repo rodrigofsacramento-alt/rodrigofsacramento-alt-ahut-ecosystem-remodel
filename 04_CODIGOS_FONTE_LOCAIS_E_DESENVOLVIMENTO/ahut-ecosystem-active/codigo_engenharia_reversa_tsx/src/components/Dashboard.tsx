@@ -19,23 +19,17 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { formatCurrency, formatNumber, cn } from '../lib/utils';
+import { useLeads } from '../hooks/useLeads';
+import { useSales } from '../hooks/useSales';
+import { useVisits } from '../hooks/useVisits';
 
-const data = [
+const dataFallback = [
   { name: 'Jan', leads: 120, vendas: 12 },
   { name: 'Fev', leads: 135, vendas: 15 },
   { name: 'Mar', leads: 150, vendas: 14 },
   { name: 'Abr', leads: 180, vendas: 18 },
   { name: 'Mai', leads: 220, vendas: 17 },
   { name: 'Jun', leads: 248, vendas: 18 },
-];
-
-const stats = [
-  { label: 'Leads Ativos', value: '248', change: '+12%', icon: Users },
-  { label: 'Imóveis Ativos', value: '186', change: '+4%', icon: Home },
-  { label: 'Visitas Mês', value: '68', change: '+8%', icon: Calendar },
-  { label: 'Propostas', value: '42', change: '+15%', icon: FileText },
-  { label: 'Vendas Mês', value: '18', change: '+20%', icon: TrendingUp },
-  { label: 'Receita Mês', value: 'R$ 16.2M', change: '+24%', icon: DollarSign, highlight: true },
 ];
 
 const slaAlerts = [
@@ -45,17 +39,47 @@ const slaAlerts = [
   { id: 4, type: 'Confirmação de Visita', client: 'Julia Costa', property: 'Ana', time: '4h restantes', color: 'bg-green-50 text-green-600 border-green-100' },
 ];
 
-const salesFunnel = [
-  { stage: 'Novos Leads', count: 248, value: 'R$ 186M', color: 'bg-orange-100 text-orange-700' },
-  { stage: 'Qualificados', count: 186, value: 'R$ 142M', color: 'bg-blue-100 text-blue-700', percent: '75%' },
-  { stage: 'Em Atendimento', count: 124, value: 'R$ 98M', color: 'bg-emerald-100 text-emerald-700', percent: '67%' },
-  { stage: 'Visita Agendada', count: 68, value: 'R$ 54M', color: 'bg-sky-100 text-sky-700', percent: '55%' },
-  { stage: 'Proposta Enviada', count: 42, value: 'R$ 38M', color: 'bg-amber-100 text-amber-700', percent: '62%' },
-  { stage: 'Em Negociação', count: 28, value: 'R$ 24M', color: 'bg-green-100 text-green-700', percent: '67%' },
-  { stage: 'Fechados', count: 18, value: 'R$ 16.2M', color: 'bg-orange-200 text-orange-800', percent: '64%' },
-];
-
 export default function Dashboard() {
+  const { data: leads = [] } = useLeads({});
+  const { data: sales = [] } = useSales();
+  const { data: visits = [] } = useVisits();
+
+  const leadsAtivos = leads.filter((l) => l.stage !== 'Convertido').length;
+  const leadsConvertidos = leads.filter((l) => l.stage === 'Convertido').length;
+  const vendasMes = sales.length;
+  const receitaMes = sales.reduce((s, v) => s + (Number((v as any)?.proposal?.value) || 0), 0);
+
+  const temDados = leads.length > 0 || sales.length > 0 || visits.length > 0;
+
+  // Gráfico: se tiver dados reais, monta por mês dos leads; senão usa fallback
+  const data =
+    temDados && leads.length > 0
+      ? Object.entries(
+          leads.reduce<Record<string, { leads: number; vendas: number }>>((acc, l) => {
+            const m = l.created_at ? new Date(l.created_at).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : '—';
+            acc[m] = acc[m] || { leads: 0, vendas: 0 };
+            acc[m].leads++;
+            return acc;
+          }, {})
+        ).map(([name, v]) => ({ name, leads: v.leads, vendas: v.vendas }))
+        .slice(-6)
+      : dataFallback;
+
+  const stats = [
+    { label: 'Leads Ativos', value: temDados ? String(leadsAtivos) : '248', change: '+12%', icon: Users },
+    { label: 'Vendas no Mês', value: temDados ? String(vendasMes) : '18', change: '+20%', icon: TrendingUp },
+    { label: 'Visitas Mês', value: temDados ? String(visits.length) : '68', change: '+8%', icon: Calendar },
+    { label: 'Convertidos', value: temDados ? String(leadsConvertidos) : '42', change: '+15%', icon: CheckCircle2 },
+    { label: 'Receita Mês', value: temDados ? formatCurrency(receitaMes) : 'R$ 16.2M', change: '+24%', icon: DollarSign, highlight: true },
+  ];
+
+  const salesFunnel = [
+    { stage: 'Novos Leads', count: temDados ? leads.length : 248, value: temDados ? formatCurrency(receitaMes) : 'R$ 186M', color: 'bg-orange-100 text-orange-700' },
+    { stage: 'Em Atendimento', count: temDados ? leads.filter((l) => ['Primeiro Atendimento', 'Lead Cadastrado'].includes(l.stage)).length : 124, value: '—', color: 'bg-emerald-100 text-emerald-700', percent: '67%' },
+    { stage: 'Visita Agendada', count: temDados ? visits.filter((v) => v.status === 'scheduled').length : 68, value: '—', color: 'bg-sky-100 text-sky-700', percent: '55%' },
+    { stage: 'Vendas Fechadas', count: temDados ? vendasMes : 18, value: temDados ? formatCurrency(receitaMes) : 'R$ 16.2M', color: 'bg-orange-200 text-orange-800', percent: '64%' },
+  ];
+
   return (
     <div className="p-6 space-y-6 bg-slate-50 min-h-full">
       {/* Welcome Banner */}
