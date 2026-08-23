@@ -1,7 +1,25 @@
 # 📊 Painel de Controle Consolidado do Squad IA
 
-**Última Atualização:** 23/08/2026 07:20 (Ciclo 1 — Jarvis Hermes)  
+**Última Atualização:** 23/08/2026 (Ciclo 2 de Implementação — Jarvis Hermes)  
 **Ambiente Ativo:** Local Dev Server (`http://localhost:5173`) | Repo: `ahut-ecosystem-remodel`
+
+## ✅ PROGRESSO CICLO 2 — IMPLEMENTAÇÃO (páginas novas + conexão a dados)
+- ✅ **Jurídico** (`/juridico`) — criada, rota+nav, build ok. [commit c6e77ac/452d4a7]
+- ✅ **Comissões** (`/comissoes`) — criada (agent_commissions/commission_rules, faixas, câmbio), build ok. [452d4a7]
+- ✅ **GestãoClientes** (`/clientes`) — criada, rota+nav, build ok. [452d4a7]
+- ✅ **Marketing** (`/marketing`) — criada (alcance vs engajamento, mídias, integrações), build ok. [452d4a7]
+- ✅ **Atendimento** — modo DEMO (fallback conversas/msgs quando WhatsApp não escaneado) p/ auditoria de UI. [a88fd14]
+- ✅ **Leads** — conectado ao Supabase (useLeads/useCreateLead/useUpdateLead): Assumir Lead, mover estágio, cadastrar real. [052db56]
+- 🔄 **Financeiro** — refatoração p/ dados (agente em execução)
+- 🔄 **Dashboard** — refatoração p/ dados (agente em execução)
+- 📄 **GAP REPORT PRIORIDADES** — descoberta: Leads/Financeiro/Dashboard eram MOCK puro; sem dados reais. [f085c76]
+
+## 🎯 PRÓXIMAS FALTAS (de produção, ainda sem TSX reverso)
+- **Área do Cliente** (`/area-cliente`) — portal do cliente
+- **CorretorDashboard** — resumo do corretor (metas/ranking)
+- **SuperAdmin*** (Users, Tenants, Plans, Subscriptions, Financial, Health, Audit, Communications, PortalIntegrations, Settings, Dashboard, Login, Layout) — gestão do sistema
+
+---
 
 ## 🚨 INCIDENTE EM PRODUÇÃO — RECLAMAÇÕES DA DENISSE (Central de Atendimento)
 > Relato da usuária (23/08): (1) não vê quem responde no grupo; (2) muitas mensagens como "arquivo indisponível"; (3) não vê todos os contatos; (4) não consegue chamar contato no privado pelo sistema.
