@@ -14,6 +14,7 @@ import Juridico from './components/Juridico';
 import GestaoClientes from './components/GestaoClientes';
 import ComissoesComercial from './components/Comissoes';
 import Marketing from './components/Marketing';
+import Treinamentos from './components/Treinamentos';
 import Finance from './components/Finance';
 import Tecnologia from './pages/Tecnologia';
 import Notificacoes from './pages/Notificacoes';
@@ -144,6 +145,14 @@ export default function App() {
             element={
               <AppLayout title="Marketing" subtitle="Postagens, mídias e engajamento.">
                 <Marketing />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/treinamentos"
+            element={
+              <AppLayout title="Treinamentos" subtitle="Curso de Neurovendas & capacitação da equipe.">
+                <Treinamentos />
               </AppLayout>
             }
           />
