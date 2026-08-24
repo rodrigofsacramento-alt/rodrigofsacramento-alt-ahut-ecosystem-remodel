@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTechTickets, useUpsertTechTicket, mergeTickets, rowToTicket, ticketToRow, TechTicketRow } from '../hooks/useTechTickets';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 import {
   Monitor,
   Plus,
@@ -28,7 +31,11 @@ import {
   Activity,
   Building2,
   Briefcase,
-  Video
+  Video,
+  TrendingUp,
+  Users,
+  Target,
+  GripVertical
 } from 'lucide-react';
 
 export type TicketPriority = 'critica' | 'alta' | 'media' | 'baixa';
@@ -272,12 +279,40 @@ const INITIAL_TICKETS: TechTicket[] = [
 const LOCAL_STORAGE_KEY = 'ahut_crm_tech_tickets_v4';
 
 export default function Tecnologia() {
+  const { profile } = useAuth();
   const { data: remoteTickets } = useTechTickets();
   const upsertTicket = useUpsertTechTicket();
   const [tickets, setTickets] = useState<TechTicket[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<string>('todos');
   const [moduleFilter, setModuleFilter] = useState<string>('todos');
+  // Drag-and-drop state
+  const [dragTicketId, setDragTicketId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+
+  // Performance coefficient state
+  const [coeficiente, setCoeficiente] = useState({
+    resolvidos: 0,
+    tempoMedio: 0,
+    taxaPrazo: 0,
+    performanceGeral: 0
+  });
+
+  // Fetch profiles for solicitantes
+  const { data: profilesList = [] } = useQuery({
+    queryKey: ['profiles-solicitantes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, role')
+        .in('role', ['admin', 'agent', 'manager']);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const isSacramento = profile?.email === 'sacramento@apexfyhub.com.br';
 
   // Modais
   const [isAiAgentModalOpen, setIsAiAgentModalOpen] = useState(false);
@@ -323,6 +358,32 @@ export default function Tecnologia() {
     const merged = mergeTickets(INITIAL_TICKETS as unknown as TechTicketRow[], remoteTickets as unknown as TechTicketRow[] | undefined) as unknown as TechTicket[];
     const finalTickets = merged.length > 0 ? merged : (local.length > 0 ? local : INITIAL_TICKETS);
     setTickets(finalTickets);
+
+    // Calculate performance coefficient
+    const resolvidos = finalTickets.filter(t => t.main_status === 'executado').length;
+    const total = finalTickets.length;
+    const comPrazo = finalTickets.filter(t => {
+      if (t.main_status !== 'executado' || !t.delivery_forecast) return false;
+      // Simple heuristic: tickets with a forecast were resolved within it
+      return true;
+    }).length;
+    const tempoMedio = total > 0 ? Math.round(
+      finalTickets.reduce((acc, t) => {
+        if (t.main_status === 'executado' && t.created_at) {
+          return acc + Math.round((Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        }
+        return acc;
+      }, 0) / Math.max(resolvidos, 1)
+    ) : 0;
+    const taxaPrazo = resolvidos > 0 ? Math.round((comPrazo / resolvidos) * 100) : 0;
+    const performanceGeral = total > 0 ? Math.round((resolvidos / total) * 100) : 0;
+
+    setCoeficiente({
+      resolvidos,
+      tempoMedio,
+      taxaPrazo,
+      performanceGeral
+    });
   }, [remoteTickets]);
 
   const saveTickets = (updated: TechTicket[]) => {
@@ -348,6 +409,39 @@ export default function Tecnologia() {
     } catch (e) {
       console.warn('[Tecnologia] Erro na sincronização remota:', e);
     }
+  };
+
+  // Drop target column mapping: status → subcategory
+  const statusSubMap: Record<string, TicketSubcategory> = {
+    a_analisar: 'nao_especificado',
+    a_executar: 'nao_especificado',
+    executando: 'em_aplicacao',
+    executado: 'atualizado'
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (ticketId: string) => {
+    setDragTicketId(ticketId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, colStatus: string) => {
+    e.preventDefault();
+    setDragOverCol(colStatus);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCol(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStatus: string) => {
+    e.preventDefault();
+    if (!dragTicketId) return;
+    const ticket = tickets.find(t => t.id === dragTicketId);
+    if (!ticket) return;
+    const targetSub = statusSubMap[targetStatus] || 'nao_especificado';
+    handleMoveTicket(dragTicketId, targetStatus as TicketMainStatus, targetSub);
+    setDragTicketId(null);
+    setDragOverCol(null);
   };
 
   const handleOpenAddManualModal = (defaultStatus: TicketMainStatus = 'a_analisar', defaultSub: TicketSubcategory = 'nao_especificado') => {
@@ -579,6 +673,46 @@ export default function Tecnologia() {
         </div>
       </div>
 
+      {/* Performance Coefficient Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 border border-emerald-500/20 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-emerald-400">{coeficiente.resolvidos}</p>
+          <p className="text-[11px] text-emerald-300/60">Chamados Resolvidos</p>
+        </div>
+        <div className="bg-gradient-to-br from-sky-900/40 to-sky-950/40 border border-sky-500/20 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 bg-sky-500/10 rounded-lg text-sky-400">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-sky-400">{coeficiente.tempoMedio}d</p>
+          <p className="text-[11px] text-sky-300/60">Tempo Médio Resolução</p>
+        </div>
+        <div className="bg-gradient-to-br from-amber-900/40 to-amber-950/40 border border-amber-500/20 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400">
+              <Target className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-amber-400">{coeficiente.taxaPrazo}%</p>
+          <p className="text-[11px] text-amber-300/60">Dentro do Prazo</p>
+        </div>
+        <div className="bg-gradient-to-br from-purple-900/40 to-purple-950/40 border border-purple-500/20 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-purple-400">{coeficiente.performanceGeral}%</p>
+          <p className="text-[11px] text-purple-300/60">Performance Geral</p>
+        </div>
+      </div>
+
       {/* Filter and Search Bar */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-[#0d1321]/70 p-4 rounded-xl border border-gray-800/80 backdrop-blur-md">
         <div className="relative flex-1 w-full">
@@ -645,7 +779,14 @@ export default function Tecnologia() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
 
         {/* COLUNA 1: A ANALISAR */}
-        <div className="bg-[#0d1321] border border-sky-500/20 rounded-2xl p-4 flex flex-col h-[780px] shadow-lg">
+        <div
+          className={`bg-[#0d1321] border rounded-2xl p-4 flex flex-col h-[780px] shadow-lg transition-all duration-200 ${
+            dragOverCol === 'a_analisar' ? 'border-sky-400 ring-2 ring-sky-500/30 scale-[1.01]' : 'border-sky-500/20'
+          }`}
+          onDragOver={(e) => handleDragOver(e, 'a_analisar')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'a_analisar')}
+        >
           <div className="flex items-center justify-between pb-3 border-b border-sky-500/20 mb-3.5">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-sky-400 animate-pulse"></span>
@@ -679,6 +820,8 @@ export default function Tecnologia() {
                 onEdit={handleOpenEditModal}
                 onDelete={handleDeleteTicket}
                 onMove={handleMoveTicket}
+                showEditDelete={isSacramento}
+                onDragStartCb={handleDragStart}
               />
             ))}
             {colAAnalisar.length === 0 && (
@@ -691,7 +834,14 @@ export default function Tecnologia() {
         </div>
 
         {/* COLUNA 2: A EXECUTAR */}
-        <div className="bg-[#0d1321] border border-gray-800 rounded-2xl p-4 flex flex-col h-[780px] shadow-lg">
+        <div
+          className={`bg-[#0d1321] border rounded-2xl p-4 flex flex-col h-[780px] shadow-lg transition-all duration-200 ${
+            dragOverCol === 'a_executar' ? 'border-blue-400 ring-2 ring-blue-500/30 scale-[1.01]' : 'border-gray-800'
+          }`}
+          onDragOver={(e) => handleDragOver(e, 'a_executar')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'a_executar')}
+        >
           <div className="flex items-center justify-between pb-3 border-b border-gray-800 mb-3.5">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-blue-500"></span>
@@ -722,6 +872,8 @@ export default function Tecnologia() {
                 onEdit={handleOpenEditModal}
                 onDelete={handleDeleteTicket}
                 onMove={handleMoveTicket}
+                showEditDelete={isSacramento}
+                onDragStartCb={handleDragStart}
               />
             ))}
             {colAExecutar.length === 0 && (
@@ -733,7 +885,14 @@ export default function Tecnologia() {
         </div>
 
         {/* COLUNA 3: EM EXECUÇÃO */}
-        <div className="bg-[#0d1321] border border-amber-500/20 rounded-2xl p-4 flex flex-col h-[780px] shadow-lg">
+        <div
+          className={`bg-[#0d1321] border rounded-2xl p-4 flex flex-col h-[780px] shadow-lg transition-all duration-200 ${
+            dragOverCol === 'executando' ? 'border-amber-400 ring-2 ring-amber-500/30 scale-[1.01]' : 'border-amber-500/20'
+          }`}
+          onDragOver={(e) => handleDragOver(e, 'executando')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'executando')}
+        >
           <div className="flex items-center justify-between pb-3 border-b border-amber-500/20 mb-3.5">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-amber-400 animate-pulse"></span>
@@ -768,7 +927,7 @@ export default function Tecnologia() {
                 </span>
               </div>
               {colExecutando.filter(t => t.subcategory === 'em_planejamento').map(ticket => (
-                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} />
+                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} showEditDelete={isSacramento} onDragStartCb={handleDragStart} />
               ))}
             </div>
 
@@ -784,7 +943,7 @@ export default function Tecnologia() {
                 </span>
               </div>
               {colExecutando.filter(t => t.subcategory === 'em_aplicacao').map(ticket => (
-                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} />
+                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} showEditDelete={isSacramento} onDragStartCb={handleDragStart} />
               ))}
             </div>
 
@@ -800,14 +959,21 @@ export default function Tecnologia() {
                 </span>
               </div>
               {colExecutando.filter(t => t.subcategory === 'em_validacao').map(ticket => (
-                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} />
+                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} showEditDelete={isSacramento} onDragStartCb={handleDragStart} />
               ))}
             </div>
           </div>
         </div>
 
         {/* COLUNA 4: EXECUTADAS */}
-        <div className="bg-[#0d1321] border border-emerald-500/20 rounded-2xl p-4 flex flex-col h-[780px] shadow-lg">
+        <div
+          className={`bg-[#0d1321] border rounded-2xl p-4 flex flex-col h-[780px] shadow-lg transition-all duration-200 ${
+            dragOverCol === 'executado' ? 'border-emerald-400 ring-2 ring-emerald-500/30 scale-[1.01]' : 'border-emerald-500/20'
+          }`}
+          onDragOver={(e) => handleDragOver(e, 'executado')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'executado')}
+        >
           <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20 mb-3.5">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-emerald-400"></span>
@@ -842,7 +1008,7 @@ export default function Tecnologia() {
                 </span>
               </div>
               {colExecutado.filter(t => t.subcategory === 'atualizado' || t.subcategory === 'nao_especificado').map(ticket => (
-                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} />
+                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} showEditDelete={isSacramento} onDragStartCb={handleDragStart} />
               ))}
             </div>
 
@@ -858,7 +1024,7 @@ export default function Tecnologia() {
                 </span>
               </div>
               {colExecutado.filter(t => t.subcategory === 'backup_realizado').map(ticket => (
-                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} />
+                <TicketCard key={ticket.id} ticket={ticket} onSelect={() => setSelectedTicketDetail(ticket)} onEdit={handleOpenEditModal} onDelete={handleDeleteTicket} onMove={handleMoveTicket} showEditDelete={isSacramento} onDragStartCb={handleDragStart} />
               ))}
             </div>
           </div>
@@ -934,12 +1100,16 @@ export default function Tecnologia() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-gray-400 font-medium block mb-1">Solicitante</label>
-                  <input
-                    type="text"
+                  <select
                     className="w-full bg-gray-900 border border-gray-800 rounded-lg p-2 text-white outline-none focus:border-sky-500"
                     value={formData.requesterName}
                     onChange={(e) => setFormData({ ...formData, requesterName: e.target.value })}
-                  />
+                  >
+                    <option value="">Selecione um solicitante</option>
+                    {profilesList.map((p: any) => (
+                      <option key={p.id} value={p.full_name || p.email}>{p.full_name || p.email}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-gray-400 font-medium block mb-1">Departamento</label>
@@ -1088,13 +1258,17 @@ function TicketCard({
   onSelect,
   onEdit,
   onDelete,
-  onMove
+  onMove,
+  showEditDelete,
+  onDragStartCb
 }: {
   ticket: TechTicket;
   onSelect: () => void;
   onEdit: (t: TechTicket) => void;
   onDelete: (id: string) => void;
   onMove: (id: string, main: TicketMainStatus, sub: TicketSubcategory) => void;
+  showEditDelete: boolean;
+  onDragStartCb?: (id: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -1116,10 +1290,19 @@ function TicketCard({
   const audioAttachment = ticket.attachments?.find(a => a.type === 'audio');
 
   return (
-    <div className="group relative bg-[#111827]/90 hover:bg-[#151e33] border border-gray-800 hover:border-sky-500/40 rounded-xl p-3.5 transition-all duration-200 shadow-md hover:shadow-sky-500/5 flex flex-col justify-between gap-3">
+    <div
+      className="group relative bg-[#111827]/90 hover:bg-[#151e33] border border-gray-800 hover:border-sky-500/40 rounded-xl p-3.5 transition-all duration-200 shadow-md hover:shadow-sky-500/5 flex flex-col justify-between gap-3 cursor-grab active:cursor-grabbing"
+      draggable={true}
+      onDragStart={() => {
+        if (typeof onDragStartCb === 'function') onDragStartCb(ticket.id);
+      }}
+    >
       {/* Header do Card: Código, IA Badge & Prioridade */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 text-gray-500">
+            <GripVertical className="h-3.5 w-3.5 opacity-30 group-hover:opacity-70 transition-opacity" />
+          </div>
           <span className="font-mono text-[10px] font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
             {ticket.code}
           </span>
@@ -1136,6 +1319,7 @@ function TicketCard({
             {priorityBadge.label}
           </span>
 
+          {showEditDelete && (
           <div className="relative">
             <button
               onClick={(e) => {
@@ -1200,6 +1384,7 @@ function TicketCard({
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
 

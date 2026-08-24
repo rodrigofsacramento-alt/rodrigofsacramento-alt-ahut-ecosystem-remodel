@@ -18,7 +18,13 @@ import {
   Cpu,
   Target,
   Play,
-  Loader2
+  Loader2,
+  X,
+  Edit3,
+  Trash2,
+  Eye,
+  GripVertical,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
@@ -52,9 +58,18 @@ export default function Gestao() {
   const tarefas = mergeGestaoTasks(tarefasIniciais, remoteTarefas);
   const navigate = useNavigate();
 
+  const isChris = profile?.email === 'chris@apexfyhub.com.br';
+
   const [aba, setAba] = useState<'tarefas' | 'resumo'>('tarefas');
   const [showModal, setShowModal] = useState(false);
   const [novaTarefa, setNovaTarefa] = useState({ titulo: '', responsavel: 'Squad Tech', prioridade: 'media' as any, mensagem: '' });
+
+  // Detail modal
+  const [selectedTask, setSelectedTask] = useState<TarefaGestao | null>(null);
+
+  // Drag-and-drop state
+  const [dragTaskId, setDragTaskId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
 
   const adicionarTarefa = () => {
     if (!novaTarefa.titulo.trim()) return;
@@ -79,6 +94,48 @@ export default function Gestao() {
     if (!alvo || alvo.status === status) return;
     upsertGestaoTask.mutate({ ...alvo, status });
   };
+
+  const handleDragStart = (taskId: string) => {
+    setDragTaskId(taskId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, colStatus: string) => {
+    e.preventDefault();
+    setDragOverCol(colStatus);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCol(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStatus: string) => {
+    e.preventDefault();
+    if (!dragTaskId) return;
+    const task = tarefas.find(t => t.id === dragTaskId);
+    if (!task) return;
+    moverStatus(dragTaskId, targetStatus as TarefaGestao['status']);
+    setDragTaskId(null);
+    setDragOverCol(null);
+  };
+
+  const deletarTarefa = (id: string) => {
+    if (!confirm('Deseja realmente excluir esta tarefa?')) return;
+    // We delete by upserting with an empty id or... actually the hook doesn't support delete directly.
+    // We use supabase directly for deletion
+    import('../lib/supabase').then(({ supabase }) => {
+      supabase.from('gestao_tasks').delete().eq('id', id).then(() => {
+        window.location.reload();
+      });
+    });
+  };
+
+  // Status column groups
+  const statusColumns: { key: TarefaGestao['status']; label: string; color: string; borderColor: string; glowColor: string }[] = [
+    { key: 'nova', label: 'Novas', color: 'text-sky-400', borderColor: 'border-sky-500/20', glowColor: 'border-sky-400' },
+    { key: 'em_analise', label: 'Em Análise', color: 'text-amber-400', borderColor: 'border-amber-500/20', glowColor: 'border-amber-400' },
+    { key: 'em_execucao', label: 'Em Execução', color: 'text-orange-400', borderColor: 'border-orange-500/20', glowColor: 'border-orange-400' },
+    { key: 'concluida', label: 'Concluída', color: 'text-emerald-400', borderColor: 'border-emerald-500/20', glowColor: 'border-emerald-400' },
+  ];
 
   const statusColor: Record<TarefaGestao['status'], string> = {
     nova: 'bg-sky-100 text-sky-700',
@@ -137,43 +194,167 @@ export default function Gestao() {
 
       {aba === 'tarefas' ? (
         <>
-          {/* Kanban simples de tarefas da gestão */}
-          <div className="grid lg:grid-cols-2 gap-4">
-            {tarefas.map((t) => (
-              <div key={t.id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-all cursor-pointer" onClick={() => t.titulo.includes('Neurovendas') ? navigate('/treinamentos/aula') : null}>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{origemLabel[t.origem]}</span>
-                  <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', statusColor[t.status])}>
-                    {t.status.replace('_', ' ')}
-                  </span>
-                </div>
-                <p className="font-bold text-slate-900 text-sm mb-1">{t.titulo}</p>
-                {t.mensagem && <p className="text-xs text-slate-500 italic mb-2 leading-relaxed">"{t.mensagem}"</p>}
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
-                    <Clock className="w-3.5 h-3.5" /> {t.criada_em}
-                    <Briefcase className="w-3.5 h-3.5 ml-1" /> {t.responsavel}
+          {/* Kanban Columns with Drag-and-Drop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {statusColumns.map(col => {
+              const colTarefas = tarefas.filter(t => t.status === col.key);
+              return (
+                <div
+                  key={col.key}
+                  className={`bg-white rounded-2xl border ${dragOverCol === col.key ? `${col.glowColor} ring-2 ring-offset-2` : col.borderColor} p-4 flex flex-col min-h-[400px] transition-all duration-200`}
+                  onDragOver={(e) => handleDragOver(e, col.key)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, col.key)}
+                >
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${col.color.replace('text-', 'bg-')}`}></span>
+                      <h3 className="font-bold text-xs uppercase tracking-wider text-slate-700">{col.label}</h3>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                      {colTarefas.length}
+                    </span>
                   </div>
-                  <div className="flex gap-1">
-                    {(['em_analise', 'em_execucao', 'concluida'] as const).map((s) => (
+
+                  <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                    {colTarefas.map(task => (
+                      <div
+                        key={task.id}
+                        className={`group bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3.5 transition-all cursor-grab active:cursor-grabbing ${isChris ? 'hover:border-orange-300' : ''}`}
+                        draggable
+                        onDragStart={() => handleDragStart(task.id)}
+                        onClick={() => setSelectedTask(task)}
+                      >
+                        <div className="flex items-start gap-2 mb-2">
+                          <GripVertical className="w-3.5 h-3.5 text-slate-300 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 whitespace-nowrap">
+                                {origemLabel[task.origem]}
+                              </span>
+                              <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap', statusColor[task.status])}>
+                                {task.status.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <p className="font-bold text-slate-900 text-sm line-clamp-2">{task.titulo}</p>
+                            {task.mensagem && (
+                              <p className="text-xs text-slate-500 italic mt-1 line-clamp-2">"{task.mensagem}"</p>
+                            )}
+                          </div>
+                          {isChris && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deletarTarefa(task.id); }}
+                              className="text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                            <Clock className="w-3 h-3" /> {task.criada_em}
+                            <Briefcase className="w-3 h-3 ml-1" /> {task.responsavel}
+                          </div>
+                          <div className="flex gap-1">
+                            {(['em_analise', 'em_execucao', 'concluida'] as const).map((s) => (
+                              <button
+                                key={s}
+                                onClick={(e) => { e.stopPropagation(); moverStatus(task.id, s); }}
+                                className={cn(
+                                  'w-2.5 h-2.5 rounded-full border transition-transform',
+                                  task.status === s ? 'scale-125 ring-2 ring-offset-1 ' + colorDot(s) : 'bg-transparent border-slate-300 hover:bg-slate-100'
+                                )}
+                                title={s.replace('_', ' ')}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {colTarefas.length === 0 && (
+                      <div className="h-24 flex items-center justify-center border border-dashed border-slate-200 rounded-xl text-xs text-slate-400">
+                        Nenhuma tarefa
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Card Detail Modal */}
+          {selectedTask && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedTask(null)}>
+              <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <Eye className="w-5 h-5 text-orange-500" /> Detalhes da Tarefa
+                  </h3>
+                  <button onClick={() => setSelectedTask(null)} className="text-slate-400 hover:text-slate-600">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-xs font-bold text-slate-500 uppercase">Título</span>
+                    <p className="font-bold text-slate-900 mt-1">{selectedTask.titulo}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 uppercase">Origem</span>
+                      <p className="text-sm text-slate-700 mt-1">{origemLabel[selectedTask.origem]}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 uppercase">Status</span>
+                      <p className={cn('text-sm font-bold mt-1', statusColor[selectedTask.status].replace('text-', 'text-'))}>
+                        {selectedTask.status.replace('_', ' ')}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 uppercase">Responsável</span>
+                      <p className="text-sm text-slate-700 mt-1">{selectedTask.responsavel}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 uppercase">Data</span>
+                      <p className="text-sm text-slate-700 mt-1">{selectedTask.criada_em}</p>
+                    </div>
+                  </div>
+                  {selectedTask.mensagem && (
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 uppercase">Mensagem / Contexto</span>
+                      <p className="text-sm text-slate-600 mt-1 italic bg-slate-50 p-3 rounded-xl border border-slate-200">"{selectedTask.mensagem}"</p>
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    {(['em_analise', 'em_execucao', 'concluida'] as const).map(s => (
                       <button
                         key={s}
-                        onClick={() => moverStatus(t.id, s)}
+                        onClick={() => { moverStatus(selectedTask.id, s); setSelectedTask(null); }}
                         className={cn(
-                          'w-2.5 h-2.5 rounded-full border transition-transform',
-                          t.status === s ? 'scale-125 ring-2 ring-offset-1 ' + colorDot(s) : 'bg-transparent border-slate-300 hover:bg-slate-100'
+                          'flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-colors',
+                          selectedTask.status === s
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'bg-orange-500 hover:bg-orange-600 text-white'
                         )}
-                        title={s.replace('_', ' ')}
-                      />
+                        disabled={selectedTask.status === s}
+                      >
+                        Mover para {s.replace('_', ' ')}
+                      </button>
                     ))}
                   </div>
+                  {isChris && (
+                    <button
+                      onClick={() => { deletarTarefa(selectedTask.id); setSelectedTask(null); }}
+                      className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg text-xs font-bold"
+                    >
+                      Excluir Tarefa
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
-            {tarefas.length === 0 && (
-              <div className="lg:col-span-2 text-center text-sm text-slate-400 py-10">Nenhuma tarefa registrada ainda.</div>
-            )}
-          </div>
+            </div>
+          )}
+
           <p className="text-xs text-slate-400">
             📱 <strong>Toda mensagem da Christiane (Telegram) que for uma solicitação chega aqui automaticamente</strong> para a gestão da empresa.
           </p>

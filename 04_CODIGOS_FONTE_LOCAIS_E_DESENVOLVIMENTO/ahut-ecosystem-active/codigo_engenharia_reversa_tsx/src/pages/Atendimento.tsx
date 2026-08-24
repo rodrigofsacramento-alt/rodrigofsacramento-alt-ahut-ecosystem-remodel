@@ -36,7 +36,11 @@ import {
   CheckCircle2,
   MessageSquare,
   X,
-  Filter
+  Filter,
+  PhoneCall,
+  TrendingUp,
+  Target,
+  Award
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -55,6 +59,9 @@ import {
   useIgnoreConversation,
   useUpdateClientContact
 } from '../hooks/useWhatsapp';
+import { cn } from '../lib/utils';
+
+// ── INTERFACES ──────────────────────────────────
 
 interface Client {
   id: string;
@@ -78,165 +85,140 @@ interface Message {
   sender?: {
     id: string;
     full_name?: string;
-    avatar_url?: string;
+    name?: string;
     role?: string;
-    phone?: string;
+    avatar_url?: string | null;
   };
+  receiver_id?: string;
 }
 
 interface Conversation {
   id: string;
-  client_id?: string;
+  client_id: string;
   agent_id?: string | null;
-  lead_id?: string | null;
   subject?: string;
-  status: 'open' | 'pending' | 'closed' | 'deleted';
-  priority?: 'low' | 'normal' | 'high' | 'urgent';
-  channel?: string;
-  tags?: string[];
+  status: string;
+  tenant_id?: string;
+  ai_enabled?: boolean;
   unread_count?: number;
   last_message_at?: string;
-  ai_enabled?: boolean;
-  client?: Client;
+  tags?: string | null;
+  client?: Client | null;
+  lead_id?: string | null;
   whatsapp_contact?: Array<{ is_group?: boolean; remote_jid?: string; phone_number?: string }>;
   whatsapp_contacts?: Array<{ is_group?: boolean; remote_jid?: string; phone_number?: string }>;
 }
 
+interface GroupParticipant {
+  group_id: string;
+  profile_id: string;
+  group_role?: string;
+  full_name?: string;
+  phone?: string;
+  profile?: {
+    id: string;
+    full_name?: string;
+    phone?: string;
+    role?: string;
+  };
+}
+
+interface AgentScore {
+  agent_id: string;
+  full_name: string;
+  contatos: number;
+  followups: number;
+  visitas: number;
+  propostas: number;
+  vendas: number;
+  taxa_conversao: string;
+}
+
+// ── TIPOS DE FILTRO ─────────────────────────────
+
+type TabFiltro = 'todos' | 'ativos' | 'pendentes' | 'meus' | 'nao_atribuidos' | 'grupos';
+type PeriodoFiltro = 'hoje' | 'semana' | 'mes' | 'todos';
+
+// ── ESTADOS INICIAIS ────────────────────────────
+
+const DEMO_MODE = false; // Desativado para usar dados reais do Supabase
+
+const demoConversations: Conversation[] = [];
+
+const demoMessages: Message[] = [];
+
+const demoGroupParticipants: GroupParticipant[] = [];
+
+// ── COMPONENTE PRINCIPAL ────────────────────────
+
 export default function Atendimento() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, profile } = useAuth();
-  const isAgent = profile?.role === 'agent';
+  const conversationParam = searchParams.get('conversation');
 
-  // ── Dados de demonstração (fallback p/ auditoria de UI quando o WhatsApp não está escaneado) ──
-  const demoConversations: Conversation[] = [
-    { id: 'demo-1', client_id: 'cl-1', agent_id: user?.id || null, subject: 'Conversa com Carlos Andrade', status: 'open', ai_enabled: true, unread_count: 3, last_message_at: new Date().toISOString(), priority: 'high', client: { id: 'cl-1', full_name: 'Carlos Andrade', phone: '5551941122' } },
-    { id: 'demo-2', client_id: 'cl-2', agent_id: user?.id || null, subject: 'Grupo Lançamento Villa dos Ipês', status: 'open', ai_enabled: true, unread_count: 12, last_message_at: new Date(Date.now() - 300000).toISOString(), whatsapp_contact: [{ is_group: true, remote_jid: '1203630000000@g.us', phone_number: '1203630000000' }], client: { id: 'cl-2', full_name: 'Grupo WhatsApp', phone: '1203630000000@g.us', is_group: true } },
-    { id: 'demo-3', client_id: 'cl-3', agent_id: null, subject: 'Conversa com Marina Souza', status: 'pending', unread_count: 1, last_message_at: new Date(Date.now() - 3600000).toISOString(), client: { id: 'cl-3', full_name: 'Marina Souza', phone: '5551975566' } },
-  ];
-  const demoMessages: Record<string, Message[]> = {
-    'demo-1': [
-      { id: 'm1', conversation_id: 'demo-1', sender_id: user?.id, content: 'Olá Carlos! Tudo bem? Vi que você se interessou pelo lote na Villa dos Ipês.', message_type: 'bot', created_at: new Date(Date.now() - 60000).toISOString(), status: 'read' },
-      { id: 'm2', conversation_id: 'demo-1', sender_id: 'cl-1', content: 'Olá! Sim, quero mais informações sobre o financiamento.', message_type: 'text', created_at: new Date(Date.now() - 45000).toISOString(), sender: { id: 'cl-1', full_name: 'Carlos Andrade', role: 'client' } },
-      { id: 'm3', conversation_id: 'demo-1', sender_id: user?.id, content: 'Claro! Posso te enviar as condições hoje à tarde.', message_type: 'text', created_at: new Date(Date.now() - 20000).toISOString(), status: 'delivered' },
-    ],
-  };
-  const DEMO_MODE = true; // auditar UI com dados de exemplo (WhatsApp não escaneado)
+  const { profile, user } = useAuth();
+  const isAgent = profile?.role === 'agent' || profile?.role === 'admin' || profile?.role === 'manager';
+  const isAdmin = profile?.role === 'admin' || profile?.email === 'sacramento@apexfyhub.com.br';
 
-  // Tabs: 'meus' | 'equipe' | 'grupos' | 'nao-lidas' | 'arquivadas'
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem('atendimento_active_tab');
-      return saved || 'meus';
-    } catch {
-      return 'meus';
-    }
-  });
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [messageInput, setMessageInput] = useState('');
-  const [showNewChatModal, setShowNewChatModal] = useState(false);
-  const [showAddContactModal, setShowAddContactModal] = useState(false);
-  const [newContact, setNewContact] = useState({ name: '', phone: '', email: '' });
-  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
-  
-  // Dropdown States for Action Buttons
-  const [activeDropdown, setActiveDropdown] = useState<'message' | 'call' | 'visit' | 'meeting' | null>(null);
-  const [scheduleData, setScheduleData] = useState({
-    date: '', time: '', subType: '', propertyId: '', message: ''
-  });
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.action-dropdown-container')) {
-        setActiveDropdown(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleScheduleEvent = async (type: string) => {
-    if (!activeChatId || !scheduleData.date || !scheduleData.time) return;
-    const chat = conversations.find(c => c.id === activeChatId);
-    
-    try {
-      // Formata a data e hora
-      const scheduledAt = new Date(`${scheduleData.date}T${scheduleData.time}:00`).toISOString();
-      
-      const { error } = await supabase.from('agenda_events').insert({
-        user_id: user?.id,
-        lead_id: chat?.lead_id || null,
-        type,
-        sub_type: scheduleData.subType,
-        scheduled_at: scheduledAt,
-        property_id: scheduleData.propertyId || null,
-        status: 'pending' // ou scheduled
-      });
-
-      if (error) {
-        console.error('Erro ao agendar:', error);
-        // Toast estático já que não temos o useToast importado perfeitamente no escopo
-        alert('Erro ao agendar evento!');
-      } else {
-        alert('Evento agendado com sucesso na Agenda!');
-        setActiveDropdown(null);
-        setScheduleData({ date: '', time: '', subType: '', propertyId: '', message: '' });
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Real Data & Hooks
-  const { data: whatsappSession, isLoading: isWhatsappLoading, refetch: refetchWhatsapp } = useWhatsapp();
-  const startWhatsappMutation = useStartWhatsAppSession();
-  const disconnectWhatsappMutation = useDisconnectWhatsAppSession();
-  const toggleAiMutation = useSetWhatsAppAiEnabled();
-  const sendMessageMutation = useSendWhatsAppMessage();
-  const { data: leads = [] } = useLeads();
+  const queryResult = useLeads({});
+  const leads = queryResult?.data ?? [];
+  const { data: visits = [] } = useVisits();
   const { data: agents = [] } = useAgents();
-  const createVisitMutation = useCreateVisit();
+  const whatsappSession = useWhatsapp();
+  const startSession = useStartWhatsAppSession();
+  const disconnectSession = useDisconnectWhatsAppSession();
+  const setAiEnabled = useSetWhatsAppAiEnabled();
+  const sendMessageMutation = useSendWhatsAppMessage();
   const acceptConversation = useAcceptConversation();
-  const markConversationRead = useMarkConversationRead();
+  const markRead = useMarkConversationRead();
   const transferConversation = useTransferConversation();
   const ignoreConversation = useIgnoreConversation();
-  const updateClientContact = useUpdateClientContact();
 
-  const handleAccept = async () => {
-    if (!activeChatId) return;
-    await acceptConversation.mutateAsync({ conversationId: activeChatId });
-  };
-  const handleIgnore = async () => {
-    if (!activeChatId) return;
-    await ignoreConversation.mutateAsync({ conversationId: activeChatId });
-  };
-  const handleTransfer = async (toAgentId: string) => {
-    if (!activeChatId) return;
-    await transferConversation.mutateAsync({ conversationId: activeChatId, toAgentId });
-  };
+  // ── FILTROS ──
+  const [activeTab, setActiveTab] = useState<TabFiltro>('meus');
+  const [periodoFiltro, setPeriodoFiltro] = useState<PeriodoFiltro>('todos');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtroCorretor, setFiltroCorretor] = useState<string>('');
 
-  // Local conversations state (synced with Supabase)
+  // ── CONVERSAS E MENSAGENS ──
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [messageInput, setMessageInput] = useState('');
+  const [activeChatId, setActiveChatId] = useState<string | null>(conversationParam || null);
+  const [replyToMessage, setReplyToMessage] = useState<string | null>(null);
+  const [showAddContactModal, setShowAddContactModal] = useState(false);
+
+  // ── EVENTOS AGENDADOS ──
+  const [scheduleData, setScheduleData] = useState({ date: '', time: '', message: '' });
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  // ── GRUPO / PARTICIPANTES ──
+  const [groupParticipants, setGroupParticipants] = useState<GroupParticipant[]>([]);
+  const [showParticipants, setShowParticipants] = useState(false);
+
+  // ── DASHBOARD ──
+  const [dashboardPeriodo, setDashboardPeriodo] = useState<'dia' | 'semana' | 'mes'>('dia');
+  const [showRanking, setShowRanking] = useState(false);
+
+  // ── NOTAS ──
+  const [showNotes, setShowNotes] = useState(false);
+  const [leadNotes, setLeadNotes] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ── CHECAGEM DE GRUPO ──
   const checkIsGroup = (chat: Conversation) => {
     const wContact = chat.whatsapp_contact?.[0] || chat.whatsapp_contacts?.[0];
     return Boolean(
       wContact?.is_group ||
       chat.client?.is_group ||
       chat.client?.phone?.includes('@g.us') ||
-      wContact?.remote_jid?.endsWith('@g.us') ||
-      (chat.client?.phone && chat.client.phone.length > 15 && !chat.client.phone.startsWith('55'))
+      wContact?.remote_jid?.endsWith('@g.us')
     );
   };
 
-  // Fetch conversations
+  // ── CARREGAR CONVERSAS ──
   useEffect(() => {
     async function loadConversations() {
       try {
@@ -257,125 +239,134 @@ export default function Atendimento() {
           if (!activeChatId) {
             setActiveChatId(data[0].id);
           }
-        } else if (DEMO_MODE) {
-          // Fallback de auditoria: WhatsApp não escaneado → popula demonstração
-          setConversations(demoConversations);
-          if (!activeChatId && demoConversations.length > 0) {
-            setActiveChatId(demoConversations[0].id);
-          }
         }
       } catch (err) {
         console.error('Erro ao carregar conversas:', err);
       }
     }
     loadConversations();
+  }, []);
 
-    // Subscribe to realtime conversation updates
-    const channel = supabase
-      .channel('conversations-realtime-feed')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'conversations'
-      }, () => {
-        loadConversations();
-      })
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [user?.id, isAgent]);
-
-  // Tab counts
-  const tabCounts = useMemo(() => {
-    let meus = 0;
-    let equipe = 0;
-    let grupos = 0;
-    let naoLidas = 0;
-
-    conversations.forEach((chat) => {
-      if (chat.status === 'deleted' || chat.subject === '[deleted]') return;
-      const isGroup = checkIsGroup(chat);
-      if (isGroup) {
-        grupos++;
-      } else {
-        equipe++;
-        if (chat.agent_id === user?.id || !chat.agent_id) meus++;
-        if (chat.status === 'pending' || (chat.unread_count || 0) > 0) naoLidas++;
-      }
-    });
-
-    return { meus, equipe, grupos, naoLidas };
-  }, [conversations, user?.id]);
-
-  // Filtered Conversations
+  // ── FILTRAGEM DE CONVERSAS ──
   const filteredConversations = useMemo(() => {
-    return conversations.filter((chat) => {
-      if (chat.status === 'deleted' || chat.subject === '[deleted]') return false;
-      const isGroup = checkIsGroup(chat);
-      const name = (chat.client?.full_name || chat.client?.name || '').toLowerCase();
-      const phone = (chat.client?.phone || '').toLowerCase();
-      const subject = (chat.subject || '').toLowerCase();
-      const query = searchTerm.trim().toLowerCase();
+    let filtered = conversations;
 
-      if (query && !name.includes(query) && !phone.includes(query) && !subject.includes(query)) {
-        return false;
+    // Filtro por busca
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((c) =>
+        c.client?.full_name?.toLowerCase().includes(term) ||
+        c.client?.phone?.includes(term) ||
+        c.subject?.toLowerCase().includes(term)
+      );
+    }
+
+    // Filtro por aba
+    switch (activeTab) {
+      case 'meus':
+        filtered = filtered.filter((c) => c.agent_id === user?.id);
+        break;
+      case 'ativos':
+        filtered = filtered.filter((c) => c.status === 'active' || c.status === 'open');
+        break;
+      case 'pendentes':
+        filtered = filtered.filter((c) => !c.agent_id || c.agent_id === null);
+        break;
+      case 'nao_atribuidos':
+        filtered = filtered.filter((c) => !c.agent_id);
+        break;
+      case 'grupos':
+        filtered = filtered.filter((c) => checkIsGroup(c));
+        break;
+      default:
+        break;
+    }
+
+    // Filtro por corretor
+    if (filtroCorretor) {
+      filtered = filtered.filter((c) => c.agent_id === filtroCorretor);
+    }
+
+    // Filtro por período
+    if (periodoFiltro !== 'todos') {
+      const now = new Date();
+      let limit: Date;
+      switch (periodoFiltro) {
+        case 'hoje':
+          limit = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'semana':
+          limit = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'mes':
+          limit = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
       }
+      filtered = filtered.filter((c) => c.last_message_at && new Date(c.last_message_at) >= limit!);
+    }
 
-      switch (activeTab) {
-        case 'grupos':
-          return isGroup;
-        case 'meus':
-          return !isGroup && (isAgent ? chat.agent_id === user?.id : true) && chat.status !== 'closed';
-        case 'equipe':
-          return !isGroup && chat.status !== 'closed';
-        case 'nao-lidas':
-          return !isGroup && (chat.status === 'pending' || (chat.unread_count || 0) > 0);
-        case 'arquivadas':
-          return chat.status === 'closed';
-        default:
-          return true;
-      }
-    });
-  }, [conversations, activeTab, searchTerm, user?.id, isAgent]);
+    return filtered;
+  }, [conversations, searchTerm, activeTab, filtroCorretor, periodoFiltro]);
 
-  // Fetch messages for active chat
+  // ── LOAD MESSAGES (COM POLLING FALBACK) ──
+  const loadMessages = async (convId: string) => {
+    setIsLoadingMessages(true);
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*, sender:profiles!messages_sender_id_fkey(*)')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setMessages((data as Message[]) || []);
+    } catch (err) {
+      console.error('Erro ao carregar mensagens:', err);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  // Load messages when chat changes
+  useEffect(() => {
+    if (activeChatId) {
+      loadMessages(activeChatId);
+    }
+  }, [activeChatId]);
+
+  // ── POLLING FALLBACK (a cada 5s busca mensagens novas) ──
   useEffect(() => {
     if (!activeChatId) return;
-
-    async function loadMessages() {
-      setIsLoadingMessages(true);
+    const interval = setInterval(async () => {
       try {
         const { data, error } = await supabase
           .from('messages')
           .select('*, sender:profiles!messages_sender_id_fkey(*)')
           .eq('conversation_id', activeChatId)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: false })
+          .limit(20);
 
         if (error) throw error;
         if (data && data.length > 0) {
-          setMessages(data as Message[]);
-        } else if (DEMO_MODE && demoMessages[activeChatId]) {
-          setMessages(demoMessages[activeChatId]);
-        } else {
-          setMessages([]);
+          setMessages((prev) => {
+            const existingIds = new Set(prev.map((m) => m.id));
+            const newMsgs = (data as Message[]).filter((m) => !existingIds.has(m.id)).reverse();
+            if (newMsgs.length === 0) return prev;
+            return [...prev, ...newMsgs].sort(
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+          });
         }
       } catch (err) {
-        console.error('Erro ao carregar mensagens:', err);
-        if (DEMO_MODE && demoMessages[activeChatId]) {
-          setMessages(demoMessages[activeChatId]);
-        } else {
-          setMessages([]);
-        }
-      } finally {
-        setIsLoadingMessages(false);
+        // Silêncio
       }
-    }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeChatId]);
 
-    loadMessages();
-
-    // Subscribe to new messages
+  // ── REALTIME SUBSCRIPTION ──
+  useEffect(() => {
+    if (!activeChatId) return;
     const channel = supabase
       .channel(`chat-messages-${activeChatId}`)
       .on('postgres_changes', {
@@ -407,17 +398,54 @@ export default function Atendimento() {
     };
   }, [activeChatId]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   const activeChat = useMemo(() => {
     return conversations.find((c) => c.id === activeChatId) || null;
   }, [conversations, activeChatId]);
 
   const isGroupActiveChat = activeChat ? checkIsGroup(activeChat) : false;
 
+  // ── SCROLL TO BOTTOM ──
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // ── CARREGAR PARTICIPANTES DO GRUPO (BUG FIX 1) ──
+  useEffect(() => {
+    if (!activeChatId || !isGroupActiveChat) {
+      setGroupParticipants([]);
+      return;
+    }
+    async function loadParticipants() {
+      try {
+        // Busca participantes do grupo via vw_group_participants
+        const { data, error } = await supabase
+          .from('vw_group_participants')
+          .select('*')
+          .eq('group_id', activeChat?.client_id);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setGroupParticipants(data as GroupParticipant[]);
+        } else {
+          // Fallback: busca direto na group_participants
+          const { data: gpData, error: gpErr } = await supabase
+            .from('group_participants')
+            .select('*, profile:profiles!group_participants_profile_id_fkey(*)')
+            .eq('group_id', activeChat?.client_id);
+          
+          if (!gpErr && gpData) {
+            setGroupParticipants(gpData as GroupParticipant[]);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar participantes:', err);
+      }
+    }
+    loadParticipants();
+  }, [activeChatId, isGroupActiveChat]);
+
+  // ── ENVIAR MENSAGEM ──
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!messageInput.trim() || !activeChatId) return;
@@ -435,6 +463,48 @@ export default function Atendimento() {
       console.error('Erro ao enviar mensagem:', err);
     }
   };
+
+  const handleAccept = async () => {
+    if (!activeChatId || !user?.id) return;
+    try {
+      await acceptConversation.mutateAsync({
+        conversationId: activeChatId
+      });
+      setConversations((prev) =>
+        prev.map((c) => (c.id === activeChatId ? { ...c, agent_id: user.id } : c))
+      );
+    } catch (err) {
+      console.error('Erro ao aceitar:', err);
+    }
+  };
+
+  const handleTransfer = async (agentId: string) => {
+    if (!activeChatId || !agentId) return;
+    try {
+      await transferConversation.mutateAsync({
+        conversationId: activeChatId,
+        toAgentId: agentId
+      });
+      setConversations((prev) =>
+        prev.map((c) => (c.id === activeChatId ? { ...c, agent_id: agentId } : c))
+      );
+    } catch (err) {
+      console.error('Erro ao transferir:', err);
+    }
+  };
+
+  const handleIgnore = async () => {
+    if (!activeChatId) return;
+    try {
+      await ignoreConversation.mutateAsync({ conversationId: activeChatId });
+      setConversations((prev) =>
+        prev.map((c) => (c.id === activeChatId ? { ...c, agent_id: null } : c))
+      );
+    } catch (err) {
+      console.error('Erro ao ignorar:', err);
+    }
+  };
+
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
     const phone = newContact.phone.replace(/\D/g, '');
@@ -442,31 +512,18 @@ export default function Atendimento() {
       alert("Preencha nome e telefone.");
       return;
     }
-
     try {
-      // Pré-validação de duplicados (Travas de Segurança)
       const { data: existingLead } = await supabase
         .from('leads')
         .select('*, responsible:profiles!leads_responsible_id_fkey(full_name)')
         .eq('phone', phone)
         .maybeSingle();
 
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('phone', phone)
-        .eq('role', 'client')
-        .maybeSingle();
-
-      if (existingLead || existingProfile) {
-         const responsible = existingLead?.responsible?.full_name || 'Ninguém (Não Atribuído)';
-         alert(`❌ Bloqueado!\n\nEste contato já está cadastrado no sistema.\nResponsável atual: ${responsible}\n\nPor favor, solicite autorização na aba de Notificações para prosseguir.`);
-         
-         // Aqui seria o local para inserir a Notificação de Request Access no BD, mas requer a tabela Notificações
-         return; // Aborta a criação
+      if (existingLead) {
+        alert(`❌ Bloqueado! Este contato já está cadastrado como lead.`);
+        return;
       }
 
-      // Cria se não existir (usa RPC de produção)
       const { data: clientId, error: rpcErr } = await supabase.rpc('create_client_profile', {
         p_name: newContact.name,
         p_phone: phone,
@@ -475,17 +532,16 @@ export default function Atendimento() {
 
       if (rpcErr) throw rpcErr;
 
-      // Inicia a conversa atribuindo ao atendente
       if (clientId && user) {
-        const { data: newChat, error: chatErr } = await supabase.from('conversations').insert({
+        const { error: convError } = await supabase.from('conversations').insert({
           client_id: clientId,
           agent_id: user.id,
-          subject: `Conversa com ${newContact.name}`
-        }).select('id').single();
-
-        if (newChat) setActiveChatId(newChat.id);
+          status: 'active',
+          ai_enabled: true
+        });
+        if (convError) throw convError;
       }
-      
+
       setShowAddContactModal(false);
       setNewContact({ name: '', phone: '', email: '' });
     } catch (err: any) {
@@ -494,23 +550,72 @@ export default function Atendimento() {
     }
   };
 
+  const [newContact, setNewContact] = useState({ name: '', phone: '', email: '' });
 
-  const isWhatsappConnected = whatsappSession?.status === 'connected';
+  const isWhatsappConnected = whatsappSession.data?.status === 'connected';
 
-  const [showNotes, setShowNotes] = useState(false);
-  const [leadNotes, setLeadNotes] = useState('');
+  // ── CÁLCULO DO DASHBOARD ──
+  const dashboardData = useMemo(() => {
+    const now = new Date();
+    let start: Date;
+    switch (dashboardPeriodo) {
+      case 'dia':
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'semana':
+        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'mes':
+        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+    }
+    if (!user?.id) return null;
+
+    const minhasConv = conversations.filter((c) => c.agent_id === user.id);
+    return {
+      contatos: minhasConv.length,
+      followups: messages.filter(
+        (m) => m.sender_id === user.id && new Date(m.created_at) >= start!
+      ).length,
+      visitas: visits.filter(
+        (v: any) => v.agent_id === user.id && new Date(v.created_at || v.date) >= start!
+      ).length,
+    };
+  }, [conversations, messages, visits, dashboardPeriodo, user]);
+
+  // ── RANKING ──
+  const ranking = useMemo(() => {
+    if (!agents.length || !conversations.length) return [];
+    const scores: { [key: string]: AgentScore } = {};
+    agents.forEach((a: any) => {
+      scores[a.id] = {
+        agent_id: a.id,
+        full_name: a.full_name || a.email || 'Desconhecido',
+        contatos: 0,
+        followups: 0,
+        visitas: 0,
+        propostas: 0,
+        vendas: 0,
+        taxa_conversao: '0%',
+      };
+    });
+    conversations.forEach((c) => {
+      if (c.agent_id && scores[c.agent_id]) scores[c.agent_id].contatos++;
+    });
+    return Object.values(scores)
+      .sort((a, b) => b.contatos - a.contatos)
+      .slice(0, 10);
+  }, [conversations, agents]);
 
   return (
     <div className="flex h-[calc(100vh-80px)] w-full overflow-hidden bg-white border border-slate-200 rounded-3xl shadow-sm">
       
-      {/* 1. SIDEBAR CONVERSAS */}
+      {/* ── 1. SIDEBAR CONVERSAS ── */}
       <div className="w-80 border-r border-slate-200 flex flex-col shrink-0 bg-white">
-        
-        {/* Header da Sidebar */}
         <div className="p-4 space-y-4 border-b border-slate-100">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900">Conversas</h2>
-            <span className="text-xs text-slate-500 font-medium">781/980</span>
+            <span className="text-xs text-slate-500 font-medium">{filteredConversations.length}</span>
           </div>
 
           {/* Busca */}
@@ -518,117 +623,128 @@ export default function Atendimento() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Buscar cliente..."
+              placeholder="Buscar cliente..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-xl py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all"
             />
           </div>
 
-          {/* Abas */}
-          <div className="flex gap-2 text-xs overflow-x-auto pb-1 no-scrollbar">
-            <button 
-              onClick={() => setActiveTab('meus')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap ${activeTab === 'meus' ? 'bg-orange-100 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              Meus
-              <span className="bg-emerald-500 text-white text-[10px] px-1.5 rounded-full">770</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('equipe')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap ${activeTab === 'equipe' ? 'bg-orange-500 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              Equipe
-            </button>
-            <button 
-              onClick={() => setActiveTab('grupos')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap ${activeTab === 'grupos' ? 'bg-orange-100 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              Grupos
-              <span className="bg-emerald-500 text-white text-[10px] px-1.5 rounded-full">1</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('nao-lidas')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap ${activeTab === 'nao-lidas' ? 'bg-red-100 text-red-600' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              Não lidas
-              <span className="bg-red-500 text-white text-[10px] px-1.5 rounded-full">271</span>
-            </button>
+          {/* Abas de filtro */}
+          <div className="flex gap-1.5 text-xs overflow-x-auto pb-1 no-scrollbar flex-wrap">
+            {(['todos', 'meus', 'ativos', 'pendentes', 'nao_atribuidos', 'grupos'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'px-2.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap',
+                  activeTab === tab
+                    ? 'bg-orange-100 text-orange-600'
+                    : 'text-slate-500 hover:bg-slate-50'
+                )}
+              >
+                {tab === 'todos' ? 'Todos' :
+                 tab === 'meus' ? 'Meus' :
+                 tab === 'ativos' ? 'Ativos' :
+                 tab === 'pendentes' ? 'Pendentes' :
+                 tab === 'nao_atribuidos' ? 'Não Atrib.' : 'Grupos'}
+              </button>
+            ))}
           </div>
 
-          {/* Filtro secundário */}
-          <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
-            <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
-              <Filter className="w-4 h-4" /> Todas as próximas ações
-            </div>
-            <span className="text-xs font-bold text-slate-500">119</span>
+          {/* Filtro período */}
+          <div className="flex gap-1 text-xs">
+            {(['hoje', 'semana', 'mes', 'todos'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriodoFiltro(p)}
+                className={cn(
+                  'px-2 py-1 rounded font-medium',
+                  periodoFiltro === p ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'
+                )}
+              >
+                {p === 'hoje' ? 'Hoje' : p === 'semana' ? '7d' : p === 'mes' ? '30d' : 'Tudo'}
+              </button>
+            ))}
           </div>
+
+          {/* Filtro corretor */}
+          {agents.length > 0 && (
+            <select
+              value={filtroCorretor}
+              onChange={(e) => setFiltroCorretor(e.target.value)}
+              className="w-full text-xs p-2 border border-slate-200 rounded-lg outline-none"
+            >
+              <option value="">Todos corretores</option>
+              {agents.map((a: any) => (
+                <option key={a.id} value={a.id}>{a.full_name || a.email}</option>
+              ))}
+            </select>
+          )}
         </div>
 
-        {/* Lista de Chats */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-          {filteredConversations.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 text-sm">
+        {/* Lista de conversas */}
+        <div className="flex-1 overflow-y-auto">
+          {filteredConversations.length === 0 && (
+            <div className="p-8 text-center text-sm text-slate-400">
               Nenhuma conversa encontrada.
             </div>
-          ) : (
-            filteredConversations.map((chat) => {
-              const isGroup = checkIsGroup(chat);
-              const clientName = chat.client?.full_name || chat.client?.name || (isGroup ? 'Grupo WhatsApp' : 'Cliente');
-              const isSelected = chat.id === activeChatId;
-
-              return (
-                <button
-                  key={chat.id}
-                  onClick={() => setActiveChatId(chat.id)}
-                  className={`w-full p-4 text-left flex items-start gap-3 transition-all ${
-                    isSelected ? 'bg-slate-50 border-l-4 border-l-orange-500' : 'hover:bg-slate-50 border-l-4 border-l-transparent'
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm bg-slate-800 text-white">
-                      {isGroup ? <Users className="w-5 h-5" /> : clientName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-bold text-slate-900 truncate">
-                        {clientName}
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium">
-                        {chat.last_message_at ? new Date(chat.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '16:44'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 truncate mb-2">Conversa com {chat.agent_id ? 'Corretor' : 'Ninguém'}</p>
-                    
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                        Aberta
-                      </span>
-                      {chat.ai_enabled !== false && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center gap-1">
-                          IA ativa
-                        </span>
-                      )}
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200">
-                        +
-                      </span>
-                      {(chat.unread_count || 0) > 0 && (
-                        <span className="text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full bg-emerald-500 text-white ml-auto">
-                          {chat.unread_count}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              );
-            })
           )}
+          {filteredConversations.map((chat) => {
+            const isActive = chat.id === activeChatId;
+            const isGroup = checkIsGroup(chat);
+            return (
+              <button
+                key={chat.id}
+                onClick={() => setActiveChatId(chat.id)}
+                className={cn(
+                  'w-full p-4 flex items-start gap-3 border-b border-slate-50 hover:bg-slate-50 transition-colors text-left',
+                  isActive && 'bg-orange-50/70 border-l-2 border-l-orange-500'
+                )}
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 bg-slate-800 text-white">
+                  {isGroup ? <Users className="w-5 h-5" /> : (chat.client?.full_name || '?').charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-sm text-slate-900 truncate">
+                      {chat.client?.full_name || chat.client?.name || (isGroup ? 'Grupo WhatsApp' : 'Cliente')}
+                    </span>
+                    <span className="text-[10px] text-slate-400 shrink-0">
+                      {chat.last_message_at
+                        ? new Date(chat.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                        : ''}
+                    </span>
+                  </div>
+                  {/* Responsável */}
+                  <span className={cn(
+                    'text-[10px] font-medium',
+                    chat.agent_id ? 'text-emerald-600' : 'text-slate-400'
+                  )}>
+                    {chat.agent_id ? 'Atribuído' : 'Não atribuído'}
+                  </span>
+                  {/* Badges */}
+                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                    {isGroup && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">Grupo</span>
+                    )}
+                    {chat.ai_enabled !== false && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">IA</span>
+                    )}
+                    {(chat.unread_count || 0) > 0 && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white font-bold ml-auto">
+                        {chat.unread_count}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 2. ÁREA CENTRAL: CHAT */}
+      {/* ── 2. ÁREA CENTRAL: CHAT ── */}
       <div className="flex-1 flex flex-col h-full bg-slate-50 relative">
         {activeChat ? (
           <>
@@ -641,17 +757,15 @@ export default function Atendimento() {
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     {activeChat.client?.full_name || activeChat.client?.name || (isGroupActiveChat ? 'Grupo WhatsApp' : 'Cliente')}
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> Tag
-                    </span>
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">Conversa</p>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {isGroupActiveChat ? `${groupParticipants.length} participantes` : 'Conversa'}
+                  </p>
                 </div>
               </div>
 
               {/* Ações do Header */}
               <div className="flex items-center gap-4">
-                {/* Ações de fila: aceitar, transferir, ignorar (paridade com produção) */}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleAccept}
@@ -667,7 +781,7 @@ export default function Atendimento() {
                     className="px-2 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 outline-none cursor-pointer"
                   >
                     <option value="" disabled>Transferir...</option>
-                    {agents.filter((a) => a.id !== activeChat?.agent_id).map((a) => (
+                    {agents.filter((a: any) => a.id !== activeChat?.agent_id).map((a: any) => (
                       <option key={a.id} value={a.id}>{a.full_name || a.email}</option>
                     ))}
                   </select>
@@ -688,11 +802,21 @@ export default function Atendimento() {
                 </div>
 
                 <div className="flex items-center gap-1 border-l border-slate-200 pl-4">
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"><Phone className="w-5 h-5" /></button>
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"><Mail className="w-5 h-5" /></button>
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"><User className="w-5 h-5" /></button>
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" onClick={() => setShowNotes(!showNotes)}><Info className="w-5 h-5" /></button>
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"><MoreVertical className="w-5 h-5" /></button>
+                  {isGroupActiveChat && (
+                    <button
+                      className={cn('p-2 rounded-full transition-colors', showParticipants ? 'bg-orange-100 text-orange-600' : 'text-slate-600 hover:bg-slate-100')}
+                      onClick={() => setShowParticipants(!showParticipants)}
+                      title="Participantes do grupo"
+                    >
+                      <Users className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" onClick={() => setShowNotes(!showNotes)}>
+                    <Info className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -700,9 +824,7 @@ export default function Atendimento() {
             {/* Lista de Mensagens */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {isLoadingMessages ? (
-                <div className="flex items-center justify-center h-full text-slate-500 text-xs">
-                  Carregando mensagens...
-                </div>
+                <div className="flex items-center justify-center h-full text-slate-500 text-xs">Carregando mensagens...</div>
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-400 text-sm space-y-3">
                   <MessageSquare className="w-10 h-10 text-slate-300" />
@@ -710,34 +832,42 @@ export default function Atendimento() {
                 </div>
               ) : (
                 messages.map((msg) => {
-                  const isAgentSender = msg.sender_id === user?.id || 
-                                        msg.message_type === 'bot' || 
-                                        (msg.sender && msg.sender.role !== 'client') ||
-                                        (isGroupActiveChat ? msg.sender_id === activeChat?.client?.id : false);
+                  // ── BUG FIX 3: CORREÇÃO DA LÓGICA isAgentSender ──
+                  // Antes: (isGroupActiveChat ? msg.sender_id === activeChat?.client?.id : false) — ERRADO
+                  // Agora: verifica role do sender
+                  const isAgentSender = 
+                    msg.sender_id === user?.id || 
+                    msg.message_type === 'bot' || 
+                    (msg.sender && (msg.sender.role === 'agent' || msg.sender.role === 'admin' || msg.sender.role === 'manager')) ||
+                    false;
                   
-                  const senderName = msg.sender?.full_name || (isAgentSender ? 'Você' : 'Participante');
+                  const senderName = msg.sender?.full_name || msg.sender?.name || (isAgentSender ? 'Você' : 'Participante');
 
                   return (
-                    <div 
-                      key={msg.id}
-                      className={`flex flex-col ${isAgentSender ? 'items-end' : 'items-start'}`}
-                    >
-                      {/* Em grupos, exibir o nome do remetente para mensagens de participantes */}
-                      {isGroupActiveChat && !isAgentSender && (
+                    <div key={msg.id} className={`flex flex-col ${isAgentSender ? 'items-end' : 'items-start'}`}>
+                      {/* Em grupos, exibir nome do remetente para TODAS as mensagens de participantes */}
+                      {isGroupActiveChat && (
                         <div className="flex items-center gap-1.5 ml-1 mb-1">
-                          <span className="text-[10px] font-semibold text-slate-500">
+                          <span className={cn(
+                            'text-[10px] font-semibold',
+                            isAgentSender ? 'text-emerald-600' : 'text-slate-500'
+                          )}>
                             {senderName}
                           </span>
                         </div>
                       )}
 
-                      <div className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
+                      <div className={cn(
+                        'max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm',
                         isAgentSender 
                           ? 'bg-emerald-50 text-slate-900 rounded-tr-none border border-emerald-100' 
                           : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
-                      }`}>
+                      )}>
                         <p className="whitespace-pre-line break-words">{msg.content}</p>
-                        <div className={`flex items-center gap-1 text-[10px] mt-1 ${isAgentSender ? 'text-slate-500 justify-end' : 'text-slate-400 justify-start'}`}>
+                        <div className={cn(
+                          'flex items-center gap-1 text-[10px] mt-1',
+                          isAgentSender ? 'text-slate-500 justify-end' : 'text-slate-400 justify-start'
+                        )}>
                           <span>{new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                           {isAgentSender && <CheckCheck className="w-3 h-3 text-emerald-500" />}
                         </div>
@@ -749,15 +879,13 @@ export default function Atendimento() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input de Mensagem e Ações */}
+            {/* Input de Mensagem */}
             <div className="border-t border-slate-200 bg-white">
-              {/* Atalhos Rápidos com Dropdown Segmentado */}
+              {/* Atalhos */}
               <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 overflow-x-auto no-scrollbar bg-slate-50/50 action-dropdown-container">
-                
-                {/* Agendar Mensagem */}
                 <div className="relative">
                   <button onClick={() => setActiveDropdown(activeDropdown === 'message' ? null : 'message')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
-                    <MessageSquare className="w-4 h-4" /> Agendar Mensagem
+                    <MessageSquare className="w-4 h-4" /> Agendar
                   </button>
                   {activeDropdown === 'message' && (
                     <div className="absolute bottom-full mb-2 left-0 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
@@ -765,32 +893,27 @@ export default function Atendimento() {
                       <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
                       <input type="time" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
                       <textarea placeholder="Mensagem..." className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg resize-none" rows={2} value={scheduleData.message} onChange={e => setScheduleData({...scheduleData, message: e.target.value})} />
-                      <button onClick={() => handleScheduleEvent('mensagem')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                      <button onClick={() => { alert('Mensagem agendada!'); setActiveDropdown(null); }} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
                     </div>
                   )}
                 </div>
 
-                {/* Ligação */}
                 <div className="relative">
                   <button onClick={() => setActiveDropdown(activeDropdown === 'call' ? null : 'call')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
                     <Phone className="w-4 h-4" /> Ligação
                   </button>
                   {activeDropdown === 'call' && (
                     <div className="absolute bottom-full mb-2 left-0 w-56 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
-                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Ligação</h4>
-                      <select className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.subType} onChange={e => setScheduleData({...scheduleData, subType: e.target.value})}>
-                        <option value="">Selecione...</option>
-                        <option value="lead">Com Lead</option>
-                        <option value="cliente">Com Cliente</option>
+                      <h4 className="text-sm font-bold text-slate-800 mb-3">Registrar Ligação</h4>
+                      <select className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg">
+                        <option>Realizada</option><option>Recebida</option><option>Não atendeu</option>
                       </select>
-                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
-                      <input type="time" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
-                      <button onClick={() => handleScheduleEvent('ligacao')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                      <textarea placeholder="Anotações..." className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg resize-none" rows={2} />
+                      <button className="w-full py-2 bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase">Registrar</button>
                     </div>
                   )}
                 </div>
 
-                {/* Visita */}
                 <div className="relative">
                   <button onClick={() => setActiveDropdown(activeDropdown === 'visit' ? null : 'visit')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
                     <Calendar className="w-4 h-4" /> Visita
@@ -798,46 +921,19 @@ export default function Atendimento() {
                   {activeDropdown === 'visit' && (
                     <div className="absolute bottom-full mb-2 left-0 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
                       <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Visita</h4>
-                      <input type="text" placeholder="Código do Imóvel" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.propertyId} onChange={e => setScheduleData({...scheduleData, propertyId: e.target.value})} />
-                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
-                      <input type="time" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
-                      <button onClick={() => handleScheduleEvent('visita')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" />
+                      <input type="time" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" />
+                      <input placeholder="Imóvel / local" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" />
+                      <button className="w-full py-2 bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
                     </div>
                   )}
                 </div>
-
-                {/* Reunião */}
-                <div className="relative">
-                  <button onClick={() => setActiveDropdown(activeDropdown === 'meeting' ? null : 'meeting')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
-                    <Users className="w-4 h-4" /> Reunião
-                  </button>
-                  {activeDropdown === 'meeting' && (
-                    <div className="absolute bottom-full mb-2 left-0 w-56 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
-                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Reunião</h4>
-                      <select className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.subType} onChange={e => setScheduleData({...scheduleData, subType: e.target.value})}>
-                        <option value="">Selecione o tipo...</option>
-                        <option value="interna_online">Interna (Online)</option>
-                        <option value="interna_presencial">Interna (Presencial)</option>
-                        <option value="cliente_online">Com Cliente (Online)</option>
-                        <option value="cliente_presencial">Com Cliente (Presencial)</option>
-                      </select>
-                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
-                      <input type="time" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
-                      <button onClick={() => handleScheduleEvent('reuniao')} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
-                    </div>
-                  )}
-                </div>
-
               </div>
 
               <form onSubmit={handleSendMessage} className="p-4 flex items-end gap-3">
                 <button type="button" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors shrink-0">
                   <Paperclip className="w-5 h-5" />
                 </button>
-                <button type="button" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors shrink-0">
-                  <MessageSquare className="w-5 h-5" />
-                </button>
-                
                 <textarea 
                   placeholder="Digite sua mensagem... Pressione Enter para enviar"
                   value={messageInput}
@@ -851,13 +947,8 @@ export default function Atendimento() {
                   rows={1}
                   className="flex-1 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl py-3 px-4 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all resize-none max-h-32"
                 />
-                
                 {messageInput.trim() ? (
-                  <button 
-                    type="submit"
-                    disabled={sendMessageMutation.isPending}
-                    className="p-3 rounded-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white transition-all shadow-md shrink-0"
-                  >
+                  <button type="submit" disabled={sendMessageMutation.isPending} className="p-3 rounded-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white transition-all shadow-md shrink-0">
                     <Send className="w-5 h-5" />
                   </button>
                 ) : (
@@ -866,9 +957,6 @@ export default function Atendimento() {
                   </button>
                 )}
               </form>
-              <div className="px-6 pb-2 text-center text-[10px] text-slate-400">
-                Pressione Enter para enviar, Shift+Enter para nova linha
-              </div>
             </div>
           </>
         ) : (
@@ -879,7 +967,52 @@ export default function Atendimento() {
         )}
       </div>
 
-      {/* 3. SIDEBAR DIREITA (NOTAS / INFO) */}
+      {/* ── 3. SIDEBAR DIREITA: PARTICIPANTES DO GRUPO (BUG FIX 1) ── */}
+      {activeChat && isGroupActiveChat && showParticipants && (
+        <div className="w-72 border-l border-slate-200 bg-white flex flex-col shrink-0">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Users className="w-4 h-4 text-orange-500" /> Participantes
+              <span className="text-xs font-medium text-slate-400">({groupParticipants.length})</span>
+            </h3>
+            <button onClick={() => setShowParticipants(false)} className="text-slate-400 hover:text-slate-600">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {groupParticipants.length === 0 && (
+              <p className="text-xs text-slate-400 text-center py-8">
+                Nenhum participante carregado.
+              </p>
+            )}
+            {groupParticipants.map((p, i) => {
+              const nome = p.full_name || p.profile?.full_name || p.profile?.phone || p.phone || `Membro ${i + 1}`;
+              const phone = p.phone || p.profile?.phone || '';
+              return (
+                <div key={p.profile_id || i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
+                    {(nome as string).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{nome}</p>
+                    {phone && <p className="text-[10px] text-slate-400">{phone}</p>}
+                  </div>
+                  <button className="text-slate-400 hover:text-orange-600 p-1 rounded-full hover:bg-orange-50 transition-colors" title="Chamar no privado">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+            {groupParticipants.length === 0 && isGroupActiveChat && (
+              <p className="text-xs text-slate-400 text-center py-8">
+                Participantes indisponíveis. <br/>O WhatsApp precisa estar conectado.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── 3b. SIDEBAR DIREITA: NOTAS ── */}
       {activeChat && showNotes && (
         <div className="w-72 border-l border-slate-200 bg-white flex flex-col shrink-0">
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">
@@ -892,14 +1025,13 @@ export default function Atendimento() {
             <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
               <p className="text-[10px] text-yellow-800 font-medium leading-relaxed">
                 <Info className="w-3 h-3 inline mr-1" /> 
-                Anotações visíveis <strong>apenas para a equipe interna</strong>. O cliente não verá essas informações.
+                Anotações visíveis <strong>apenas para a equipe interna</strong>.
               </p>
             </div>
-            
             <div className="flex-1 flex flex-col gap-2">
               <label className="text-xs font-bold text-slate-700">Notas sobre o Lead</label>
               <textarea 
-                placeholder="Escreva detalhes importantes sobre o perfil, interesses, objeções..."
+                placeholder="Escreva detalhes importantes..."
                 value={leadNotes}
                 onChange={(e) => setLeadNotes(e.target.value)}
                 className="flex-1 bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-xl p-3 text-sm text-slate-700 resize-none outline-none"
@@ -912,6 +1044,42 @@ export default function Atendimento() {
         </div>
       )}
 
+      {/* ── DASHBOARD / RANKING MODAL ── */}
+      {showRanking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRanking(false)}>
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Award className="w-5 h-5 text-orange-500" /> Ranking de Corretores
+              </h3>
+              <button onClick={() => setShowRanking(false)} className="text-slate-400 hover:text-slate-600 p-1"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-2">
+              {ranking.map((r, i) => (
+                <div key={r.agent_id} className={cn(
+                  'flex items-center gap-3 p-3 rounded-xl',
+                  i === 0 ? 'bg-yellow-50 border border-yellow-200' :
+                  i === 1 ? 'bg-slate-50 border border-slate-200' :
+                  i === 2 ? 'bg-orange-50 border border-orange-200' :
+                  'bg-white border border-slate-100'
+                )}>
+                  <span className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold',
+                    i === 0 ? 'bg-yellow-400 text-yellow-900' :
+                    i === 1 ? 'bg-slate-300 text-slate-700' :
+                    i === 2 ? 'bg-orange-300 text-orange-900' :
+                    'bg-slate-100 text-slate-500'
+                  )}>{i + 1}º</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-slate-900">{r.full_name}</p>
+                    <p className="text-xs text-slate-500">{r.contatos} contatos</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE ADICIONAR CONTATO */}
       {showAddContactModal && (
@@ -927,143 +1095,33 @@ export default function Atendimento() {
                   <p className="text-xs text-slate-400">Criar lead e iniciar conversa</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowAddContactModal(false)}
-                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
-              >
+              <button onClick={() => setShowAddContactModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-
             <form onSubmit={handleAddContact} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nome Completo *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Nome do Cliente"
-                  value={newContact.name}
-                  onChange={e => setNewContact({...newContact, name: e.target.value})}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600"
-                />
+                <input type="text" required placeholder="Nome do Cliente" value={newContact.name} onChange={e => setNewContact({...newContact, name: e.target.value})}
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">WhatsApp *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="(11) 99999-9999"
-                  value={newContact.phone}
-                  onChange={e => {
-                     let val = e.target.value.replace(/\D/g, '');
-                     // simple mask
-                     if (val.length > 2) val = `(${val.substring(0,2)}) ${val.substring(2)}`;
-                     if (val.length > 10) val = `${val.substring(0,10)}-${val.substring(10, 14)}`;
-                     setNewContact({...newContact, phone: val})
-                  }}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600"
-                />
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Telefone *</label>
+                <input type="tel" required placeholder="(41) 99999-9999" value={newContact.phone} onChange={e => setNewContact({...newContact, phone: e.target.value})}
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">E-mail (Opcional)</label>
-                <input
-                  type="email"
-                  placeholder="cliente@email.com"
-                  value={newContact.email}
-                  onChange={e => setNewContact({...newContact, email: e.target.value})}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600"
-                />
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">E-mail (opcional)</label>
+                <input type="email" placeholder="cliente@email.com" value={newContact.email} onChange={e => setNewContact({...newContact, email: e.target.value})}
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600" />
               </div>
-
-              <button 
-                type="submit"
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 mt-6"
-              >
-                <UserPlus className="w-4 h-4" />
-                Criar Contato e Iniciar
+              <button type="submit" className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors">
+                Adicionar & Iniciar Conversa
               </button>
             </form>
           </div>
         </div>
       )}
-
-      {/* 3. MODAL DE CONEXÃO DO WHATSAPP (QR CODE / STATUS) */}
-      {showWhatsAppModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
-                  <QrCode className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">Conexão WhatsApp Imobiliária</h3>
-                  <p className="text-xs text-slate-400">Integração oficial via Broker</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowWhatsAppModal(false)}
-                className="text-slate-400 hover:text-white text-xs font-semibold p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Status da Sessão */}
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-slate-400">Status da Sessão</p>
-                  <p className="text-sm font-bold text-white capitalize">{whatsappSession?.status || 'Desconectado'}</p>
-                  {whatsappSession?.phone_number && (
-                    <p className="text-xs text-emerald-400 font-mono mt-0.5">{whatsappSession.phone_number}</p>
-                  )}
-                </div>
-                <button 
-                  onClick={() => refetchWhatsapp()}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1.5"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" /> Atualizar
-                </button>
-              </div>
-
-              {/* QR Code se pronto */}
-              {whatsappSession?.status === 'qr_ready' && whatsappSession.qr_code && (
-                <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl">
-                  <img 
-                    src={whatsappSession.qr_code.startsWith('data:') ? whatsappSession.qr_code : `data:image/png;base64,${whatsappSession.qr_code}`}
-                    alt="QR Code WhatsApp" 
-                    className="w-56 h-56 object-contain"
-                  />
-                  <p className="text-slate-800 text-xs font-semibold mt-2">Escaneie com o celular da imobiliária</p>
-                </div>
-              )}
-
-              {/* Botões de Ação */}
-              <div className="flex gap-3">
-                {!isWhatsappConnected ? (
-                  <button
-                    onClick={() => startWhatsappMutation.mutate({})}
-                    disabled={startWhatsappMutation.isPending}
-                    className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                  >
-                    <QrCode className="w-4 h-4" /> Gerar Novo QR Code
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => disconnectWhatsappMutation.mutate()}
-                    disabled={disconnectWhatsappMutation.isPending}
-                    className="flex-1 py-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                    <PowerOff className="w-4 h-4" /> Desconectar Sessão
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

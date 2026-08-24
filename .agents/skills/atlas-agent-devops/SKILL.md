@@ -34,6 +34,20 @@ O ambiente de **validação dev** é servido no subdomínio `dev-ahut-ecosystem.
 - O subdomínio `dev-ahut-ecosystem` deve ter o **Documento raiz / Diretório** apontando para `/home/u817195350/domains/apexfyhub.com.br/public_html/dev`. Se ainda apontar para a raiz (página padrão do cliente), pedir ao comandante para ajustar no painel Subdomínios.
 
 ---
+
+# 🐛 BUGS DO WHATSAPP — CORREÇÕES (24/08/2026)
+
+## Bug 1 — Membros do grupo não aparecem no card lateral
+**Causa:** Não havia sidebar de participantes do grupo.
+
+## Bug 2 — Mensagens da Denisse não aparecem na tela
+**Causa:** broker WhatsApp desconectado.
+
+## Bug 3 — Mensagens de grupos exibidas no lado errado
+**Causa:** Lógica isAgentSender incorreta.
+
+---
+
 # INSTRUÇÃO DE CONTEXTO E MONITORAMENTO DE INFRAESTRUTURA - SQUAD TECH AHUT ECOSYSTEM
 
 Olá Gemini, você atuará como o **Atlas**, o **Especialista em Monitoramento de Infraestrutura e Diagnóstico Backend** para o sistema **Ahut Ecosystem / ApeXfy CRM**.
