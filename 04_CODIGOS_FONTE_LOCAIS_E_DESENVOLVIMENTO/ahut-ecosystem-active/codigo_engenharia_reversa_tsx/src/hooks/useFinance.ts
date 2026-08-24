@@ -1,15 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
 
 /**
  * Hook useFinance
- * Fonte de dados de finanças (fluxo de caixa, recebíveis, comissões e VGV).
- *
- * NOTA: este módulo ainda não possui tabela confirmada no Supabase. Para que a
- * tela seja auditável e o contrato de dados fique pronto para a próxima etapa
- * (conectar ao banco), os dados são carregados VIA useQuery imitando uma chamada
- * de API (função `fetchFinanceData` abaixo). Para conectar ao banco, basta
- * trocar o corpo de `fetchFinanceData` por uma query ao Supabase mantendo a
- * mesma forma de retorno (FinanceSnapshot).
+ * Conectado ao Supabase — tabela financial_transactions.
  */
 
 export interface Transaction {
@@ -19,6 +13,10 @@ export interface Transaction {
   value: number;
   date: string;
   status: 'received' | 'paid' | 'pending' | 'expected';
+  category?: string;
+  broker_id?: string;
+  broker_name?: string;
+  created_at?: string;
 }
 
 /** Total de comissões do período */
@@ -41,7 +39,7 @@ export interface RepassesSummary {
 export interface RecebiveisSummary {
   total: number;
   received: number;
-  outstanding: number; // a vencer / em aberto
+  outstanding: number;
   count: number;
 }
 
@@ -57,9 +55,9 @@ export interface CashFlowPeriod {
   receitaTotal: number;
   despesasTotal: number;
   saldoPrevisto: number;
-  deltaReceita: number; // % variação mês
-  deltaDespesa: number; // % variação mês
-  deltaSaldo: number;   // % variação saldo
+  deltaReceita: number;
+  deltaDespesa: number;
+  deltaSaldo: number;
 }
 
 /** Contrato/forma completa retornada pelo hook */
@@ -72,72 +70,209 @@ export interface FinanceSnapshot {
   vgv: VGVSummary;
 }
 
-/**
- * Função que "busca" os dados. AQUI: dados mock estruturados, mas servida via
- * useQuery para que a UI reaja a estado de carregamento/erro e o contrato fique
- * pronto para substituição por uma chamada real ao Supabase.
- */
-async function fetchFinanceData(): Promise<FinanceSnapshot> {
-  // Simula latência de rede para reproduzir o comportamento de uma API real.
-  await new Promise((resolve) => setTimeout(resolve, 350));
+export interface FinanceFilters {
+  period?: 'month' | 'quarter' | 'year';
+  type?: 'income' | 'expense' | 'commission' | 'all';
+  broker_id?: string;
+}
 
-  const transactions: Transaction[] = [
-    { id: 'trx-1', description: 'Comissão Venda CTR-15243', type: 'income', value: 45000, date: '2023-10-24', status: 'received' },
-    { id: 'trx-2', description: 'Marketing Digital - Outubro', type: 'expense', value: 5000, date: '2023-10-22', status: 'paid' },
-    { id: 'trx-3', description: 'Aluguel Escritório', type: 'expense', value: 12000, date: '2023-10-20', status: 'paid' },
-    { id: 'trx-4', description: 'Comissão Locação CTR-88742', type: 'income', value: 2500, date: '2023-10-18', status: 'received' },
-    { id: 'trx-5', description: 'Comissão Venda CTR-15811', type: 'income', value: 67200, date: '2023-10-15', status: 'pending' },
-    { id: 'trx-6', description: 'Repasse Corretor Parceiro - CTR-15243', type: 'expense', value: 9000, date: '2023-10-12', status: 'paid' },
-    { id: 'trx-7', description: 'Comissão Venda CTR-16002', type: 'income', value: 9800, date: '2023-10-08', status: 'expected' },
-    { id: 'trx-8', description: 'Software e Ferramentas', type: 'expense', value: 2300, date: '2023-10-05', status: 'paid' },
-  ];
+/**
+ * Busca transações financeiras do Supabase com filtros opcionais
+ */
+async function fetchTransactions(filters?: FinanceFilters): Promise<Transaction[]> {
+  let query = supabase
+    .from('financial_transactions')
+    .select('*');
+
+  // Apply filters
+  if (filters?.type && filters.type !== 'all') {
+    if (filters.type === 'commission') {
+      query = query.or('category.eq.comissao,category.eq.comissão');
+    } else {
+      query = query.eq('type', filters.type);
+    }
+  }
+
+  if (filters?.broker_id) {
+    query = query.eq('broker_id', filters.broker_id);
+  }
+
+  // Period filter
+  if (filters?.period) {
+    const now = new Date();
+    let startDate: Date;
+    switch (filters.period) {
+      case 'quarter':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+        break;
+      case 'month':
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+    }
+    query = query.gte('date', startDate.toISOString().split('T')[0]);
+  }
+
+  const { data, error } = await query
+    .order('date', { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.warn('[useFinance] Erro ao buscar transações:', error.message);
+    return [];
+  }
+
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    description: row.description || 'Transação',
+    type: row.type || 'income',
+    value: row.value || 0,
+    date: row.date || row.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+    status: row.status || 'pending',
+    category: row.category,
+    broker_id: row.broker_id,
+    broker_name: row.broker_name,
+    created_at: row.created_at,
+  }));
+}
+
+/**
+ * Busca dados financeiros do Supabase
+ */
+async function fetchFinanceData(filters?: FinanceFilters): Promise<FinanceSnapshot> {
+  const transactions = await fetchTransactions(filters);
+
+  // Calculate cashflow from transactions
+  const receitaTotal = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.value, 0);
+  const despesasTotal = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.value, 0);
+  const saldoPrevisto = receitaTotal - despesasTotal;
+
+  // Commissions summary
+  const comissoesTotal = transactions
+    .filter(t => t.type === 'income' && (t.category?.toLowerCase().includes('comiss') || !t.category))
+    .reduce((sum, t) => sum + t.value, 0);
+  const comissoesReceived = transactions
+    .filter(t => t.type === 'income' && (t.status === 'received') && (t.category?.toLowerCase().includes('comiss') || !t.category))
+    .reduce((sum, t) => sum + t.value, 0);
+  const comissoesExpected = transactions
+    .filter(t => t.type === 'income' && (t.status === 'pending' || t.status === 'expected') && (t.category?.toLowerCase().includes('comiss') || !t.category))
+    .reduce((sum, t) => sum + t.value, 0);
+  const comissaoCount = transactions
+    .filter(t => t.type === 'income' && (t.category?.toLowerCase().includes('comiss') || !t.category))
+    .length;
+
+  // Repasses summary
+  const repassesTotal = transactions
+    .filter(t => t.type === 'expense' && t.category?.toLowerCase().includes('repasse'))
+    .reduce((sum, t) => sum + t.value, 0);
+  const repassesToPay = transactions
+    .filter(t => t.type === 'expense' && t.category?.toLowerCase().includes('repasse') && t.status === 'pending')
+    .reduce((sum, t) => sum + t.value, 0);
+  const repassesPaid = transactions
+    .filter(t => t.type === 'expense' && t.category?.toLowerCase().includes('repasse') && t.status === 'paid')
+    .reduce((sum, t) => sum + t.value, 0);
+  const repasseCount = transactions
+    .filter(t => t.type === 'expense' && t.category?.toLowerCase().includes('repasse'))
+    .length;
+
+  // Recebíveis
+  const recebiveisTotal = transactions
+    .filter(t => t.type === 'income' && t.status !== 'received')
+    .reduce((sum, t) => sum + t.value, 0);
+  const recebiveisReceived = transactions
+    .filter(t => t.type === 'income' && t.status === 'received')
+    .reduce((sum, t) => sum + t.value, 0);
+  const recebiveisOutstanding = transactions
+    .filter(t => t.type === 'income' && (t.status === 'pending' || t.status === 'expected'))
+    .reduce((sum, t) => sum + t.value, 0);
+
+  // VGV by month
+  const monthMap = new Map<string, number>();
+  transactions
+    .filter(t => t.type === 'income')
+    .forEach(t => {
+      const month = t.date ? t.date.substring(0, 7) : 'unknown';
+      monthMap.set(month, (monthMap.get(month) || 0) + t.value);
+    });
+  const byMonth = Array.from(monthMap.entries())
+    .map(([m, v]) => ({
+      month: new Date(m + '-01').toLocaleDateString('pt-BR', { month: 'short' }),
+      value: v,
+    }))
+    .slice(-6);
 
   const cashflow: CashFlowPeriod = {
-    receitaTotal: 124500,
-    despesasTotal: 32800,
-    saldoPrevisto: 91700,
-    deltaReceita: 12,
-    deltaDespesa: -5,
-    deltaSaldo: 8,
+    receitaTotal,
+    despesasTotal,
+    saldoPrevisto,
+    deltaReceita: 0,
+    deltaDespesa: 0,
+    deltaSaldo: 0,
   };
 
   const comissoes: CommissionsSummary = {
-    total: 124500,
-    received: 47500,
-    expected: 77000,
-    count: 4,
+    total: comissoesTotal,
+    received: comissoesReceived,
+    expected: comissoesExpected,
+    count: comissaoCount,
   };
 
   const repasses: RepassesSummary = {
-    total: 21300,
-    toPay: 12300,
-    paid: 9000,
-    count: 3,
+    total: repassesTotal,
+    toPay: repassesToPay,
+    paid: repassesPaid,
+    count: repasseCount,
   };
 
   const recebiveis: RecebiveisSummary = {
-    total: 77000,
-    received: 47500,
-    outstanding: 29500,
-    count: 5,
+    total: recebiveisTotal + recebiveisReceived,
+    received: recebiveisReceived,
+    outstanding: recebiveisOutstanding,
+    count: transactions.filter(t => t.type === 'income').length,
   };
 
   const vgv: VGVSummary = {
-    total: 124500,
-    count: 4,
-    byMonth: [
-      { month: 'Ago', value: 98000 },
-      { month: 'Set', value: 112000 },
-      { month: 'Out', value: 124500 },
-    ],
+    total: receitaTotal,
+    count: transactions.filter(t => t.type === 'income').length,
+    byMonth,
   };
 
   return { transactions, cashflow, comissoes, repasses, recebiveis, vgv };
 }
 
-export function useFinance() {
+export function useFinance(filters?: FinanceFilters) {
   return useQuery<FinanceSnapshot>({
-    queryKey: ['finance'],
-    queryFn: fetchFinanceData,
+    queryKey: ['finance', filters],
+    queryFn: () => fetchFinanceData(filters),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+/**
+ * Hook to fetch brokers/profiles for filter dropdown
+ */
+export function useFinanceBrokers() {
+  return useQuery<{ id: string; full_name: string }[]>({
+    queryKey: ['finance-brokers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('role', ['agent', 'admin', 'manager'])
+        .order('full_name');
+      if (error) {
+        console.warn('[useFinance] Erro ao buscar corretores:', error.message);
+        return [];
+      }
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 5,
   });
 }
