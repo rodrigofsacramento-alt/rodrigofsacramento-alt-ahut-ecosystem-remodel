@@ -118,15 +118,11 @@ export default function Gestao() {
     setDragOverCol(null);
   };
 
-  const deletarTarefa = (id: string) => {
+  const deletarTarefa = async (id: string) => {
     if (!confirm('Deseja realmente excluir esta tarefa?')) return;
-    // We delete by upserting with an empty id or... actually the hook doesn't support delete directly.
-    // We use supabase directly for deletion
-    import('../lib/supabase').then(({ supabase }) => {
-      supabase.from('gestao_tasks').delete().eq('id', id).then(() => {
-        window.location.reload();
-      });
-    });
+    const { supabase } = await import('../lib/supabase');
+    await supabase.from('gestao_tasks').delete().eq('id', id);
+    window.location.reload();
   };
 
   // Status column groups

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -8,16 +8,32 @@ import {
   Calendar,
   Filter,
   Download,
-  Loader2
+  Loader2,
+  Users,
+  RefreshCw
 } from 'lucide-react';
 import { formatCurrency, cn } from '../lib/utils';
-import { useFinance } from '../hooks/useFinance';
+import { useFinance, useFinanceBrokers, type FinanceFilters } from '../hooks/useFinance';
 
 export default function Finance() {
-  const { data, isLoading } = useFinance();
+  const [filters, setFilters] = useState<FinanceFilters>({
+    period: 'month',
+    type: 'all',
+    broker_id: undefined,
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  const { data, isLoading } = useFinance(filters);
+  const { data: brokers = [] } = useFinanceBrokers();
 
   const transactions = data?.transactions ?? [];
   const cashflow = data?.cashflow;
+
+  const periodLabel: Record<string, string> = {
+    month: 'Mês Atual',
+    quarter: 'Último Trimestre',
+    year: 'Último Ano',
+  };
 
   return (
     <div className="space-y-6">
@@ -27,16 +43,76 @@ export default function Finance() {
           <p className="text-slate-500">Controle de receitas, despesas e comissões.</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors"
+          >
+            <Filter className="w-4 h-4" />
+            Filtros
+          </button>
           <button className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
             <Download className="w-4 h-4" />
             Exportar
           </button>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
-            <DollarSign className="w-4 h-4" />
-            Nova Transação
-          </button>
         </div>
       </div>
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-600">Período</label>
+              <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+                {(['month', 'quarter', 'year'] as const).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setFilters({ ...filters, period: p })}
+                    className={cn(
+                      'px-3 py-1.5 rounded-md text-xs font-bold transition-colors',
+                      filters.period === p ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+                    )}
+                  >
+                    {periodLabel[p]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-600">Tipo</label>
+              <select
+                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                value={filters.type}
+                onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
+              >
+                <option value="all">Todos</option>
+                <option value="income">Receitas</option>
+                <option value="expense">Despesas</option>
+                <option value="commission">Comissões</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-600">Corretor</label>
+              <select
+                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                value={filters.broker_id || ''}
+                onChange={(e) => setFilters({ ...filters, broker_id: e.target.value || undefined })}
+              >
+                <option value="">Todos os Corretores</option>
+                {brokers.map((b: any) => (
+                  <option key={b.id} value={b.id}>{b.full_name}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => setFilters({ period: 'month', type: 'all', broker_id: undefined })}
+              className="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 flex items-center gap-1"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Limpar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -46,10 +122,10 @@ export default function Finance() {
               <TrendingUp className="w-6 h-6" />
             </div>
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-              {isLoading ? '...' : `${cashflow?.deltaReceita ?? 0 >= 0 ? '+' : ''}${cashflow?.deltaReceita ?? 0}%`}
+              {isLoading ? '...' : `${(cashflow?.deltaReceita ?? 0) >= 0 ? '+' : ''}${cashflow?.deltaReceita ?? 0}%`}
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-medium">Receita Total (Mês)</p>
+          <p className="text-sm text-slate-500 font-medium">Receita Total ({periodLabel[filters.period || 'month']})</p>
           <p className="text-2xl font-bold text-slate-900">
             {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.receitaTotal ?? 0)}
           </p>
@@ -60,10 +136,10 @@ export default function Finance() {
               <TrendingDown className="w-6 h-6" />
             </div>
             <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
-              {isLoading ? '...' : `${cashflow?.deltaDespesa ?? 0 >= 0 ? '+' : ''}${cashflow?.deltaDespesa ?? 0}%`}
+              {isLoading ? '...' : `${(cashflow?.deltaDespesa ?? 0) >= 0 ? '+' : ''}${cashflow?.deltaDespesa ?? 0}%`}
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-medium">Despesas Totais (Mês)</p>
+          <p className="text-sm text-slate-500 font-medium">Despesas Totais ({periodLabel[filters.period || 'month']})</p>
           <p className="text-2xl font-bold text-slate-900">
             {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.despesasTotal ?? 0)}
           </p>
@@ -74,7 +150,7 @@ export default function Finance() {
               <DollarSign className="w-6 h-6" />
             </div>
             <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
-              {isLoading ? '...' : `${cashflow?.deltaSaldo ?? 0 >= 0 ? '+' : ''}${cashflow?.deltaSaldo ?? 0}%`}
+              {isLoading ? '...' : `${(cashflow?.deltaSaldo ?? 0) >= 0 ? '+' : ''}${cashflow?.deltaSaldo ?? 0}%`}
             </span>
           </div>
           <p className="text-sm text-slate-500 font-medium">Saldo Previsto</p>
@@ -87,11 +163,13 @@ export default function Finance() {
       {/* Transactions Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-900">Transações Recentes</h3>
+          <h3 className="font-bold text-slate-900">
+            Transações Recentes
+            {transactions.length > 0 && (
+              <span className="text-sm font-normal text-slate-400 ml-2">({transactions.length})</span>
+            )}
+          </h3>
           <div className="flex gap-2">
-            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50">
-              <Filter className="w-4 h-4" />
-            </button>
             <button className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50">
               <Calendar className="w-4 h-4" />
             </button>
@@ -119,13 +197,20 @@ export default function Finance() {
               )}
               {!isLoading && transactions.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-400">Nenhuma transação encontrada.</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-400">Nenhuma transação encontrada para o período.</td>
                 </tr>
               )}
               {!isLoading && transactions.map((t) => (
                 <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-slate-900">{t.description}</span>
+                    <div>
+                      <span className="text-sm font-medium text-slate-900">{t.description}</span>
+                      {t.broker_name && (
+                        <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                          <Users className="w-3 h-3" /> {t.broker_name}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -151,7 +236,7 @@ export default function Finance() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-500">
-                    {new Date(t.date).toLocaleDateString('pt-BR')}
+                    {t.date ? new Date(t.date + (t.date.includes('-') ? '' : '')).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'}
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(
