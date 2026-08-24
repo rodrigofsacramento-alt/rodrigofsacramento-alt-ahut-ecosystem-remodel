@@ -37,6 +37,40 @@ export function useAgents() {
 
       if (error) throw error;
 
+      // ── FILTRO ANTI-DUPLICATA ──
+      // Remove nomes inválidos (símbolos, emojis, números soltos, vazios)
+      // e perfis que são claramente contatos de WhatsApp promovidos a agente
+      const validProfiles = (profiles || []).filter((p: any) => {
+        const name = (p.full_name || '').trim();
+        if (!name) return false;                              // vazio
+        if (name.length <= 1) return false;                    // só 1 caractere
+        if (/^[^a-zA-ZÀ-ÿ]/.test(name)) return false;         // começa com emoji/símbolo
+        if (/^\d+$/.test(name)) return false;                  // só números
+        if (/@estateia\.com$/.test(p.email || '')) return false; // email auto-gerado
+        if (name.toLowerCase() === 'novo usuário') return false;
+        if (name.toLowerCase() === 'user') return false;
+        return true;
+      });
+
+      // ── DEDUPLICAÇÃO ──
+      // Para duplicatas (mesmo email), mantém o registro com mais dados
+      const seen = new Map<string, any>();
+      validProfiles.forEach((p: any) => {
+        const key = p.email || p.phone || p.id;
+        const existing = seen.get(key);
+        if (!existing) {
+          seen.set(key, p);
+        } else {
+          // Mantém quem tem mais dados (nome mais completo)
+          const existingLength = (existing.full_name || '').length;
+          const newLength = (p.full_name || '').length;
+          if (newLength > existingLength) {
+            seen.set(key, p);
+          }
+        }
+      });
+      const dedupedProfiles = Array.from(seen.values());
+
       const { data: leads } = await supabase.from('leads').select('responsible_id');
       const { data: visits } = await supabase.from('visits').select('agent_id');
       const { data: proposals } = await supabase.from('proposals').select('agent_id');
@@ -55,7 +89,7 @@ export function useAgents() {
         if (p.agent_id) proposalsMap[p.agent_id] = (proposalsMap[p.agent_id] || 0) + 1;
       });
 
-      return (profiles || []).map((p: any) => ({
+      return (dedupedProfiles || []).map((p: any) => ({
         ...p,
         leads_count: leadsMap[p.id] || 0,
         visits_count: visitsMap[p.id] || 0,

@@ -677,7 +677,7 @@ export default function Atendimento() {
             >
               <option value="">Todos corretores</option>
               {agents.map((a: any) => (
-                <option key={a.id} value={a.id}>{a.full_name || a.email}</option>
+                <option key={a.id} value={a.id}>{a.full_name}{a.email ? ` — ${a.email}` : ''}</option>
               ))}
             </select>
           )}
@@ -782,7 +782,7 @@ export default function Atendimento() {
                   >
                     <option value="" disabled>Transferir...</option>
                     {agents.filter((a: any) => a.id !== activeChat?.agent_id).map((a: any) => (
-                      <option key={a.id} value={a.id}>{a.full_name || a.email}</option>
+                      <option key={a.id} value={a.id}>{a.full_name}{a.email ? ` — ${a.email}` : ''}</option>  
                     ))}
                   </select>
                   <button
