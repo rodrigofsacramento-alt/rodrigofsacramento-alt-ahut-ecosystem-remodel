@@ -454,13 +454,37 @@ export default function Atendimento() {
     setMessageInput('');
     setReplyToMessage(null);
 
+    // ── OPTIMISTIC UPDATE: mostra a mensagem IMEDIATAMENTE ──
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: tempId,
+      conversation_id: activeChatId,
+      sender_id: user?.id,
+      content,
+      message_type: 'text',
+      created_at: new Date().toISOString(),
+      status: 'sent',
+      sender: user ? { id: user.id, full_name: profile?.full_name, role: profile?.role } : undefined,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
     try {
-      await sendMessageMutation.mutateAsync({
+      const result = await sendMessageMutation.mutateAsync({
         conversationId: activeChatId,
         content: content
       });
+      // Substitui mensagem temporária pela real (se tiver ID de volta)
+      if (result?.id) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, id: result.id, status: 'delivered' as any } : m))
+        );
+      }
     } catch (err) {
       console.error('Erro ao enviar mensagem:', err);
+      // Marca como erro
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, status: 'error' as any } : m))
+      );
     }
   };
 
