@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Brain,
   Play,
@@ -61,6 +62,7 @@ const metricasNeuro = [
 
 export default function Treinamentos() {
   const [aulaAberta, setAulaAberta] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
@@ -109,7 +111,7 @@ export default function Treinamentos() {
                     {aula.status === 'disponivel' ? <Play className="w-5 h-5" /> : aula.status === 'em_producao' ? <Timer className="w-5 h-5" /> : <Lock className="w-4 h-4" />}
                   </div>
                   <button
-                    onClick={() => setAulaAberta(aulaAberta === aula.id ? null : aula.id)}
+                    onClick={() => aula.status === 'disponivel' ? navigate('/treinamentos/aula') : setAulaAberta(aulaAberta === aula.id ? null : aula.id)}
                     className="flex-1 text-left"
                   >
                     <div className="flex items-center justify-between">

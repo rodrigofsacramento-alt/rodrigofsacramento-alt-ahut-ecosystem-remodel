@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -49,6 +50,7 @@ export default function Gestao() {
   const { data: remoteTarefas, isLoading } = useGestaoTasks();
   const upsertGestaoTask = useUpsertGestaoTask();
   const tarefas = mergeGestaoTasks(tarefasIniciais, remoteTarefas);
+  const navigate = useNavigate();
 
   const [aba, setAba] = useState<'tarefas' | 'resumo'>('tarefas');
   const [showModal, setShowModal] = useState(false);
@@ -138,7 +140,7 @@ export default function Gestao() {
           {/* Kanban simples de tarefas da gestão */}
           <div className="grid lg:grid-cols-2 gap-4">
             {tarefas.map((t) => (
-              <div key={t.id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-all">
+              <div key={t.id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-all cursor-pointer" onClick={() => t.titulo.includes('Neurovendas') ? navigate('/treinamentos/aula') : null}>
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{origemLabel[t.origem]}</span>
                   <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', statusColor[t.status])}>

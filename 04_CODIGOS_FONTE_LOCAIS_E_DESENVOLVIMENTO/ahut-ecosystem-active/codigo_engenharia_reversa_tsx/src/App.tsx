@@ -15,6 +15,7 @@ import GestaoClientes from './components/GestaoClientes';
 import ComissoesComercial from './components/Comissoes';
 import Marketing from './components/Marketing';
 import Treinamentos from './components/Treinamentos';
+import TreinamentoAula from './components/TreinamentoAula';
 import Gestao from './components/Gestao';
 import Finance from './components/Finance';
 import Tecnologia from './pages/Tecnologia';
@@ -154,6 +155,14 @@ export default function App() {
             element={
               <AppLayout title="Treinamentos" subtitle="Curso de Neurovendas & capacitação da equipe.">
                 <Treinamentos />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/treinamentos/aula"
+            element={
+              <AppLayout title="Aula de Neurovendas" subtitle="Apresentação da aula — Christiane Racanelli.">
+                <TreinamentoAula />
               </AppLayout>
             }
           />
