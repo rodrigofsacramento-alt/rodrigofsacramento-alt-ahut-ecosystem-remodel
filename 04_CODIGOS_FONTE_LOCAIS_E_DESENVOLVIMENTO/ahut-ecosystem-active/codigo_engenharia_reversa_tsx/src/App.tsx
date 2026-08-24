@@ -35,17 +35,17 @@ const queryClient = new QueryClient({
   }
 });
 
-function AppLayout({ children, title, subtitle }: { children: React.ReactNode; title: string; subtitle?: string }) {
+function AppLayout({ children, title, subtitle, dark }: { children: React.ReactNode; title: string; subtitle?: string; dark?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   // 🔔 Hook global de lembretes com alertas sonoros — roda em background para todas as telas
   useReminders();
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+    <div className={`flex min-h-screen ${dark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header title={title} subtitle={subtitle} />
-        <main className="p-6 flex-1 overflow-auto">
+        <main className={`p-6 flex-1 overflow-auto ${dark ? 'bg-slate-950' : ''}`}>
           {children}
         </main>
       </div>
@@ -193,7 +193,7 @@ export default function App() {
           <Route
             path="/tecnologia"
             element={
-              <AppLayout title="Squad de Tecnologia & Chamados" subtitle="Kanban de acompanhamento e triagem inteligente com Agente de IA.">
+              <AppLayout title="Squad de Tecnologia & Chamados" subtitle="Kanban de acompanhamento e triagem inteligente com Agente de IA." dark>
                 <Tecnologia />
               </AppLayout>
             }

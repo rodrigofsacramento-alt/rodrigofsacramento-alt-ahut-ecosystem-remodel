@@ -6,6 +6,11 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+        display: ['Inter', 'sans-serif'],
+      },
       colors: {
         // Cores premium inspiradas na área médica (tons de azul-clínico, teal e ardósia)
         medical: {
