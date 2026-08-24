@@ -1,7 +1,24 @@
 # 📊 Painel de Controle Consolidado do Squad IA
 
-**Última Atualização:** 23/08/2026 (Ciclo 2 de Implementação — Jarvis Hermes)  
-**Ambiente Ativo:** Local Dev Server (`http://localhost:5173`) | Repo: `ahut-ecosystem-remodel`
+**Última Atualização:** 24/08/2026 (Ciclo 3 — Infraestrutura/Clone Supabase)  
+**Ambiente Ativo:** Local Dev Server (`http://localhost:5173`) | Repo: `ahut-ecosystem-remodel`  
+**Dev Subdomínio:** `https://dev-ahut-ecosystem.apexfyhub.com.br` ✅ Funcionando (SPA routing fix)  
+
+## ✅ PROGRESSO CICLO 3 — INFRA SUPABASE CLONE + APP ATUALIZADO
+- ✅ **Commit + Push no GitHub remodel** — 10 commits enviados (58c5415): cartões navegam, TreinamentoAula, 🚀 Skill ATLAS deploy dev, Gestão persistência, Neurovendas, Chamados/Tecnologia, refatoramento, RPCs Atendimento, Corretores/Agenda. [58c5415]
+- ✅ **PostgreSQL 15 instalado na VPS** (2.24.95.98) — serviço systemd, DB clone_prod.
+- ✅ **pg_dump da produção Supabase** (`ptochsyoyatsydfysacc`) — schema 15.113 linhas extraído com pg_dump 17.
+- ✅ **Schema restaurado no clone**: 65 tabelas, 58 funções, 53 triggers, 110 RLS policies, 4 extensões.
+- ✅ **Comparação clone vs dev Supabase** (`mizeybqkgvuulbatsvte`): 16 tabelas faltantes no dev foram **criadas**.
+- ✅ **Divergências de colunas corrigidas**: leads.tags (removido whatsapp_group), profiles.department_id + manager_id, whatsapp_sessions.last_event_at.
+- ✅ **Tabela `documents` removida** do dev (não existe em produção).
+- ✅ **Dev Supabase agora com 65 tabelas** (idêntico à produção em estrutura).
+- ✅ **RLS Policies incluídas** no clone (110 policies de produção).
+
+## 🔧 INFRA — Conexão com o clone na VPS
+- `postgresql://postgres:Dir@124!@$!@$@2.24.95.98:5432/clone_prod`
+- Acesso completo para testes livres — 0 risco ao cliente.
+- _Falta: extensions pg_cron, pg_graphql, pg_net, supabase_vault, vector (instalar se app usar)_
 
 ## ✅ PROGRESSO CICLO 2 — IMPLEMENTAÇÃO (páginas novas + conexão a dados)
 - ✅ **Jurídico** (`/juridico`) — criada, rota+nav, build ok. [commit c6e77ac/452d4a7]
