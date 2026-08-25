@@ -970,8 +970,8 @@ export default function Atendimento() {
                       e.preventDefault();
                       handleSendMessage();
                     }
-                    // Command+Space (Mac) / Ctrl+Space (Win/Linux) = quebra linha
-                    if (e.key === ' ' && (e.metaKey || e.ctrlKey)) {
+                    // Ctrl+Space (Mac / Win / Linux) = quebra linha
+                    if (e.key === ' ' && e.ctrlKey) {
                       e.preventDefault();
                       const target = e.target as HTMLTextAreaElement;
                       const start = target.selectionStart;
