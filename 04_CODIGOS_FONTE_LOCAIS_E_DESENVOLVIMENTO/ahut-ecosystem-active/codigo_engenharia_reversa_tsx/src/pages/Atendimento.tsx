@@ -857,12 +857,10 @@ export default function Atendimento() {
               ) : (
                 messages.map((msg) => {
                   // ── BUG FIX 3: CORREÇÃO DA LÓGICA isAgentSender ──
-                  // Antes: (isGroupActiveChat ? msg.sender_id === activeChat?.client?.id : false) — ERRADO
-                  // Agora: verifica role do sender
+                  // Só o usuário logado é "Atendimento" (lado direito)
                   const isAgentSender = 
                     msg.sender_id === user?.id || 
-                    msg.message_type === 'bot' || 
-                    (msg.sender && (msg.sender.role === 'agent' || msg.sender.role === 'admin' || msg.sender.role === 'manager')) ||
+                    (msg as any).from_me === true ||
                     false;
                   
                   const senderName = msg.sender?.full_name || msg.sender?.name || (isAgentSender ? 'Você' : 'Participante');
@@ -954,22 +952,27 @@ export default function Atendimento() {
                 </div>
               </div>
 
-              <form onSubmit={handleSendMessage} className="p-4 flex items-end gap-3">
+              <form onSubmit={handleSendMessage} className="p-4 flex items-end gap-3 w-full">
                 <button type="button" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors shrink-0">
                   <Paperclip className="w-5 h-5" />
                 </button>
                 <textarea 
-                  placeholder="Digite sua mensagem... Pressione Enter para enviar"
+                  placeholder="Digite sua mensagem..."
                   value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
+                  onChange={(e) => {
+                    setMessageInput(e.target.value);
+                    // Auto-ajusta altura vertical
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.ctrlKey) {
                       e.preventDefault();
                       handleSendMessage();
                     }
                   }}
                   rows={1}
-                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl py-3 px-4 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all resize-none max-h-32"
+                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl py-3 px-4 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all resize-none overflow-y-auto whitespace-pre-wrap min-h-[44px] max-h-[200px]"
                 />
                 {messageInput.trim() ? (
                   <button type="submit" disabled={sendMessageMutation.isPending} className="p-3 rounded-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white transition-all shadow-md shrink-0">
