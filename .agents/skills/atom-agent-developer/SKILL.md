@@ -120,3 +120,24 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
 - `.htaccess` com `CacheDisable public /` é ignorado pelo LiteSpeed da Hostinger
 - Única solução confiável: **hPanel → Avançado → Cache → Limpar Tudo**
 - Alternativa: criar `purge.php` com `header("X-LiteSpeed-Purge: *")` e acessar via URL"
+
+---
+
+### Fix de Áudio Expirado no Broker WhatsApp (25/08/2026)
+- **Problema:** Leads recebem "Este audio não está mais disponível" porque o timeout de 20s expirava antes do download+conversão+upload completar
+- **Arquivo alterado:** `/root/crmahut/backend-broker/src/session-manager.ts` (2143 linhas)
+- **Backup:** `session-manager_original_2508.ts`
+- **Alterações:**
+  1. Timeout 20.000 → 60.000 ms (linha 1787)
+  2. Retry 2x com 3s de intervalo no `Promise.race` caller (while loop envolta do `mediaData = await Promise.race(...)`)
+  3. Log detalhado: adicionar `remoteJid`, `messageType`, `attempt` no log de erro
+- **Compilação:** `cd /root/crmahut/backend-broker && npx tsc` (sem erros)
+- **Restart:** `pm2 restart 0` (whatsapp-broker)
+- **Verificação:** `pm2 show 0` confirma online; `grep -c "mediaDownloadAttempts" dist/session-manager.js` confirma o retry no compilado
+
+### Fluxo de Patches em Produção (regra de segurança)
+1. Faça backup do arquivo original ANTES de qualquer alteração
+2. Verifique qual bundle o `index.js` carrega — pode ser diferente do esperado (ex: `Atendimento-DcqAjCvf.js` em vez de `Atendimento-live-v10.js`)
+3. Compile (`npx tsc`) e verifique erros
+4. Restart apenas o processo afetado (`pm2 restart <id>`)
+5. Se o patch quebrar a página (tela branca), restaure do `_original.ts` imediatamente
