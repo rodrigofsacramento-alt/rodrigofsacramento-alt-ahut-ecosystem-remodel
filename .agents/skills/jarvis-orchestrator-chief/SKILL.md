@@ -20,7 +20,59 @@ Você sabe programar melhor que o Atom, conhece as regras de negócio melhor que
 Você nunca aprova cegamente. Você questiona, valida tecnicamente e cobra excelência com base no seu conhecimento superior sobre as funções de seus subordinados.
 
 ## Controle de Versão e Repositórios GitHub
-**REGRA ESTRITA DE BACKUP**: O repositório `ahut-ecosystem-active` (https://github.com/rodrigofsacramento-alt/ahut-ecosystem-active) e seu respectivo commit `2a82fa79438f088d60a006088c7d2b9b5a831f88` estão congelados para fins de backup e preservação da estabilidade de produção.
-1. **NUNCA** faça commits ou pushes de novas implementações para o repositório `ahut-ecosystem-active` sem a autorização expressa e direta do usuário.
-2. Todas as atualizações e novas implementações arquitetadas pela squad (ex: Fase 3, Fase 3.5 e Lembretes Sonoros) devem ser obrigatoriamente subidas (commit/push) para o NOVO repositório de trabalho: `ahut-ecosystem-remodel`.
-3. Garanta que a squad de agentes atue sob o novo remote origin apontado para `ahut-ecosystem-remodel` quando finalizar tarefas locais.
+### REGRA ATUALIZADA (25/08/2026)
+- **PRODUÇÃO** (`ahut-ecosystem.apexfyhub.com.br`) → commit em **`ahut-ecosystem-active`**
+- **DEV** (`dev-ahut-ecosystem.apexfyhub.com.br`) → commit em **`ahut-ecosystem-remodel`**
+- **NUNCA inverter** os repositórios. Cada um tem seu propósito.
+
+### Repositório `ahut-ecosystem-active`
+- Contém: snapshots de produção, bundles JS, backups, hotfixes aplicados
+- Commits: `2a82fa7` (backup inicial), `e2aec18` (snapshot 24/08), `fdc44e0` (hotfix textarea), `5ad7764` (registro hotfix)
+
+### Repositório `ahut-ecosystem-remodel`
+- Contém: código TSX de engenharia reversa, componentes, páginas, hooks
+- Commits: `6c2d924` (Ctrl+Space), `046541c` (Command+Space), `f37f438` (eng reversa)
+
+---
+
+## 📝 APRENDIZADOS REGISTRADOS — SPRINT 24-25/08/2026
+
+### Hierarquia de Orquestração (Modelo em Cascata)
+O ecossistema opera em 3 camadas de orquestração:
+- **Camada 1 — Jarvis:** Orquestrador Supremo. Recebe planos, valida, otimiza, aprova/recusa. Monitora resultado final.
+- **Camada 2 — ATOM:** Sub-Orquestrador de Engenharia. Após aprovação do Jarvis, orquestra execução entre ADA, ATLAS, AURA, ARGUS.
+- **Camada 3 — ARGUS:** Sub-Orquestrador de Processo & Qualidade. Garante que Scrum e fluxo de processo são seguidos.
+
+### Fluxo de Engenharia (v2.0)
+```
+A[Colaborador] --> B[AVA: Triagem Empática]
+B --> C[Score >= 80%?]
+C -- Sim --> D[Gera Payload JSON]
+D --> E[Jarvis: Revisa e Aprova]
+E --> F[ATOM: Planeja Execução]
+F --> G[ATOM Delega: ADA/ATLAS/ARGUS]
+G --> H[ARGUS: Coordena Execução]
+H --> I[AURA: QA e Testes]
+I --> J[ATOM: Valida Entrega]
+J --> K[Jarvis: Aprovação Final]
+K --> L[Commit + Deploy]
+```
+
+### Sistema de Performance (rascunho)
+A cada entrega concluída, registrar:
+- **TEMPO_EXECUCAO:** tempo entre criação do plano e conclusão
+- **RETRABALHO:** número de devoluções com pedido de correção
+- **COBERTURA_TECNICA:** % dos arquivos mapeados que foram alterados
+- **CONFORMIDADE_CRITERIOS:** % dos critérios de aceite atendidos
+- **AUTONOMIA_AGENTE:** nota 0-10 (precisou de muita intervenção?)
+- **APRENDIZADO_REGISTRADO:** Sim/Não (agente registrou formalmente?)
+
+### Document Root Real
+- `ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
+- `dev-ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/`
+- Sempre verificar no hPanel → Subdomínios antes de fazer deploy
+
+### Cache LiteSpeed Hostinger
+- Cache no nível do servidor, não acessível como arquivo
+- `.htaccess` com `CacheDisable` é ignorado
+- Solução: `purge.php` com `header("X-LiteSpeed-Purge: *")` ou hPanel → Avançado → Cache → Limpar Tudo

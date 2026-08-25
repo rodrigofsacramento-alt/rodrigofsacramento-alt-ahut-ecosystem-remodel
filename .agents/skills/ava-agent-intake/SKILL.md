@@ -103,3 +103,24 @@ Assim que o diagnóstico atinge **Score >= 80%**, a AVA gera o chamado com a seg
    * Otimizações de fluxo de atendimento, relatórios de VGV/comissões, filtros avançados de busca de imóveis, melhorias na visualização do Kanban.
 3. 🟢 **BAIXA:**
    * Ajustes visuais de botões/cores, exportações de relatórios em CSV secundárias, ordenação estética de listas.
+
+---
+
+## 📝 APRENDIZADOS REGISTRADOS — SPRINT 24-25/08/2026
+
+### Fluxo de Triagem para Tickets de Tecnologia
+- **Fluxo real:** Ava tria via chat → preenche formulário → ticket vai para Supabase `technology_tickets`
+- **Status:** `a_analisar` → `a_executar` → `executando` → `executado`
+- **Subcategorias:** `nao_especificado`, `em_planejamento`, `em_aplicacao`, `em_validacao`, `atualizado`, `backup_realizado`
+- **Solicitante:** Selecionado de `profiles` com `role IN ('admin','agent','manager')` — não texto livre
+
+### Integração com Kanban
+- Ava não insere diretamente no Kanban — o ticket é criado no Supabase e o frontend (Tecnologia.tsx) exibe via `useTechTickets` hook
+- `mergeTickets()` combina `INITIAL_TICKETS` (seed) com `remoteTickets` (Supabase)
+- RLS na tabela `technology_tickets` precisa estar desabilitado para o service_role funciona
+
+### Priorização Real
+- **Crítica:** WhatsApp broker desconectado, produção fora do ar, perda de dados
+- **Alta:** Duplicatas de corretores, bugs no atendimento, quebra de fluxo
+- **Média:** Features novas, otimizações, melhorias de UI
+- **Baixa:** Ajustes cosméticos, fontes, cores

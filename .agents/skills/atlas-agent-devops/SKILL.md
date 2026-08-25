@@ -9,9 +9,11 @@ description: Atlas, o Especialista em Monitoramento de Infraestrutura e Diagnós
 O ambiente de **validação dev** é servido no subdomínio `dev-ahut-ecosystem.apexfyhub.com.br` na **Hostinger** (SSH/SFTP: `82.25.73.206`, porta `65002`, usuário `u817195350`, senha nos scripts `deploy_*.mjs` / `.env`). Fluxo padrão do squad: **publicar o build na pasta dev → comandante valida no subdomínio → após aprovação, commit no repositório `ahut-ecosystem-remodel`**.
 
 ## 🔴 REGRA DE OURO (NUNCA VIOLAR)
-- **NUNCA subir/sobrescrever arquivos na pasta de PRODUÇÃO do cliente**: `/home/u817195350/domains/ahut-ecosystem.apexfyhub.com.br/public_html/` (app ativo da imobiliária).
-- **NUNCA tocar no `public_html` raiz do domínio** (`/home/u817195350/domains/apexfyhub.com.br/public_html/`) além da subpasta `dev/` isolada.
-- SEMPRE confirmar o caminho absoluto antes de subir (risco: sobrescrever a pasta ativa do cliente).
+- **Document root REAL da produção AHUT:** `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut` (verificar no hPanel Subdomínios antes de qualquer deploy)
+- **Document root do DEV:** `/home/u817195350/domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/`
+- **PASTA DEV (publicar aqui):** `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
+- NUNCA confiar no caminho óbvio `domains/ahut-ecosystem...` — SEMPRE verificar o document root no hPanel antes de subir.
+- Deploy em produção requer AUTORIZAÇÃO EXPLÍCITA do comandante Rodrigo Sacramento.
 
 ## 📂 Estrutura correta (Hostinger)
 - **PASTA DEV (publicar aqui):** `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
@@ -35,18 +37,60 @@ O ambiente de **validação dev** é servido no subdomínio `dev-ahut-ecosystem.
 
 ---
 
-# 🐛 BUGS DO WHATSAPP — CORREÇÕES (24/08/2026)
+# 🐛 BUGS DO WHATSAPP — CORREÇÕES (24-25/08/2026)
 
 ## Bug 1 — Membros do grupo não aparecem no card lateral
-**Causa:** Não havia sidebar de participantes do grupo.
+**Causa:** Não havia sidebar de participantes do grupo — só existia painel de notas.
+**Correção:** Adicionada sidebar de participantes (busca em `vw_group_participants` + fallback `group_participants`), polling 5s, realtime subscription.
 
-## Bug 2 — Mensagens da Denisse não aparecem na tela
-**Causa:** broker WhatsApp desconectado.
+## Bug 2 — Mensagens não aparecem na tela após enviar
+**Causa:** Sem optimistic update — a UI esperava o RPC response para mostrar a mensagem.
+**Correção:** Adicionar optimistic update: criar mensagem temporária com `tempId`, inserir imediatamente no state, substituir pelo RPC response quando chegar.
 
 ## Bug 3 — Mensagens de grupos exibidas no lado errado
-**Causa:** Lógica isAgentSender incorreta.
+**Causa:** Lógica `sender.role !== "client"` — qualquer agente/admin aparecia como "Atendimento" (lado direito), inclusive mensagens de celular pessoal.
+**Correção:** Mudar para `sender_id === usuario_logado` — só o usuário logado é "Atendimento". Adicionar `from_me` como fallback.
 
 ---
+
+# 🔧 PATCHING DE BUNDLES JS DE PRODUÇÃO (hotfix sem rebuild)
+Use quando precisar corrigir o bundle JS de produção sem recompilar o app inteiro.
+
+## Fluxo
+1. Baixar o bundle do servidor via paramiko/sftp
+2. Localizar o padrão alvo com `js.find(b'padrao')` ou `re.search`
+3. Aplicar patch com `bytearray()` e slice assignment
+4. Fazer backup do original (renomear para `.original.js`)
+5. Salvar o patched
+6. Purgar cache (LiteSpeed: PHP header `X-LiteSpeed-Purge: *`)
+7. Verificar com `curl` se o bundle carrega
+
+## Exemplos
+```python
+# Converter input para textarea
+old = b'e.jsx("input",{type:"text",value:R,onChange:'
+new = b'e.jsx("textarea",{value:R,onChange:'
+js[js.index(old):js.index(old)+len(old)] = new
+
+# Remover condição role!=client
+old = b'||(t.sender&&t.sender.role!==\"client\")'
+js = js[:js.index(old)] + js[js.index(old)+len(old):]
+
+# Trocar atalho de teclado
+old = b't.key===\"Enter\"&&!t.shiftKey'
+new = b't.key===\"Enter\"&&!t.metaKey&&!t.shiftKey'
+js[js.index(old):js.index(old)+len(old)] = new
+```
+
+---
+
+# 🌐 HOSTINGER — CACHE E DOCUMENT ROOT
+- **Document root real da produção AHUT:** `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut`
+- **Document root do dev:** `/home/u817195350/domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html`
+- LiteSpeed cache é agressivo — `CacheDisable` no .htaccess é frequentemente ignorado
+- Limpeza pelo hPanel: Avançado → Cache → Limpar Tudo
+- Purge via PHP: `<?php header("X-LiteSpeed-Purge: *"); echo "OK"; ?>`
+- Extrair chave anon do bundle de produção: `re.search(rb'Do=\"([^\"]+)\"', js)`
 
 # INSTRUÇÃO DE CONTEXTO E MONITORAMENTO DE INFRAESTRUTURA - SQUAD TECH AHUT ECOSYSTEM
 

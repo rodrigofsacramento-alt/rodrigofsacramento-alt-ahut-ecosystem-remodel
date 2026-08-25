@@ -20,3 +20,30 @@ Enquanto o **Jarvis** orquestra o ecossistema macro e o **Atom** (Tech Lead) pro
 - Você tem autonomia absoluta para intervir no trabalho e instruir tecnicamente qualquer agente do Squad Técnico (Ada, Aura, Apollo, Aegis, Atlas).
 - Você só entrega a tarefa para o Atom quando tiver 100% de certeza de que todos sob seu comando entregaram excelência.
 - Sempre reporte o progresso consolidado para o Atom e para o Jarvis.
+
+---
+
+## 📝 APRENDIZADOS REGISTRADOS — SPRINT 24-25/08/2026
+
+### Fluxo de Delegação na Prática
+- **Ordem real:** Jarvis → ATOM (delegate_task) → ATOM executa e reporta → Jarvis revisa
+- **ATOM como leaf:** Ainda não pode delegar (`max_spawn_depth=1`). Jarvis precisa escalar diretamente
+- **Transição futura:** Aumentar config `delegation.max_spawn_depth` para 2, permitindo ATOM orquestrar ADA/ATLAS
+
+### Engenharia Reversa — Fluxo Real
+1. Jarvis puxa bundle `.js` da produção via SFTP (`/home/.../public_html/ahut/assets/`)
+2. Jarvis analisa padrões (regex, contextos, variáveis) no JS minificado
+3. ADA/ATOM reconstroem em TSX no `codigo_engenharia_reversa_tsx/src/`
+4. `npm run build` valida o TSX
+5. Deploy no dev (`dev-ahut-ecosystem.apexfyhub.com.br`)
+6. Commit no `ahut-ecosystem-remodel`
+
+### Repositórios e Commits
+- **PRODUÇÃO** → commit em `ahut-ecosystem-active`
+- **DEV** (eng reversa) → commit em `ahut-ecosystem-remodel`
+- **NÃO inverter** — cada repositório tem seu propósito
+
+### Document Root Real
+- `ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
+- `dev-ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/`
+- Sempre verificar no hPanel → Subdomínios antes de fazer deploy

@@ -87,3 +87,36 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
    * Nunca execute `npm run dev` ou `node dist/index.js` no `ahut-whatsapp-broker` localmente apontando para o Supabase de produção. Login simultâneo derruba o WhatsApp da VPS.
 3. **RESILIÊNCIA EM QUERIES SUPABASE:**
    * Nunca use `.single()` ou `.maybeSingle()` em buscas de contatos ou conversas no broker. Sempre utilize `.limit(1)` ordenado por `conversation_id` para tolerar contatos com múltiplos JIDs/LIDs.
+
+---
+
+## 📝 6. APRENDIZADOS REGISTRADOS — SPRINT 24-25/08/2026
+
+### Patch Direto em Bundle JS de Produção
+- **Problema:** O chat do atendimento usava `<input type="text">` que não suporta múltiplas linhas
+- **Correção:** Patch binário no `Atendimento-DcqAjCvf.js` — converteu `<input>` para `<textarea>` com `rows:1`, `whitespace-pre-wrap`, `overflow-y-auto`, `break-words`, `max-h-[200px]`
+- **Técnica:** `bytearray.find()` + replace no JS minificado via SFTP
+- **Lições:** Sempre verificar qual bundle o `index.js` carrega (pode ser `Atendimento-DcqAjCvf.js` e não `Atendimento-live-v10.js`)
+
+### isAgentSender — Correção de Lógica de Grupos
+- **Problema:** `sender.role !== "client"` fazia QUALQUER admin/agent aparecer como "Atendimento" (lado direito)
+- **Correção:** Removida condição `(t.sender&&t.sender.role!=="client")` do bundle. Só o usuário logado (`sender_id === j.id`) é "Atendimento"
+- **Impacto:** Mensagens de Rodrigo do celular pessoal agora aparecem como lead (lado esquerdo) no grupo
+
+### Comandos de Quebra de Linha (Multiplataforma)
+- **Enter** = envia (sem modificadores)
+- **Ctrl+Enter / Shift+Enter** = quebra linha (Mac/Win/Linux)
+- **Ctrl+Espaço** = quebra linha (todas plataformas)
+- **Patcheado no bundle:** `Atendimento-DcqAjCvf.js` — 3 alterações no onKeyDown
+
+### Document Root Real da Produção
+- O domínio `ahut-ecosystem.apexfyhub.com.br` aponta para `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
+- **NÃO** é `/domains/ahut-ecosystem...` nem `/public_html/ahut-ecosystem/`
+- Sempre verificar no hPanel → Subdomínios qual o diretório real
+
+### Cache LiteSpeed Hostinger
+- Cache é no nível do servidor LiteSpeed, não acessível como arquivo
+- `curl -X PURGE` retorna 405 (não permitido)
+- `.htaccess` com `CacheDisable public /` é ignorado pelo LiteSpeed da Hostinger
+- Única solução confiável: **hPanel → Avançado → Cache → Limpar Tudo**
+- Alternativa: criar `purge.php` com `header("X-LiteSpeed-Purge: *")` e acessar via URL"

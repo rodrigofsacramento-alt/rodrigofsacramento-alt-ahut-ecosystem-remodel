@@ -25,3 +25,41 @@ O Atom (Desenvolvedor Principal) irá extrair as lógicas de negócio dos arquiv
 - Nunca altere lógicas de banco de dados diretamente; delegue isso ao Atom.
 - Sempre use Tailwind CSS (`className`) e componentes Lucide-React.
 - Siga estritamente o manual de Design System do Ahut.
+
+---
+
+## 📝 APRENDIZADOS REGISTRADOS — SPRINT 24-25/08/2026
+
+### Atendimento — Chat e Input de Mensagens
+- **Problema:** `<input type="text">` não suporta quebras de linha, texto cresce horizontalmente
+- **Correção no TSX convertido:** `<textarea>` com `rows={1}`, `whitespace-pre-wrap`, `overflow-y-auto`, `max-h-[200px]`
+- **Auto-resize:** `onChange` ajusta `e.target.style.height` dinamicamente até 200px
+- **Comandos de tecla:** Enter envia sem modificadores; Ctrl+Enter / Shift+Enter / Ctrl+Espaço quebram linha
+
+### Atendimento — isAgentSender (Lado do Balão)
+- **Problema:** `sender.role !== 'client'` fazia qualquer admin/agent aparecer como "Atendimento"
+- **Correção no TSX:** `isAgentSender = msg.sender_id === user?.id || (msg as any).from_me === true`
+- Só o usuário logado aparece do lado direito
+
+### Atendimento — Dashboard e Filtros
+- Filtros por período (hoje/semana/mês), corretor responsável, status (meus/ativos/pendentes/grupos)
+- Dashboard com cards: contatos, follow-ups, reuniões, propostas, vendas com variação ↑↓
+- Ranking de corretores ordenável por coluna
+
+### Otimistic Update no Envio
+- Mensagem aparece IMEDIATAMENTE na UI via `tempId`, depois substituída pelo resultado real
+- Se falha, marca como `status: 'error'` — feedback visual instantâneo
+
+### Agenda — Notificações com Som
+- Eventos conectados ao Supabase (tabela `agenda_events`)
+- Notificação sonora 5 min antes com `new Audio()`
+- Botão Snooze (adiar 5 min)
+
+### Dark Mode na Tecnologia
+- Prop `dark` no `AppLayout` para página Tecnologia
+- `bg-slate-950` + `text-slate-100` quando dark=true
+- Fontes Inter (textos) + JetBrains Mono (código) via Google Fonts
+
+### Filtro de Login com Timeout
+- Timeout de 1500ms no AuthProvider para evitar tela de carregamento infinita
+- Se o Supabase não responder, o app falha graciosamente
