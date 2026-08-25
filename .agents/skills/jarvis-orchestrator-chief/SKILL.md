@@ -43,19 +43,75 @@ O ecossistema opera em 3 camadas de orquestração:
 - **Camada 2 — ATOM:** Sub-Orquestrador de Engenharia. Após aprovação do Jarvis, orquestra execução entre ADA, ATLAS, AURA, ARGUS.
 - **Camada 3 — ARGUS:** Sub-Orquestrador de Processo & Qualidade. Garante que Scrum e fluxo de processo são seguidos.
 
-### Fluxo de Engenharia (v2.0)
+### Fluxo de Engenharia (v2.0) — ATUALIZADO 25/08
 ```
-A[Colaborador] --> B[AVA: Triagem Empática]
-B --> C[Score >= 80%?]
-C -- Sim --> D[Gera Payload JSON]
-D --> E[Jarvis: Revisa e Aprova]
-E --> F[ATOM: Planeja Execução]
-F --> G[ATOM Delega: ADA/ATLAS/ARGUS]
-G --> H[ARGUS: Coordena Execução]
-H --> I[AURA: QA e Testes]
-I --> J[ATOM: Valida Entrega]
-J --> K[Jarvis: Aprovação Final]
-K --> L[Commit + Deploy]
+                                ┌─────────────────────────────┐
+                                │  FLUXO DE ORQUESTRAÇÃO      │
+                                │  SQUAD TECH AHUT (v2.0)     │
+                                │  ATUALIZADO 25/08/2026      │
+                                └─────────────────────────────┘
+
+    INÍCIO: Demanda chega
+        │
+        ├──🔴 ORIGEM: CHAT TELEGRAM (Comandante Rodrigo Sacramento)
+        │   ├── NÃO passa por AVA — é CHAMADO DIRETO COMANDANTE
+        │   ├── Prioridade: 🔴 ALTA (só o comandante tem esse canal)
+        │   ├── JARVIS já recebe a demanda com 100% de clareza
+        │   └── Pula para [2] JARVIS diretamente
+        │
+        └──🟢 ORIGEM: COLABORADOR / TICKET / CHAMADO
+            └── Segue o fluxo normal abaixo
+
+    [1] AVA: Triagem Empática + Score ≥ 80%?
+        │
+        ├── Não → Volta para refinamento
+        │
+        └── Sim → Gera Payload JSON
+              │
+              ▼
+    [2] JARVIS: Analisa payload + Escala o SQUAD
+        │    • Avalia o ELENCO ATUAL (10 agentes disponíveis)
+        │    • Escolhe o(s) agente(s) MAIS PRODUTIVO(S)
+        │      para aquela demanda — NÃO limitado a ATOM/ADA/ATLAS
+        │    • Pode escalar múltiplos agentes em paralelo
+        │    • Para CHAMADO DIRETO COMANDANTE: já recebe com clareza
+        │
+        ▼
+    [3] AGENTE(S) EXECUTAM
+        │    • Trabalham em paralelo se necessário
+        │    • Reportam para Jarvis via delegate_task
+        │
+        ▼
+    [4] JARVIS REVISA + ENSINA (se erro)
+        │    • Se erro → mostra o erro, ensina, corrige junto
+        │    • Se certo → aprova
+        │
+        ▼
+    [5] AURA: QA Final
+        │    • npx tsc --noEmit
+        │    • npm run build
+        │    • Verifica critérios de aceite
+        │
+        ▼
+    [6] ARGUS: Registro do Aprendizado
+        │    • Atualiza SKILL.md do(s) agente(s)
+        │    • Registra lições no PAINEL_DE_CONTROLE
+        │
+        ▼
+    [7] Deploy + Commit
+        │    • Produção → ahut-ecosystem-active
+        │    • Dev → ahut-ecosystem-remodel
+        │
+        ▼
+    [8] Ticket no Kanban Tecnologia
+        │    • TCK-2026-XXX com solicitante = Rodrigo Sacramento
+        │    • Status: executado
+        │    • Subcategoria: conforme tipo de entrega
+        │
+        ▼
+    [9] Sistema de Performance
+        • Calcula tempo, retrabalho, autonomia
+        • Registra no card do Kanban
 ```
 
 ### Sistema de Performance (rascunho)
