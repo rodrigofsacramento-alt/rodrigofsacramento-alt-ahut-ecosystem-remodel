@@ -966,9 +966,23 @@ export default function Atendimento() {
                     e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.ctrlKey) {
+                    if (e.key === 'Enter' && !e.metaKey && !e.shiftKey) {
                       e.preventDefault();
                       handleSendMessage();
+                    }
+                    // Command+Space (Mac) / Ctrl+Space (Win/Linux) = quebra linha
+                    if (e.key === ' ' && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      const target = e.target as HTMLTextAreaElement;
+                      const start = target.selectionStart;
+                      const val = target.value;
+                      const newVal = val.slice(0, start) + '\n' + val.slice(target.selectionEnd);
+                      setMessageInput(newVal);
+                      // Reajusta altura após inserir a quebra
+                      requestAnimationFrame(() => {
+                        target.style.height = 'auto';
+                        target.style.height = Math.min(target.scrollHeight, 200) + 'px';
+                      });
                     }
                   }}
                   rows={1}
