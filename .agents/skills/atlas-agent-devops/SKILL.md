@@ -17,7 +17,7 @@ O ambiente de **validação dev** é servido no subdomínio `dev-ahut-ecosystem.
 
 ## 📂 Estrutura correta (Hostinger)
 - **PASTA DEV (publicar aqui):** `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
-- **PRODUÇÃO (NÃO TOCAR):** `/home/u817195350/domains/ahut-ecosystem.apexfyhub.com.br/public_html/`
+- **PRODUÇÃO (NÃO TOCAR):** `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
 
 ## 🔧 Como subir o app na pasta dev (via SSH/SFTP, paramiko)
 1. **Gerar o build** no projeto reverso:
@@ -31,6 +31,11 @@ O ambiente de **validação dev** é servido no subdomínio `dev-ahut-ecosystem.
    - Estrutura no destino: `index.html` + `assets/index-*.js` + `assets/index-*.css`.
 4. **Verificar pós-upload**: `ls -la <DEV>/assets` confirma o JS/CSS novo; `cat <DEV>/index.html` deve referenciar nosso `assets/index-<hash>.js`.
 5. **Testar acesso**: `curl -sk https://dev-ahut-ecosystem.apexfyhub.com.br/` deve retornar o nosso app (não "Página padrão" da Hostinger).
+
+## 📦 REGRA DE REPOSITÓRIOS (NUNCA INVERTER)
+- **PRODUÇÃO** (`ahut-ecosystem.apexfyhub.com.br`) → commit em **`ahut-ecosystem-active`**
+- **DEV** (`dev-ahut-ecosystem.apexfyhub.com.br`) → commit em **`ahut-ecosystem-remodel`**
+- NUNCA inverter. Cada repositório tem seu propósito.
 
 ## ⚠️ Ajuste pendente no painel Hostinger (validar antes de confiar no subdomínio)
 - O subdomínio `dev-ahut-ecosystem` deve ter o **Documento raiz / Diretório** apontando para `/home/u817195350/domains/apexfyhub.com.br/public_html/dev`. Se ainda apontar para a raiz (página padrão do cliente), pedir ao comandante para ajustar no painel Subdomínios.
