@@ -79,7 +79,18 @@ if (matchedMsgs?.length > 0) {
 }
 ```
 
-## Auditoria de Leads (@lid)
+## Sistema de Lixeira (Soft Delete)
+- **Tabela:** `deleted_profiles` — cópia do profile + dados relacionados
+- **Função:** `move_profile_to_trash(id)` — mover para lixeira
+- **Função:** `restore_from_trash(id)` — restaurar da lixeira
+- **NUNCA** mais usar DELETE direto em profiles — sempre via função
+- **Lição:** 172 perfis foram hard-deleted antes da lixeira existir — irrecuperáveis
+
+## Lições Aprendidas
+- **Filtro LID:** `LENGTH(phone) > 14` perde LIDs de 14 dígitos. Usar `> 13`
+- **Unificação:** requires transferir conversas, mensagens (sender_id + receiver_id), whatsapp_contacts, leads — depois deletar
+- **Verificação SEMPRE:** testar com um lead real antes de fazer em lote
+- **Lixeira:** implementar ANTES de qualquer operação de DELETE em produção
 - **Script automático:** `/opt/data/scripts/leads-audit.py` — CRON diário 6h (job: `leads-audit-diario`)
 - **Detecta:** LIDs no lugar de telefone, perfis duplicados (mesmo nome + LID+real), nomes genéricos (emoji, ".", "~")
 - **Regra:** APENAS LEITURA — nunca altera dados. Relatório .md salvo
