@@ -104,6 +104,8 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
 9. **NUNCA altere a porta do broker** sem atualizar os proxies reversos do Nginx/LiteSpeed — o broker precisa responder na porta 3001.
 10. **NUNCA deixe de testar áudios em iPhone real e Android real** antes de homologar — navegadores desktop toleram codecs que celulares rejeitam.
 
+> **Referência completa:** `references/audio-pipeline-troubleshooting.md` — fluxo dual, diagnóstico 4-passos, causas conhecidas e comandos SQL/Python para debug.
+
 ---
 
 ## 📝 6. APRENDIZADOS REGISTRADOS — SPRINT 24-25/08/2026
