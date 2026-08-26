@@ -132,6 +132,12 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
 - **NÃO** é `/domains/ahut-ecosystem...` nem `/public_html/ahut-ecosystem/`
 - Sempre verificar no hPanel → Subdomínios qual o diretório real
 
+### Document Root Real do DEV (aprendizado 26/08)
+- O domínio `dev-ahut-ecosystem.apexfyhub.com.br` aponta para `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
+- **Também NÃO é o subdomínio isolado** — mesmo padrão da produção (subdiretório dentro do domínio principal)
+- **NUNCA** tentar deploy em `domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/` (erro comum)
+- **Sempre verificar** no hPanel → Domínios → [subdomínio] → Documento Raiz antes de deploy
+
 ### Cache LiteSpeed Hostinger
 - Cache é no nível do servidor LiteSpeed, não acessível como arquivo
 - `curl -X PURGE` retorna 405 (não permitido)
@@ -207,34 +213,50 @@ return await sock.sendMessage(jid, { audio: rawBuf, mimetype: 'audio/webm', ptt:
 | **Solução:** Após restart, verificar `whatsapp_sessions.status` no banco. Se `disconnected`, acessar o CRM e escanear QR code
 |- **Prevenção:** Agrupar múltiplos patches em UM restart só. Evitar restart para alterações de frontend.
 
-### P2: Conversão webm→ogg com Re-upload Storage (26/08/2026)
-|- **Problema:** Áudios gravados no CRM via MediaRecorder produzem `.webm` (Chrome não suporta `audio/ogg` no MediaRecorder). O player `<audio>` do frontend até aceita webm, mas o ideal é converter para `.ogg` no servidor.
-|- **Arquivo:** `/root/crmahut/backend-broker/src/session-manager.ts` — função `sendMessage()`, bloco `[Audio]`
-|- **Solução em 2 camadas:**
-|  1. **Broker (`sendMessage`)**: Após baixar o webm, converter para ogg via `convertBufferToWhatsAppAudio()`, fazer upload do `.ogg` no Supabase Storage, e atualizar a tabela `messages` com a URL do `.ogg`
-|  2. **Frontend**: Adicionar `audio/webm` aos sources do `<audio>` player (fallback caso o broker não consiga converter)
-|- **Código adicionado (session-manager.ts, linhas ~2110-2150):**
-|  ```typescript
-|  const sendResult = await sock.sendMessage(jid, {
-|    audio: oggBuffer, mimetype: 'audio/ogg; codecs=opus', ptt: true, waveform: waveform
-|  });
-|  // Upload ogg version to storage for CRM playback
-|  const oggFileName = `audio_${Date.now()}.ogg`;
-|  const oggFileKey = `96e33b2e-0855-4ad4-b56a-af900747107b/${oggFileName}`;
-|  await supabase.storage.from('chat-attachments').upload(oggFileKey, oggBuffer, {
-|    contentType: 'audio/ogg', cacheControl: '3600', upsert: true
-|  });
-|  // Update CRM messages table with ogg URL
-|  const { data: waMsg } = await supabase.from('whatsapp_messages')
-|    .select('conversation_id').eq('remote_jid', jid).eq('from_me', true)
-|    .order('created_at', { ascending: false }).limit(1).maybeSingle();
-|  if (waMsg && waMsg.conversation_id) {
-|    const newContent = `[Audio] ${oggFileName}\\n${oggUrl}`;
-|    await supabase.from('messages').update({ content: newContent })
-|      .eq('conversation_id', waMsg.conversation_id).eq('message_type', 'text')
-|      .ilike('content', '%[Audio]%').order('created_at', { ascending: false }).limit(1);
-|  }
-|  return sendResult;
-|  ```
+### P2: Conversão webm→ogg com Re-upload Storage (26/08/2026) — CORREÇÃO DO DEV ORIGINAL
+||- **Problema:** Áudios gravados no CRM via MediaRecorder produzem `.webm` (Chrome não suporta `audio/ogg` no MediaRecorder). Minha implementação inicial tinha 3 erros graves (Linhas Vermelhas #1, #2, #4 do RUNBOOK).
+||- **Arquivo:** `/root/crmahut/backend-broker/src/session-manager.ts` — função `sendMessage()`, bloco `[Audio]`
+||- **Solução em 2 camadas:**
+||  1. **Broker (`sendMessage`)**: Após baixar o webm, converter para ogg via `convertBufferToWhatsAppAudio()`, fazer upload do `.ogg` no Supabase Storage, e atualizar a tabela `messages` com a URL do `.ogg`
+||  2. **Frontend**: Adicionar `audio/webm` aos sources do `<audio>` player (fallback caso o broker não consiga converter)
+||
+||### ⚠️ ERROS QUE COMETI NO P2 (e o dev original corrigiu)
+||
+||| # | Linha Vermelha Violada | Meu erro | Correção do dev original |
+|||---|---|---|---|
+||| 1 | **🚫 NUNCA código após `return`** | Coloquei upload do .ogg DEPOIS do `return await sock.sendMessage(...)` — código morto | O dev colocou o upload ANTES do return, e só depois envia o resultado |
+||| 2 | **🚫 NUNCA `.order().limit()` dentro de `.update()`** | Usei `.order().limit()` direto no `supabase.from('messages').update(...)` — erro HTTP 400 | O dev faz SELECT prévio por ID, depois UPDATE com `.eq('id', msgId)` |
+||| 3 | **🚫 NUNCA hardcode UUIDs** | Hardcodei `96e33b2e-0855-4ad4-b56a-af900747107b` como conversation_id | O dev extrai `convId` dinamicamente da URL: `urlParts[urlParts.length - 2]` |
+||
+||### ✅ CÓDIGO CORRETO DO DEV ORIGINAL (Copiar e usar)
+||
+||```typescript
+||// 1. Converte e envia para WhatsApp
+||const oggBuffer = await convertBufferToWhatsAppAudio(rawBuffer);
+||const sendResult = await sock.sendMessage(jid, {
+||  audio: oggBuffer, mimetype: 'audio/ogg; codecs=opus', ptt: true, waveform
+||});
+||
+||// 2. Upload .ogg no Storage (ANTES de qualquer return — código vivo!)
+||const urlParts = urlLine.split('/');
+||const convId = urlParts[urlParts.length - 2] || 'general';  // ← dinâmico, sem hardcode
+||const oggFileName = urlParts[urlParts.length - 1].replace(/\.[^/.]+$/, '') + '.ogg';
+||const oggFileKey = `${convId}/${oggFileName}`;
+||await supabase.storage.from('chat-attachments').upload(oggFileKey, oggBuffer, {
+||  contentType: 'audio/ogg; codecs=opus', cacheControl: '3600', upsert: true
+||});
+||
+||// 3. Atualiza messages table com URL do .ogg (SELECT prévio + UPDATE por ID)
+||const { data: matchedMsgs } = await supabase.from('messages')
+||  .select('id').eq('conversation_id', convId)
+||  .ilike('content', `%${urlParts[urlParts.length - 1]}%`).limit(1);
+||if (matchedMsgs?.length > 0) {
+||  await supabase.from('messages').update({ 
+||    content: `[Audio] ${oggFileName}\n${oggUrl}` 
+||  }).eq('id', matchedMsgs[0].id);  // ← UPDATE por ID, sem .order().limit()
+||}
+||
+||return sendResult;  // ← return ÚNICO, no final
+||```
 |- **Compilação:** `npx tsc` sem erros (necessário usar `convId` temporário para evitar TS18047)
 |- **Commit:** `4852487` no `ahut-ecosystem-active`

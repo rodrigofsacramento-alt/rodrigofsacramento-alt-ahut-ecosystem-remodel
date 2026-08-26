@@ -298,14 +298,15 @@ export default function Tecnologia() {
     performanceGeral: 0
   });
 
-  // Fetch profiles for solicitantes
+  // Fetch profiles for solicitantes — carrega TODOS os usuários do sistema
   const { data: profilesList = [] } = useQuery({
     queryKey: ['profiles-solicitantes'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, email, role')
-        .in('role', ['admin', 'agent', 'manager']);
+        .not('full_name', 'is', null)
+        .order('full_name');
       if (error) throw error;
       return data || [];
     },
@@ -354,9 +355,12 @@ export default function Tecnologia() {
     if (saved) {
       try { local = JSON.parse(saved); } catch { local = INITIAL_TICKETS; }
     }
-    // Merge: inicial (seed) + local (cache antigo, se houver) + remoto (Supabase)
+    // Merge: inicial (seed) + remoto (Supabase) + local (cache do browser)
     const merged = mergeTickets(INITIAL_TICKETS as unknown as TechTicketRow[], remoteTickets as unknown as TechTicketRow[] | undefined) as unknown as TechTicket[];
-    const finalTickets = merged.length > 0 ? merged : (local.length > 0 ? local : INITIAL_TICKETS);
+    // 🔴 ANTES: merged.length > 0 ignorava localStorage — tickets do usuário sumiam
+    // ✅ AGORA: sempre mescla localStorage também
+    const mergedWithLocal = mergeTickets(merged as unknown as TechTicketRow[], local as unknown as TechTicketRow[]) as unknown as TechTicket[];
+    const finalTickets = mergedWithLocal.length > 0 ? mergedWithLocal : INITIAL_TICKETS;
     setTickets(finalTickets);
 
     // Calculate performance coefficient
@@ -450,7 +454,7 @@ export default function Tecnologia() {
       title: '',
       description: '',
       module: 'Frontend & UI',
-      requesterName: 'Christian Eracanelli',
+      requesterName: '',
       requesterDepartment: 'Diretoria / Tech',
       priority: 'media',
       main_status: defaultStatus,
