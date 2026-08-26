@@ -98,6 +98,22 @@ if (matchedMsgs?.length > 0) {
 - **Resultado:** 2.055 LIDs (36,6%), 20 duplicatas LID+real phone confirmadas
 - **Referência:** `references/lid-audit-queries.sql` — consultas SQL prontas para diagnóstico
 
+### Pipeline de Áudio — Regras Críticas (manual do dev)
+1. **NUNCA código após `return`** — qualquer código depois de `return await sock.sendMessage(...)` vira código morto. SEMPRE capturar `const sendResult = await sock.sendMessage(...)` e colocar `return sendResult;` ao final, após o upload.
+2. **NUNCA `.order().limit()` em UPDATE** — PostgREST rejeita. Fazer SELECT prévio por ID, guardar o `id`, depois UPDATE `.eq('id', id)`.
+3. **NUNCA hardcode UUID** — `96e33b2e-0855-4ad4-b56a-af900747107b` fixo só atende 1 conv. Extrair `convId` dinamicamente: `urlLine.split('/')[n]`.
+4. **Fluxo correto:** baixar .webm → FFmpeg → .ogg → enviar pra WhatsApp → upload .ogg storage → atualizar messages.content com URL .ogg.
+5. **Fallback raw buffer:** se FFmpeg falhar, enviar buffer raw como `audio/webm` + `ptt: true`.
+6. **Waveform:** gerar com `generateWaveform(oggBuffer)` (64 samples normalizados) e incluir no sendMessage.
+
+### Deploy Produção — Docroot Correto
+- **CRM ativo:** `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/` (acessível via `https://apexfyhub.com.br/ahut/`)
+- **Subdomínio:** `https://ahut-ecosystem.apexfyhub.com.br/` também serve o mesmo app
+- **DEV:** `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
+- **Hostinger SFTP:** `82.25.73.206:65002`, user `u817195350`
+- **Cache LiteSpeed:** purge via `purge.php` no docroot — mas se deploy está na pasta errada, cache não resolve
+- **Regra de ouro:** verificar SEMPRE o docroot real antes de deployar. Erro de pasta custa tempo e frustra o Comandante.
+
 ## Fluxo de Trabalho Diário
 1. Verificar status das sessões WhatsApp no banco
 2. Processar fila de mensagens pending
