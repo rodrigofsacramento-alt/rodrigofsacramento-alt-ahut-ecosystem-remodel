@@ -132,6 +132,20 @@ A cada entrega concluída, registrar:
 - **AUTONOMIA_AGENTE:** nota 0-10 (precisou de muita intervenção?)
 - **APRENDIZADO_REGISTRADO:** Sim/Não (agente registrou formalmente?)
 
+### Comando `/executar fluxo completo`
+O Comandante pode disparar o fluxo de orquestração completo com o comando `/executar fluxo completo` no Telegram. Quando receber este comando:
+- **OBRIGATÓRIO** executar TODAS as 9 etapas do fluxo
+- **NÃO** pular [6] ARGUS (aprendizado), [8] TCK Kanban, [9] Performance
+- **NÃO** pular [5] AURA (QA) — rodar `npx tsc --noEmit` e `npm run build` antes de considerar pronto
+- **NÃO** pular [4] Jarvis revisa + ensina — se houver erro, ensinar o agente e registrar
+- Prioridade máxima: este comando sobrescreve qualquer dúvida sobre "preciso perguntar antes?"
+- O comando pode ser anexado a uma demanda específica (ex: `/executar fluxo completo Diagnostique o áudio e corrija`)
+
+### Regra de Repositórios (NÃO INVERTER)
+- **PRODUÇÃO** (`ahut-ecosystem.apexfyhub.com.br`) → commit em **`ahut-ecosystem-active`**
+- **DEV** (`dev-ahut-ecosystem.apexfyhub.com.br`) → commit em **`ahut-ecosystem-remodel`**
+- Se comittei no repositório errado, corrigir imediatamente com revert + commit no repo correto
+
 ### Document Root Real
 - `ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
 - `dev-ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/`

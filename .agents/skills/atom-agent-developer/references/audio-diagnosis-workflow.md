@@ -1,112 +1,90 @@
-# Diagnóstico de Áudio no WhatsApp CRM
+# Diagnóstico de Áudio WhatsApp — Fluxo de Referência
 
-## Fluxo de Investigação (quando lead reporta "audio não funciona")
+## Sintomas
+- Lead reporta "Este audio não está mais disponível"
+- Lead reporta "Não consigo abrir o audio"
+- Player do CRM não mostra o play (mostra texto "[midia]" em vez de player)
 
-### 1. Verificar o Banco — `whatsapp_messages`
+## Fluxo de Diagnóstico Rápido
 
+### Passo 1 — Verificar sessão WhatsApp
 ```sql
-SELECT id, media_status, message_type, content, media_url, created_at
-FROM whatsapp_messages
-WHERE message_type = 'audio'
-ORDER BY created_at DESC
-LIMIT 10;
+SELECT id, status, phone_number, last_connected_at, last_error
+FROM whatsapp_sessions
+WHERE tenant_id = 'fa440b34-5eb7-417d-b836-1184d229e427'
+ORDER BY updated_at DESC LIMIT 1;
+```
+- Se `status != 'connected'` → QR code precisa ser escaneado
+- Se `last_error` contém erro → investigar
+
+### Passo 2 — Verificar áudios recentes no broker
+```bash
+grep -i "audio\|Baixando midia\|Upload concluído\|conversão\|convertido" /root/.pm2/logs/whatsapp-broker-out.log | tail -15
 ```
 
-**Interpretação:**
-- `media_status = 'downloaded'` + `media_url NOT NULL` → áudio baixado e upado com sucesso
-- `media_status = 'failed'` → broker falhou ao baixar/processar
-- `media_url IS NULL` → nunca foi upado ao storage
-
-### 2. Verificar o Banco — `messages` (CRM)
-
+### Passo 3 — Comparar áudio que funciona vs áudio que falha
 ```sql
-SELECT id, message_type, content, created_at
-FROM messages
-WHERE content LIKE '%[Audio]%'
-ORDER BY created_at DESC
-LIMIT 10;
+-- Buscar áudio que funcionou
+SELECT id, message_type, content, created_at FROM messages
+WHERE content LIKE '%[Audio]%' AND created_at > '2026-08-14'
+ORDER BY created_at DESC LIMIT 5;
+
+-- Buscar áudio no whatsapp_messages
+SELECT id, media_status, media_url, content, created_at FROM whatsapp_messages
+WHERE message_type = 'audio' ORDER BY created_at DESC LIMIT 5;
 ```
 
-**Interpretação:**
-- `content = "[Audio] filename.ext\nhttps://..."` → áudio foi processado e tem URL
-- `content = "[midia]"` → áudio falhou (broker não conseguiu processar)
-- `message_type` é sempre `'text'` mesmo para áudio — não confiar nessa coluna
-
-### 3. Testar a URL Diretamente
-
+### Passo 4 — Testar URL do storage
 ```python
 import urllib.request
+url = "https://ptochsyoyatsydfysacc.supabase.co/storage/v1/object/public/chat-attachments/..."
 req = urllib.request.Request(url, method='HEAD')
 r = urllib.request.urlopen(req, timeout=10)
-print(f'HTTP: {r.status}')
-print(f'Type: {r.headers.get("Content-Type")}')
-print(f'Size: {r.headers.get("Content-Length")}')
+print(f'HTTP: {r.status}, Type: {r.headers.get("Content-Type")}, Size: {r.headers.get("Content-Length")}')
 ```
 
-- HTTP 200 ✅ → URL acessível
-- `Content-Type: audio/ogg` → formato OGG (nativo)
-- `Content-Type: audio/webm` → formato WebM (precisa de suporte no player)
-
-### 4. Comparar Working vs Failing
-
-| Característica | Funcionou ✅ | Falhou ❌ |
-|---|---|---|
-| **Formato** | `.ogg` | `.webm` |
-| **Content-Type** | `audio/ogg` | `audio/webm` |
-| **Player suporta?** | ✅ Sim | ❌ Não (sem fix) |
-
-### 5. Causas Raiz Conhecidas
+## Causas Raiz Conhecidas
 
 | Causa | Sintoma | Fix |
 |---|---|---|
-| **Player sem suporte a webm** | URL 200, áudio existe, mas não toca | Adicionar `<source type="audio/webm">` no player |
-| **Timeout de download (20s)** | `media_status = 'failed'`, `media_url = NULL` | Aumentar timeout para 60s + retry 2x |
-| **`.single()` duplicado** | "JSON object requested, multiple rows" | Trocar por `.limit(1).order().maybeSingle()` |
-| **Sessão desconectada** | `creds.json` não encontrado | Escanear QR code no CRM |
-| **Conversão falha** | Log "Falha na conversão de áudio, enviando via URL fallback" | Fallback deve enviar buffer raw, não URL |
+| `.webm` sem suporte no player | Player mostra "Falhou o áudio" | Adicionar `audio/webm` nos sources do `<audio>` |
+| Conversão webm→ogg falha | Log: "Falha na conversão de áudio" | Fallback: buffer raw com `audio/webm` |
+| Timeout de 20s insuficiente | Log: "Media download timeout 20s" | Aumentar para 60_000 |
+| `.single()` retorna múltiplos | Log: "JSON object requested, multiple rows" | Trocar por `.limit(1).order().maybeSingle()` |
+| Sessão desconectada | Log: "401" ou "creds.json not found" | Escanear QR code no CRM |
+| URL do storage expirada | HTTP 404 | Bucket público, mas verificar RLS |
 
-### 6. MediaRecorder — Comportamento por Browser
+## Comandos Úteis
 
-```javascript
-// Chrome desktop: NÃO suporta audio/ogg
-// Firefox: SUPORTA audio/ogg
-// Chrome Android: SUPORTA audio/ogg
-// Safari: NÃO suporta audio/ogg nem audio/webm (usa .m4a)
-
-mime = MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")
-  ? "audio/ogg;codecs=opus"       // Firefox, Chrome Android
-  : MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-    ? "audio/webm;codecs=opus"    // Chrome desktop fallback
-    : "audio/webm"                // fallback genérico
-```
-
-### 7. Player `<audio>` — Sources Necessários
-
-```jsx
-<audio controls>
-  <source src={url} type="audio/ogg; codecs=opus" />
-  <source src={url} type="audio/ogg" />
-  <source src={url} type="audio/webm" />      {/* ← ESSENCIAL para Chrome */}
-  <source src={url} type="audio/mpeg" />
-  <source src={url} type="audio/mp4" />
-</audio>
-```
-
-## Comandos Úteis para Diagnóstico
-
+### Verificar retry no compilado
 ```bash
-# Testar URL do áudio
-curl -s -o /dev/null -w "HTTP %{http_code}, Type: %{content_type}, Size: %{size_download}\n" "<url>"
-
-# Verificar magic bytes
-python3 -c "import urllib.request; r=urllib.request.urlopen('<url>'); print(r.read(4).hex())"
-# OggS = 4f676753 (OGG válido)
-# 1a45dfa3 = (WebM válido)
-
-# Verificar status da sessão WhatsApp
-PGPASSWORD='...' psql -h db.ptochsyoyatsydfysacc.supabase.co -p 5432 -U postgres -d postgres \
-  -c "SELECT id, status, phone_number, last_connected_at FROM whatsapp_sessions ORDER BY updated_at DESC;"
-
-# Verificar logs recentes do broker
-grep "audio\|Baixando\|Upload\|timeout\|convertido" /root/.pm2/logs/whatsapp-broker-out.log | tail -20
+grep -c "mediaDownloadAttempts" /root/crmahut/backend-broker/dist/session-manager.js
 ```
+
+### Verificar compilação
+```bash
+cd /root/crmahut/backend-broker && npx tsc --noEmit 2>&1
+```
+
+### Restart broker
+```bash
+pm2 restart 0
+```
+
+### Verificar status broker
+```bash
+pm2 show 0 | grep -E "status|uptime|restarts|pid"
+```
+
+### Verificar sessão
+```bash
+PGPASSWORD='Dir@124!@$!@$' /usr/lib/postgresql/17/bin/psql -h db.ptochsyoyatsydfysacc.supabase.co -p 5432 -U postgres -d postgres -c "SELECT id, status, phone_number, updated_at::text FROM whatsapp_sessions WHERE status='connected'"
+```
+
+## Histórico de Correções
+
+| Data | Commit | Correção |
+|---|---|---|
+| 25/08 | `a759ae2` | Timeout 20s→60s, retry 2x, log detalhado |
+| 25/08 | `dc787e4` | `.single()` → `.limit(1)+.order()` em queries não-PK |
+| 26/08 | `4852487` | P2: Conversão webm→ogg com re-upload no storage |

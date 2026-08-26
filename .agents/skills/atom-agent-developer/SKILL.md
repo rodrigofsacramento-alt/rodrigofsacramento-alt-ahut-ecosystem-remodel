@@ -186,5 +186,37 @@ return await sock.sendMessage(jid, { audio: rawBuf, mimetype: 'audio/webm', ptt:
 ### Risco: Restart do Broker Deleta Auth
 - Cada `pm2 restart 0` no broker executa `stopSession()` que pode remover as credenciais
 - Sintoma: `ENOENT: no such file or directory, open '.../creds.json'`
-- **Solução:** Após restart, verificar `whatsapp_sessions.status` no banco. Se `disconnected`, acessar o CRM e escanear QR code
-- **Prevenção:** Agrupar múltiplos patches em UM restart só. Evitar restart para alterações de frontend.
+| **Solução:** Após restart, verificar `whatsapp_sessions.status` no banco. Se `disconnected`, acessar o CRM e escanear QR code
+|- **Prevenção:** Agrupar múltiplos patches em UM restart só. Evitar restart para alterações de frontend.
+
+### P2: Conversão webm→ogg com Re-upload Storage (26/08/2026)
+|- **Problema:** Áudios gravados no CRM via MediaRecorder produzem `.webm` (Chrome não suporta `audio/ogg` no MediaRecorder). O player `<audio>` do frontend até aceita webm, mas o ideal é converter para `.ogg` no servidor.
+|- **Arquivo:** `/root/crmahut/backend-broker/src/session-manager.ts` — função `sendMessage()`, bloco `[Audio]`
+|- **Solução em 2 camadas:**
+|  1. **Broker (`sendMessage`)**: Após baixar o webm, converter para ogg via `convertBufferToWhatsAppAudio()`, fazer upload do `.ogg` no Supabase Storage, e atualizar a tabela `messages` com a URL do `.ogg`
+|  2. **Frontend**: Adicionar `audio/webm` aos sources do `<audio>` player (fallback caso o broker não consiga converter)
+|- **Código adicionado (session-manager.ts, linhas ~2110-2150):**
+|  ```typescript
+|  const sendResult = await sock.sendMessage(jid, {
+|    audio: oggBuffer, mimetype: 'audio/ogg; codecs=opus', ptt: true, waveform: waveform
+|  });
+|  // Upload ogg version to storage for CRM playback
+|  const oggFileName = `audio_${Date.now()}.ogg`;
+|  const oggFileKey = `96e33b2e-0855-4ad4-b56a-af900747107b/${oggFileName}`;
+|  await supabase.storage.from('chat-attachments').upload(oggFileKey, oggBuffer, {
+|    contentType: 'audio/ogg', cacheControl: '3600', upsert: true
+|  });
+|  // Update CRM messages table with ogg URL
+|  const { data: waMsg } = await supabase.from('whatsapp_messages')
+|    .select('conversation_id').eq('remote_jid', jid).eq('from_me', true)
+|    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+|  if (waMsg && waMsg.conversation_id) {
+|    const newContent = `[Audio] ${oggFileName}\\n${oggUrl}`;
+|    await supabase.from('messages').update({ content: newContent })
+|      .eq('conversation_id', waMsg.conversation_id).eq('message_type', 'text')
+|      .ilike('content', '%[Audio]%').order('created_at', { ascending: false }).limit(1);
+|  }
+|  return sendResult;
+|  ```
+|- **Compilação:** `npx tsc` sem erros (necessário usar `convId` temporário para evitar TS18047)
+|- **Commit:** `4852487` no `ahut-ecosystem-active`
