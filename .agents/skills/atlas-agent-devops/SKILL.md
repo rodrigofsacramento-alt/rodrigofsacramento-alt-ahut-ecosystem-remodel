@@ -95,7 +95,28 @@ js[js.index(old):js.index(old)+len(old)] = new
 - LiteSpeed cache é agressivo — `CacheDisable` no .htaccess é frequentemente ignorado
 - Limpeza pelo hPanel: Avançado → Cache → Limpar Tudo
 - Purge via PHP: `<?php header("X-LiteSpeed-Purge: *"); echo "OK"; ?>`
-- Extrair chave anon do bundle de produção: `re.search(rb'Do=\"([^\"]+)\"', js)`
+- Extrair chave anon do bundle de produção: `re.search(rb'Do=\\\"([^\\\"]+)\\\"', js)`
+
+### 🔴 Risco: Restart do Broker Pode Deletar Sessão WhatsApp
+- Múltiplos `pm2 restart 0` consecutivos executam `stopSession()` que remove `creds.json`
+- Sintoma: `ENOENT: no such file or directory, open '.../creds.json'` no log de erro
+- Sessão fica `disconnected` → QR code precisa ser escaneado novamente
+- **Verificação:** `SELECT status FROM whatsapp_sessions WHERE tenant_id = 'fa440b34-...'`
+- **Recuperação:** `UPDATE whatsapp_sessions SET status='connecting', qr_code=NULL, qr_expires_at=NULL, last_error=NULL, updated_at=NOW()
+  WHERE id = '<session_id>'` → broker gera novo QR
+- **Prevenção:** Agrupar múltiplos patches em UM restart. Verificar `pm2 show 0` após restart
+
+### 📱 Fluxo de Áudio: Diagnóstico e Correção
+- **Problema:** "Falhou o áudio" ou "Este audio não está mais disponível"
+- **Diagnóstico (comparar working x failing):**
+  1. `SELECT content, media_url, media_status FROM whatsapp_messages WHERE message_type='audio' ORDER BY created_at DESC LIMIT 10`
+  2. HEAD nas URLs → comparar Content-Type (audio/ogg vs audio/webm)
+  3. Verificar se `whatsapp_messages.media_status = 'downloaded'` (se `'failed'` ou `NULL`, o download não completou)
+  4. Verificar `messages.content`: se `'[midia]'` significa que o broker não conseguiu baixar
+- **Fixes aplicados:**
+  • Frontend: adicionar `<source type="audio/webm">` no player `<audio>` do bundle Atendimento-DcqAjCvf.js
+  • Broker: fallback envia buffer raw (`fetch(url) → arrayBuffer → Buffer.from`) em vez de URL com mime errado
+  • Timeout 20s→60s + retry 2x no download de mídia
 
 # INSTRUÇÃO DE CONTEXTO E MONITORAMENTO DE INFRAESTRUTURA - SQUAD TECH AHUT ECOSYSTEM
 

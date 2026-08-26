@@ -63,3 +63,36 @@ O Atom (Desenvolvedor Principal) irá extrair as lógicas de negócio dos arquiv
 ### Filtro de Login com Timeout
 - Timeout de 1500ms no AuthProvider para evitar tela de carregamento infinita
 - Se o Supabase não responder, o app falha graciosamente
+
+---
+
+## 📝 APRENDIZADOS — SPRINT 25-26/08/2026 (ÁUDIO)
+
+### Player de Áudio: Suporte a audio/webm
+- **Problema:** Leads reportam "Este audio não está mais disponível" mesmo com áudio existente no Supabase
+- **Causa:** O `<audio>` player no chat só declarava 3 sources: `audio/ogg; codecs=opus`, `audio/ogg`, `audio/mpeg`, `audio/mp4`. O broker pode entregar arquivos `.webm` (content-type: `audio/webm`) quando a conversão falha ou quando o Baileys envia o formato original
+- **Correção no bundle JS de produção:** Adicionar `<source type="audio/webm">` entre o source ogg e mpeg
+- **Patch exato no Atendimento-DcqAjCvf.js:**
+  ```javascript
+  // ANTES (não suportava webm):
+  "audio/ogg; codecs=opus"), "audio/ogg"), "audio/mpeg"), "audio/mp4")
+  
+  // DEPOIS (adicionado webm):
+  "audio/ogg; codecs=opus"), "audio/ogg"), "audio/webm"), "audio/mpeg"), "audio/mp4")
+  ```
+
+### Diagnóstico de Mídia com Falha
+- **Método:** Comparar um áudio que funcionou (14/08) x um que falhou (25/08):
+  1. HEAD request nas duas URLs → comparar `Content-Type` e `Content-Length`
+  2. Baixar primeiros bytes → verificar magic bytes (OggS=OGG, 1a45dfa3=WebM)
+- **Ferramentas:** `curl -s -o /dev/null -w "%{content_type}"` ou `urllib.request.Request(method='HEAD')` em Python
+
+### Mapeamento do Fluxo de Mídia no CRM
+- A tabela `messages` (CRM) tem `message_type`, `content`, mas **não tem** `media_url` (essa coluna fica em `whatsapp_messages`)
+- Quando o broker processa um áudio com sucesso:
+  - `whatsapp_messages.message_type = 'audio'`, `media_url` preenchido, `media_status = 'downloaded'`
+  - `messages.content = "[Audio] <filename>.<ext>\n<url>"`, `messages.message_type = 'text'` (sempre 'text' mesmo para áudio)
+- Quando falha:
+  - `messages.content = "[midia]"`, `messages.message_type = 'text'`
+  - Frontend renderiza como texto, não como player de áudio
+- **Regra de ouro para debug:** `SELECT * FROM whatsapp_messages ORDER BY created_at DESC` primeiro, depois `messages`

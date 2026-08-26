@@ -141,3 +141,49 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
 3. Compile (`npx tsc`) e verifique erros
 4. Restart apenas o processo afetado (`pm2 restart <id>`)
 5. Se o patch quebrar a página (tela branca), restaure do `_original.ts` imediatamente
+
+---
+
+## 📝 7. APRENDIZADOS REGISTRADOS — SPRINT 25-26/08/2026 (ÁUDIO)
+
+### Diagnóstico: Comparação Working vs Failing
+- **Problema:** Leads reportam "Este audio não está mais disponível" mesmo com broker online
+- **Método de diagnóstico:** Comparar um áudio que funcionou (14/08) x um que falhou (25/08):
+  1. Buscar na tabela `messages` WHERE content LIKE '%[Audio]%' nas duas datas
+  2. Comparar `media_url`, `message_type`, `media_status`
+  3. Fazer HEAD request nas duas URLs e comparar `Content-Type` e tamanho
+  4. Baixar primeiros bytes e verificar cabeçalho (OggS=OGG válido, 1a45dfa3=WebM válido)
+- **Descoberta:** Áudios que funcionam estão em `.ogg` (content-type: `audio/ogg`). Áudios que falham estão em `.webm` (content-type: `audio/webm`). O player `<audio>` do frontend **não tinha suporte a webm**.
+
+### Causa Raiz Dupla do Áudio Quebrado
+
+| Camada | Problema | Fix |
+|---|---|---|
+| **Frontend** | `<audio>` player só tinha sources para ogg, mpeg, mp4 — faltava `audio/webm` | Adicionar `<source type="audio/webm">` |
+| **Broker (sendMessage)** | Quando a conversão webm→ogg falha, o fallback enviava URL com mimetype `audio/ogg` mas o arquivo é `.webm` | Fallback: fazer fetch da URL → buffer raw → enviar como `{ audio: rawBuffer, mimetype: 'audio/webm', ptt: true }` |
+| **Sessão** | Múltiplos restarts no broker (`pm2 restart 0`) podem deletar `creds.json` | A sessão fica `disconnected` e precisa escanear QR novamente |
+
+### Patch no Bundle JS de Produção (Atendimento-DcqAjCvf.js)
+```javascript
+// ANTES (não suportava webm):
+"audio/ogg; codecs=opus"), "audio/ogg"), "audio/mpeg"), "audio/mp4")
+
+// DEPOIS (adicionado webm):
+"audio/ogg; codecs=opus"), "audio/ogg"), "audio/webm"), "audio/mpeg"), "audio/mp4")
+```
+
+### Patch no Broker (session-manager.ts) — Fallback de Conversão
+```typescript
+// ANTES (envia URL com mime errado):
+return await sock.sendMessage(jid, { audio: { url: urlLine }, mimetype: 'audio/ogg; codecs=opus', ptt: true });
+
+// DEPOIS (envia buffer raw com mime correto):
+const rawBuf = Buffer.from(await (await fetch(urlLine)).arrayBuffer());
+return await sock.sendMessage(jid, { audio: rawBuf, mimetype: 'audio/webm', ptt: true });
+```
+
+### Risco: Restart do Broker Deleta Auth
+- Cada `pm2 restart 0` no broker executa `stopSession()` que pode remover as credenciais
+- Sintoma: `ENOENT: no such file or directory, open '.../creds.json'`
+- **Solução:** Após restart, verificar `whatsapp_sessions.status` no banco. Se `disconnected`, acessar o CRM e escanear QR code
+- **Prevenção:** Agrupar múltiplos patches em UM restart só. Evitar restart para alterações de frontend.
