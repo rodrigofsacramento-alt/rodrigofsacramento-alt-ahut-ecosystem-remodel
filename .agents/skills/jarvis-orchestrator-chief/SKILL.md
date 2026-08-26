@@ -123,14 +123,62 @@ O ecossistema opera em 3 camadas de orquestração:
         • Registra no card do Kanban
 ```
 
-### Sistema de Performance (rascunho)
-A cada entrega concluída, registrar:
-- **TEMPO_EXECUCAO:** tempo entre criação do plano e conclusão
+### Sistema de Performance & Pontuação por Ciclo de Entrega (ATUALIZADO 26/08)
+
+**Gatilho:** OBRIGATÓRIO após cada entrega concluída com `/executar`.
+
+**6 Indicadores de Performance:**
+- **TEMPO_EXECUCAO:** tempo entre criação do plano e conclusão (planejado vs real)
 - **RETRABALHO:** número de devoluções com pedido de correção
 - **COBERTURA_TECNICA:** % dos arquivos mapeados que foram alterados
 - **CONFORMIDADE_CRITERIOS:** % dos critérios de aceite atendidos
 - **AUTONOMIA_AGENTE:** nota 0-10 (precisou de muita intervenção?)
 - **APRENDIZADO_REGISTRADO:** Sim/Não (agente registrou formalmente?)
+
+**Score Final:** média ponderada dos 6 indicadores (0-100)
+
+### 🔄 Fluxo Pós-Entrega (OBRIGATÓRIO após cada entrega)
+
+```
+ENTREGA CONCLUÍDA
+    │
+    ▼
+[1] CALCULAR PERFORMANCE (6 indicadores)
+    │   Gera Score 0-100
+    │
+    ▼
+[2] ANÁLISE DE LACUNA (SEMPRE — independente do score)
+    │   Pergunta: "Um agente novo teria ajudado?"
+    │   ├── SIM → Crio o agente com SKILL.md completo
+    │   │          Registro no PAINEL_DE_CONTROLE
+    │   │          O agente passa a fazer parte do SQUAD
+    │   │
+    │   └── NÃO → Só registro aprendizado
+    │
+    ▼
+[3] SE um novo agente FOI CRIADO no passo [2]:
+    │   Monitorar suas próximas 10 tarefas
+    │   
+    │   Se 7 de 10 tarefas tiverem SCORE > 80 pontos:
+    │       → NASCE O ASIMOV (Agente Criador de Agentes)
+    │       → ASIMOV herda 100% da função de criar novos agentes
+    │       → Jarvis passa a só VALIDAR as propostas do ASIMOV
+    │       → Jarvis registra no SKILL.md do ASIMOV todo o
+    │         conhecimento de como analisar lacunas, estruturar
+    │         SKILL.md, e avaliar performance de novos agentes
+    │
+    └── Se NÃO atingiu 7/10 >80pts:
+            → Continua monitorando
+            → Jarvis registra o que precisa melhorar
+            → Se cair abaixo de 50pts em 3 tarefas consecutivas:
+              → Desativar agente, registrar lição, refazer análise
+```
+
+### 🧠 ASIMOV — Agente Criador de Agentes
+- **NÃO existe ainda.** Será criado quando um agente novo atingir 7/10 tarefas com score >80.
+- **Função:** Analisar gaps de eficiência, propor/criar novos agentes, manter organograma, documentar metodologia de criação.
+- **Herança:** Jarvis transfere TODO o conhecimento de criação de agentes para o ASIMOV.
+- **Pós-ASIMOV:** Jarvis só valida propostas. ASIMOV cria do zero.
 
 ### Comando `/executar fluxo completo`
 O Comandante pode disparar o fluxo de orquestração completo com o comando `/executar fluxo completo` no Telegram. Quando receber este comando:
