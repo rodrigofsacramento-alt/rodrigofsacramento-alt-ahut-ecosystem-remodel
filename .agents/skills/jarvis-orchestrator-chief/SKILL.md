@@ -149,11 +149,28 @@ ENTREGA CONCLUÍDA
     ▼
 [2] ANÁLISE DE LACUNA (SEMPRE — independente do score)
     │   Pergunta: "Um agente novo teria ajudado?"
-    │   ├── SIM → Crio o agente com SKILL.md completo
-    │   │          Registro no PAINEL_DE_CONTROLE
-    │   │          O agente passa a fazer parte do SQUAD
-    │   │
-    │   └── NÃO → Só registro aprendizado
+    │   Se SIM, analisa TAMBÉM:
+    │   ├── Qual a função específica do agente?
+    │   ├── Para qual agente ele deve se REPORTAR?
+    │   │   (baseado em: contexto de conhecimento, senioridade,
+    │   │    fluxo de validação e escalabilidade)
+    │   ├── Quem ele vai ORQUESTRAR (se alguém)?
+    │   └── Qual o caminho de validação (junior→pleno→senior→jarvis)?
+    │
+    │   Critérios de posicionamento hierárquico:
+    │   ├── Quanto mais ESPECIALISTA (ex: só WhatsApp), mais abaixo
+    │   ├── Quanto mais GENERALISTA (ex: full-stack), mais acima
+    │   ├── O agente superior PRECISA ter contexto profundo para
+    │   │   validar o trabalho do subordinado (senão o filtro falha
+    │   │   e informação distorcida/de baixa qualidade sobe)
+    │   ├── Nunca colocar 2 validações desnecessárias entre o
+    │   │   executor e quem decide (otimiza tempo + tokens)
+    │   └── Exemplo prático:
+    │       │   wab-client (especialista WhatsApp) → ATOM (senior
+    │       │   full-stack com contexto de broker/backend)
+    │       │   NÃO faria sentido: wab-client → ATLAS (devops,
+    │       │   sem contexto de Baileys) → ATOM (informação
+    │       │   chegaria filtrada incorretamente)
     │
     ▼
 [3] SE um novo agente FOI CRIADO no passo [2]:
