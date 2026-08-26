@@ -148,8 +148,12 @@ ENTREGA CONCLUÍDA
     │
     ▼
 [2] ANÁLISE DE LACUNA (SEMPRE — independente do score)
-    │   Pergunta: "Um agente novo teria ajudado?"
-    │   Se SIM, analisa TAMBÉM:
+    │   Pergunta: "Um ou mais agentes novos teriam ajudado?"
+    │   (PODE sugerir MÚLTIPLOS agentes em um único ciclo —
+    │    sem limitação de 1 por vez. A decisão é baseada em
+    │    produtividade, eficiência e fluidez do squad.)
+    │   
+    │   Se SIM, analisa TAMBÉM (para CADA agente):
     │   ├── Qual a função específica do agente?
     │   ├── Para qual agente ele deve se REPORTAR?
     │   │   (baseado em: contexto de conhecimento, senioridade,
@@ -166,12 +170,18 @@ ENTREGA CONCLUÍDA
     │   ├── Nunca colocar 2 validações desnecessárias entre o
     │   │   executor e quem decide (otimiza tempo + tokens)
     │   └── Exemplo prático:
-    │       │   wab-client (especialista WhatsApp) → ATOM (senior
+    │       │   Ajax (especialista WhatsApp) → ATOM (senior
     │       │   full-stack com contexto de broker/backend)
-    │       │   NÃO faria sentido: wab-client → ATLAS (devops,
+    │       │   NÃO faria sentido: Ajax → ATLAS (devops,
     │       │   sem contexto de Baileys) → ATOM (informação
     │       │   chegaria filtrada incorretamente)
     │
+    │   ├── SIM (1 ou mais) → Crio cada agente com SKILL.md
+    │   │                     Defino lugar no organograma
+    │   │                     Registro no PAINEL_DE_CONTROLE
+    │   │                     Cada agente passa a fazer parte do SQUAD
+    │   │
+    │   └── NÃO → Só registro aprendizado
     ▼
 [3] SE um novo agente FOI CRIADO no passo [2]:
     │   Monitoramento CONTÍNUO: sempre as ÚLTIMAS 10 tarefas executadas
