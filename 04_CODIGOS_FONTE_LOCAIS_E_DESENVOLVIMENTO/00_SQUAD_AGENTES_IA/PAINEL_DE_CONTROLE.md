@@ -5,6 +5,7 @@
 **Dev Subdomínio:** `https://dev-ahut-ecosystem.apexfyhub.com.br` ✅ Funcionando (SPA routing fix)  
 
 ## ✅ PROGRESSO CICLO 4 — CORREÇÃO DE ÁUDIOS + FLUXO PÓS-ENTREGA (26/08)
+- ✅ **BUG-UI-001** — Inversão Visual Grupos (isAgentSender) + Legenda lead mostrava nome do grupo: corrigido. 10 perfis atualizados no DB. Backend patched. **status: executado**
 - ✅ **TCK-2026-093** — Hotfixes produção: áudio, textarea, isAgentSender (solicitado 24/08, entregue 26/08)
 - ✅ **TCK-2026-092** — Correção de áudios WhatsApp: pipeline WebM→OGG, retry 2x, timeout 60s, `.single()` fix
 - ✅ **Commit `38e8c1e`** — Snapshot produção + broker no `ahut-ecosystem-active`
