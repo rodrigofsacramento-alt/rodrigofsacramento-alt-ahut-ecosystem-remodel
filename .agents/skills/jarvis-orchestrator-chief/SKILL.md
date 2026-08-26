@@ -157,9 +157,10 @@ ENTREGA CONCLUÍDA
     │
     ▼
 [3] SE um novo agente FOI CRIADO no passo [2]:
-    │   Monitorar suas próximas 10 tarefas
+    │   Monitoramento CONTÍNUO: sempre as ÚLTIMAS 10 tarefas executadas
+    │   (se executou 100, analisa as últimas 10; se 177, as últimas 10)
     │   
-    │   Se 7 de 10 tarefas tiverem SCORE > 80 pontos:
+    │   Se 7 das últimas 10 tarefas tiverem SCORE > 80 pontos:
     │       → NASCE O ASIMOV (Agente Criador de Agentes)
     │       → ASIMOV herda 100% da função de criar novos agentes
     │       → Jarvis passa a só VALIDAR as propostas do ASIMOV
@@ -167,8 +168,8 @@ ENTREGA CONCLUÍDA
     │         conhecimento de como analisar lacunas, estruturar
     │         SKILL.md, e avaliar performance de novos agentes
     │
-    └── Se NÃO atingiu 7/10 >80pts:
-            → Continua monitorando
+    └── Se NÃO atingiu 7/10 >80pts nas últimas 10:
+            → Continua monitorando (loop contínuo)
             → Jarvis registra o que precisa melhorar
             → Se cair abaixo de 50pts em 3 tarefas consecutivas:
               → Desativar agente, registrar lição, refazer análise
