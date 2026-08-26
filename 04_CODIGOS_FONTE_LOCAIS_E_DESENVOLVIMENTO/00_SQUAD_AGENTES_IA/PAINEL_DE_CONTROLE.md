@@ -1,10 +1,20 @@
 # 📊 Painel de Controle Consolidado do Squad IA
 
-**Última Atualização:** 24/08/2026 (Ciclo 3 — Infraestrutura/Clone Supabase)  
-**Ambiente Ativo:** Local Dev Server (`http://localhost:5173`) | Repo: `ahut-ecosystem-remodel`  
+**Última Atualização:** 26/08/2026 (Ciclo 4 — Correção de Áudios + Fluxo Pós-Entrega)  
+**Ambiente Ativo:** Produção (`ahut-ecosystem.apexfyhub.com.br`) | Repo: `ahut-ecosystem-active`  
 **Dev Subdomínio:** `https://dev-ahut-ecosystem.apexfyhub.com.br` ✅ Funcionando (SPA routing fix)  
 
-## ✅ PROGRESSO CICLO 3 — INFRA SUPABASE CLONE + APP ATUALIZADO
+## ✅ PROGRESSO CICLO 4 — CORREÇÃO DE ÁUDIOS + FLUXO PÓS-ENTREGA (26/08)
+- ✅ **TCK-2026-092** — Correção de áudios WhatsApp: pipeline WebM→OGG, retry 2x, timeout 60s, `.single()` fix
+- ✅ **Commit `38e8c1e`** — Snapshot produção + broker no `ahut-ecosystem-active`
+- ✅ **Commit `3e47891`** — Schema banco de dados produção
+- ✅ **MANUAL_MASTER_RUNBOOK.md** — Handover do dev original documentado
+- ✅ **GUIA_COMANDANTE.md** — Comandos `/executar`, `/performance`, `/criaragente`
+- ✅ **Fluxo Pós-Entrega** — SKILL.md do Jarvis atualizado com performance + lacuna + ASIMOV
+- ✅ **Áudio funcionando** — Testado e validado na produção
+- ✅ **Score de Performance:** 58/100 (retrabalho e autonomia puxaram nota)
+- 🔄 **Análise de Lacuna:** Agente `wab-client` proposto (WhatsApp Business Client Specialist)
+- 🔄 **Engenharia reversa produção→dev:** Pendente (ADA identificou 12 correções que faltam no TSX)
 - ✅ **Commit + Push no GitHub remodel** — 10 commits enviados (58c5415): cartões navegam, TreinamentoAula, 🚀 Skill ATLAS deploy dev, Gestão persistência, Neurovendas, Chamados/Tecnologia, refatoramento, RPCs Atendimento, Corretores/Agenda. [58c5415]
 - ✅ **PostgreSQL 15 instalado na VPS** (2.24.95.98) — serviço systemd, DB clone_prod.
 - ✅ **pg_dump da produção Supabase** (`ptochsyoyatsydfysacc`) — schema 15.113 linhas extraído com pg_dump 17.
