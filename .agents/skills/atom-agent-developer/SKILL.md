@@ -148,7 +148,8 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
 
 ### Diagnóstico: Comparação Working vs Failing
 - **Problema:** Leads reportam "Este audio não está mais disponível" mesmo com broker online
-- **Método de diagnóstico:** Comparar um áudio que funcionou (14/08) x um que falhou (25/08):
+- **Referência completa:** `references/audio-diagnosis-workflow.md` — contém comandos SQL, Python, queries e tabela de causas raiz
+- **Método de diagnóstico:** Comparar um áudio que funcionou x um que falhou:
   1. Buscar na tabela `messages` WHERE content LIKE '%[Audio]%' nas duas datas
   2. Comparar `media_url`, `message_type`, `media_status`
   3. Fazer HEAD request nas duas URLs e comparar `Content-Type` e tamanho
