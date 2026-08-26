@@ -83,8 +83,9 @@ if (matchedMsgs?.length > 0) {
 - **Script automático:** `/opt/data/scripts/leads-audit.py` — CRON diário 6h (job: `leads-audit-diario`)
 - **Detecta:** LIDs no lugar de telefone, perfis duplicados (mesmo nome + LID+real), nomes genéricos (emoji, ".", "~")
 - **Regra:** APENAS LEITURA — nunca altera dados. Relatório .md salvo
-- **Fix aplicado:** `findOrCreateParticipantProfile` aceita `realPhone` e cria `remote_jid_alt`
+- **Fix aplicado:** `findOrCreateParticipantProfile` aceita `realPhone` e cria `remote_jid_alt` (commit 6553d37, compilado + PM2 reload)
 - **Resultado:** 2.055 LIDs (36,6%), 20 duplicatas LID+real phone confirmadas
+- **Referência:** `references/lid-audit-queries.sql` — consultas SQL prontas para diagnóstico
 
 ## Fluxo de Trabalho Diário
 1. Verificar status das sessões WhatsApp no banco
