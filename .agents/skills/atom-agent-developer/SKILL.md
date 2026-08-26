@@ -85,8 +85,24 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
    * Modificar o frontend **NÃO** afeta o broker na VPS. É expressamente **PROIBIDO** dar `pm2 reload` ou `pm2 restart` no broker do WhatsApp durante trabalhos de frontend.
 2. **PROIBIDO RODAR BROKER EM LOCALHOST COM BANCO DE PRODUÇÃO:**
    * Nunca execute `npm run dev` ou `node dist/index.js` no `ahut-whatsapp-broker` localmente apontando para o Supabase de produção. Login simultâneo derruba o WhatsApp da VPS.
-3. **RESILIÊNCIA EM QUERIES SUPABASE:**
+|3. **RESILIÊNCIA EM QUERIES SUPABASE:**
    * Nunca use `.single()` ou `.maybeSingle()` em buscas de contatos ou conversas no broker. Sempre utilize `.limit(1)` ordenado por `conversation_id` para tolerar contatos com múltiplos JIDs/LIDs.
+
+---
+
+## 🚫 5b. AS 10 LINHAS VERMELHAS DA ARQUITETURA (MANUAL MASTER)
+*Fonte: MANUAL_MASTER_RUNBOOK.md (documento de handover do desenvolvedor original, 26/08/2026)*
+
+1. **NUNCA coloque código assíncrono após o `return`** no `session-manager.js` — qualquer comando após o return vira código morto e nunca executa.
+2. **NUNCA use `.order().limit()` dentro de `.update()`** no Supabase — a API PostgREST rejeita com erro 400. Sempre faça SELECT prévio pelo ID e depois UPDATE com `.eq('id', ...)`.
+3. **NUNCA passe `mimetype: 'audio/mp4'`** para arquivos gravados em WebM no Baileys — corrompe reprodução em apps móveis do WhatsApp.
+4. **NUNCA hardcode UUIDs** de conversas ou tenants no código. Sempre extraia dinamicamente da URL ou payload.
+5. **NUNCA delete a pasta `/auth_info/`** com o PM2 online. Sempre rode `pm2 stop 0` antes de limpar credenciais.
+6. **NUNCA altere o número de colunas da tabela `messages`** sem avisar o frontend — o frontend espera exatamente 8 colunas. Mídias são tratadas dentro do `content`.
+7. **NUNCA suba arquivos sem extensão** para o Supabase Storage — precisa da extensão correta (`.ogg`, `.webm`, `.jpg`, `.pdf`) para setar o Content-Type.
+8. **NUNCA desative o FFmpeg na VPS** — ele é a espinha dorsal de compatibilidade multimídia do sistema.
+9. **NUNCA altere a porta do broker** sem atualizar os proxies reversos do Nginx/LiteSpeed — o broker precisa responder na porta 3001.
+10. **NUNCA deixe de testar áudios em iPhone real e Android real** antes de homologar — navegadores desktop toleram codecs que celulares rejeitam.
 
 ---
 

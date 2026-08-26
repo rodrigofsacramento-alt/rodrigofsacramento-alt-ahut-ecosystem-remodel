@@ -208,6 +208,52 @@ ENTREGA CONCLUÍDA
 - **Herança:** Jarvis transfere TODO o conhecimento de criação de agentes para o ASIMOV.
 - **Pós-ASIMOV:** Jarvis só valida propostas. ASIMOV cria do zero.
 
+---
+
+### 🧩 Nomenclatura de Agentes
+- Todos os agentes do squad seguem nomes de tecnologia começando com a letra **A**:
+  - `ADA` (Front-End), `ATOM` (Dev), `ATLAS` (DevOps), `AURA` (QA), `AEGIS` (Security),
+  - `ARGUS` (Scrum), `AVA` (Triagem), `APOLLO` (Data), `ARIA` (Leads), `AJAX` (WhatsApp),
+  - `ASIMOV` (Criador de Agentes — futuro)
+- Nomes em maiúsculo, 4-5 letras, identidade tecnológica
+
+---
+
+### 🏢 Hierarquia de Agentes — Critérios de Posicionamento
+Ao criar um novo agente, definir sua posição no organograma baseado em:
+
+1. **Quanto mais ESPECIALISTA** (ex: só WhatsApp), mais abaixo na hierarquia
+2. **Quanto mais GENERALISTA** (ex: full-stack), mais acima
+3. **O superior PRECISA ter contexto profundo** para validar o subordinado
+   - Se o superior não entende do assunto, o filtro falha e informação distorcida sobe
+   - Ex: Ajax (especialista WhatsApp) → ATOM (senior full-stack com contexto de broker)
+   - Errado: Ajax → ATLAS (devops, sem contexto de Baileys) → ATOM (informação filtrada incorretamente)
+4. **Nunca colocar 2 validações desnecessárias** entre executor e quem decide
+5. **Caminho de validação padrão:** Júnior → Pleno → Sênior (ATOM) → Jarvis
+
+---
+
+### 🌌 Visão Estratégica — Produto QUBITS
+O Squad Tech Ahut está construindo o **QUBITS**: um sistema que torna empresas **90% autônomas de funcionários humanos**, absorvendo operações por automação + squad de agentes de IA.
+
+**Roadmap de 3 Sprints rumo à autonomia:**
+- **Sprint 1 (7 dias):** Fundação autônoma — CI/CD, Message Bus, Auto-Contexto AJAX, Auto-Report
+- **Sprint 2 (8 dias):** Auto-validação + auto-proteção — E2E, SIEM, IaC, Auto-Qualificação Leads
+- **Sprint 3 (14 dias):** Auto-criação + auto-correção — Spec→Código, Auto-Validação Visual, Auto-Tracking
+
+**7 Métricas de Autonomia (M1 a M7):**
+| # | Métrica | Baseline | Meta 90d |
+|---|---|---|---|
+| M1 | % Deploys automáticos | 0% | 100% |
+| M2 | % Releases sem blocker humano | 30% | 95% |
+| M3 | Tempo spec→produção (dias) | 14 | 1 |
+| M4 | % Incidentes auto-remediados | 0% | 90% |
+| M5 | % Action items executados | <30% | 95% |
+| M6 | Tempo resposta lead P1 | >4h | <1min |
+| M7 | % Comunicação com contexto | 0% | 100% |
+
+**90% de autonomia = TODAS as métricas acima de 90%**
+
 ### Comando `/executar fluxo completo`
 O Comandante pode disparar o fluxo de orquestração completo com o comando `/executar fluxo completo` no Telegram. Quando receber este comando:
 - **OBRIGATÓRIO** executar TODAS as 9 etapas do fluxo
