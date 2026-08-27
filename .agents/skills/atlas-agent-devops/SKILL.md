@@ -92,6 +92,12 @@ js[js.index(old):js.index(old)+len(old)] = new
 # 🌐 HOSTINGER — CACHE E DOCUMENT ROOT
 - **Document root real da produção AHUT:** `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut`
 - **Document root do dev:** `/home/u817195350/domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html`
+- **ATENÇÃO: 4 destinos de deploy obrigatórios:**
+  1. VPS nginx: `/var/www/html/`
+  2. VPS crm: `/var/www/crm-imobiliaria/`
+  3. Hostinger subdomínio: `/home/u817195350/domains/ahut-ecosystem.apexfyhub.com.br/public_html/`
+  4. Hostinger ahut/: `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
+- O domínio `ahut-ecosystem.apexfyhub.com.br` aponta para Hostinger (LiteSpeed), não para o VPS
 - LiteSpeed cache é agressivo — `CacheDisable` no .htaccess é frequentemente ignorado
 - Limpeza pelo hPanel: Avançado → Cache → Limpar Tudo
 - Purge via PHP: `<?php header("X-LiteSpeed-Purge: *"); echo "OK"; ?>`
@@ -105,6 +111,45 @@ js[js.index(old):js.index(old)+len(old)] = new
 - **Recuperação:** `UPDATE whatsapp_sessions SET status='connecting', qr_code=NULL, qr_expires_at=NULL, last_error=NULL, updated_at=NOW()
   WHERE id = '<session_id>'` → broker gera novo QR
 - **Prevenção:** Agrupar múltiplos patches em UM restart. Verificar `pm2 show 0` após restart
+
+### 📦 Restauração de Versão Anterior via Git
+Quando precisar reverter o frontend de produção para um commit específico (ex: deploy quebrou):
+```bash
+# No repositório ahut-ecosystem-active (VPS 2.24.95.98)
+cd /root/.hermes/ahut-ecosystem-active
+git config --global --add safe.directory /root/.hermes/ahut-ecosystem-active
+
+# Verificar o que o commit contém
+git show <hash> --name-only
+
+# Restaurar arquivos específicos do commit
+git checkout <hash> -- 01_FRONTEND_PRODUCAO_HOSTINGER/
+
+# Deployar para os 4 destinos (ver seção de destinos acima)
+# Purge cache
+curl -sk https://ahut-ecosystem.apexfyhub.com.br/purge.php
+```
+
+### 🖥️ Técnica: VPS como Middleman para Hostinger
+Quando a conexão direta SFTP à Hostinger falha (timeout), usar o VPS como ponte:
+```python
+vps = paramiko.SSHClient(); vps.connect('2.24.95.98', username='root', password='...')
+host = paramiko.SSHClient(); host.connect('82.25.73.206', port=65002, username='u817195350', password='...')
+vps_sftp = vps.open_sftp(); h_sftp = host.open_sftp()
+
+# Download do VPS → upload para Hostinger
+with vps_sftp.open(src, 'rb') as vf:
+    data = vf.read()
+with h_sftp.open(remote, 'wb') as hf:
+    hf.write(data)
+```
+
+### 🗃️ Snapshots Disponíveis no VPS
+- `prod_snapshot_2408/` — 24/08 (index.html + index-C9-68P_N.js + Atendimento-live-v10.js)
+- `prod_snapshot_2608/` — 26/08 (index.html + index-C9-68P_N.js + Atendimento-DcqAjCvf.js + Atendimento-live-v10.js + index-rUI5cL83.css)
+- `01_FRONTEND_PRODUCAO_HOSTINGER/` — backup completo com todos os chunks JS (23/08)
+- `01_FRONTEND_PRODUCAO_HOSTINGER_BKP/` — backup alternativo
+- `crm-imobiliaria-producao-BKP/` — backup do CRM imobiliário
 
 ### 📱 Fluxo de Áudio: Diagnóstico e Correção
 - **Problema:** "Falhou o áudio" ou "Este audio não está mais disponível"

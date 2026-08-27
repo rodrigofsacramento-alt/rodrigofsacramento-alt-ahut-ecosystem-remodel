@@ -143,3 +143,12 @@ if (matchedMsgs?.length > 0) {
 | D ⚪ | Nenhum tem mensagens | ~2.880 | Pode limpar |
 - **Filtro correto:** `LENGTH(phone) > 13` (LIDs podem ter 14 dígitos — não usar > 14)
 - **Função lixeira:** `move_profile_to_trash(p_profile_id UUID)` — parâmetro nomeado para evitar coluna ambígua
+
+### 🔔 Sistema de Notificações (DB Triggers)
+- **Tabela:** `notifications` — 15 colunas com tipos: `new_lead`, `sale_completed`, `lead_contacted`, `lead_qualified`, `proposal_created`, `visit_scheduled`, `contract_signed`, `reminder`, `late`, `system`, `approval`
+- **Triggers automáticos:**
+  - `trg_notify_new_lead` → AFTER INSERT ON leads → notifica responsável + admins
+  - `trg_notify_lead_contacted` → AFTER INSERT ON conversations → notifica agente
+  - `trg_notify_sale_completed` → AFTER UPDATE ON contracts (status='active') → notifica agente + admins
+- **Frontend:** `Notificacoes.tsx` com Realtime subscription, Toast pop-up, sons (venda = caixa registradora alto), cards de estatísticas, filtros por tipo
+- **Sounds:** Mixkit assets via `new Audio(url)`. Volume: sale=0.8, outros=0.4

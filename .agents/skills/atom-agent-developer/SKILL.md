@@ -172,14 +172,14 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
 - **Patch aplicado em:** `Atendimento-DcqAjCvf.js` (produção) e `ahut/assets/` (ambas as URLs)
 
 ### Document Root Final (confirmado 26/08)
-- **Produção:** `https://ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
+- **Produção — 4 destinos obrigatórios:**
+  1. VPS nginx: `/var/www/html/`
+  2. VPS crm: `/var/www/crm-imobiliaria/`
+  3. Hostinger subdomínio: `/home/u817195350/domains/ahut-ecosystem.apexfyhub.com.br/public_html/`
+  4. Hostinger ahut/: `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
 - **Dev:** `https://dev-ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
-- **NUNCA** tentar deploy em `domains/ahut-ecosystem.apexfyhub.com.br/public_html/` ou `domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/` — esses caminhos NÃO são os docroots reais
-- **Sempre verificar:** hPanel → Domínios → [subdomínio] → Documento Raiz
-- O domínio `dev-ahut-ecosystem.apexfyhub.com.br` aponta para `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
-- **Também NÃO é o subdomínio isolado** — mesmo padrão da produção (subdiretório dentro do domínio principal)
-- **NUNCA** tentar deploy em `domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/` (erro comum)
-- **Sempre verificar** no hPanel → Domínios → [subdomínio] → Documento Raiz antes de deploy
+- **SEMPRE deployar nos 4 destinos.** O domínio `ahut-ecosystem.apexfyhub.com.br` aponta para Hostinger (LiteSpeed), não para o VPS
+- **Cache LiteSpeed:** purge via `purge.php` com `header("X-LiteSpeed-Purge: *")` ou hPanel → Avançado → Cache → Limpar Tudo
 
 ### Cache LiteSpeed Hostinger
 - Cache é no nível do servidor LiteSpeed, não acessível como arquivo
