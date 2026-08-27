@@ -101,6 +101,52 @@ if (matchedMsgs?.length > 0) {
 - **Resultado:** 2.055 LIDs (36,6%), 20 duplicatas LID+real phone confirmadas
 - **Referência:** `references/lid-audit-queries.sql` — consultas SQL prontas para diagnóstico
 
+### CAT 2 — Correção em Massa de `remote_jid_alt` (aprendido 27/08)
+**Problema:** Após sessão WhatsApp reconectar, o broker processa mensagens de LIDs e cria `whatsapp_contacts` SEM `remote_jid_alt`. O número real existe em `whatsapp_messages.canonical_remote_jid`.
+
+**Correção em lote (executar no Supabase):**
+```sql
+-- 1. Via canonical_remote_jid (mais preciso)
+UPDATE whatsapp_contacts wc
+SET remote_jid_alt = u.real_jid
+FROM (
+    SELECT DISTINCT ON (wc.id)
+        wc.id as wc_id,
+        wm.canonical_remote_jid as real_jid
+    FROM whatsapp_contacts wc
+    JOIN conversations c ON c.id = wc.conversation_id AND c.status NOT IN ('closed', 'deleted')
+    JOIN whatsapp_messages wm ON wm.remote_jid = wc.remote_jid
+    WHERE wc.remote_jid LIKE '%@lid%'
+      AND (wc.remote_jid_alt IS NULL OR wc.remote_jid_alt = '')
+      AND wm.canonical_remote_jid IS NOT NULL
+      AND wm.canonical_remote_jid LIKE '%@s.whatsapp.net%'
+      AND wm.from_me = true
+    ORDER BY wc.id, wm.created_at DESC
+) u
+WHERE wc.id = u.wc_id;
+
+-- 2. Fallback via profiles.phone (quando tem duplicata real)
+UPDATE whatsapp_contacts wc
+SET remote_jid_alt = CONCAT(REGEXP_REPLACE(p.phone, '[^0-9]', '', 'g'), '@s.whatsapp.net')
+FROM profiles p
+WHERE wc.profile_id = p.id
+  AND wc.remote_jid LIKE '%@lid%'
+  AND (wc.remote_jid_alt IS NULL OR wc.remote_jid_alt = '')
+  AND p.phone ~ '^[0-9]+$'
+  AND LENGTH(p.phone) > 10 AND LENGTH(p.phone) <= 13
+  AND p.full_name !~ '^[0-9]+$';
+
+-- 3. Fallback via whatsapp_contacts.phone_number (último recurso)
+UPDATE whatsapp_contacts wc
+SET remote_jid_alt = CONCAT(wc.phone_number, '@s.whatsapp.net')
+FROM conversations c
+WHERE wc.conversation_id = c.id
+  AND wc.remote_jid LIKE '%@lid%'
+  AND (wc.remote_jid_alt IS NULL OR wc.remote_jid_alt = '')
+  AND c.status NOT IN ('closed', 'deleted');
+```
+**Resultado 27/08:** 964 LIDs corrigidos (745 via canonical, 219 via profiles, 79 via phone_number). Restaram 0.
+
 ### Pipeline de Áudio — Regras Críticas (manual do dev)
 1. **NUNCA código após `return`** — qualquer código depois de `return await sock.sendMessage(...)` vira código morto. SEMPRE capturar `const sendResult = await sock.sendMessage(...)` e colocar `return sendResult;` ao final, após o upload.
 2. **NUNCA `.order().limit()` em UPDATE** — PostgREST rejeita. Fazer SELECT prévio por ID, guardar o `id`, depois UPDATE `.eq('id', id)`.
@@ -108,6 +154,22 @@ if (matchedMsgs?.length > 0) {
 4. **Fluxo correto:** baixar .webm → FFmpeg → .ogg → enviar pra WhatsApp → upload .ogg storage → atualizar messages.content com URL .ogg.
 5. **Fallback raw buffer:** se FFmpeg falhar, enviar buffer raw como `audio/webm` + `ptt: true`.
 6. **Waveform:** gerar com `generateWaveform(oggBuffer)` (64 samples normalizados) e incluir no sendMessage.
+
+### ⚠️ PM2 Restart Pode Perder Sessão WhatsApp (aprendido 27/08)
+- **Problema:** `pm2 restart 0 --update-env` pode disparar `stopSession()` que deleta as credenciais (`auth_info/`). O PM2 pode estar desatualizado em relação ao disco (`In-memory PM2 is out-of-date`).
+- **Sintoma:** Sessão fica em loop: "Conectando → Código de pareamento gerado → Stream Errored 503 → Reconectando"
+- **Recuperação:** Re-parear o WhatsApp no celular. O código de pareamento é gerado com `pairingPhone` do número configurado (ex: `595994857156`).
+- **Prevenção:** NUNCA reiniciar o broker sem antes confirmar que o PM2 está atualizado (`pm2 update`) e que as credenciais estão salvas.
+- **Perfis órfãos:** Quando a sessão cai durante o processamento de `messages.upsert`, o broker cria o perfil mas NÃO cria o `whatsapp_contacts` — lead fica invisível no chat. Há 3 queries de correção na seção "CAT 2 — Correção em Massa" acima.
+
+### 🔔 Sistema de Notificações — Constraints
+- **Tabela `notifications`** tem CHECK constraint no campo `type`:
+  ```sql
+  CHECK (type IN ('new_lead','sale_completed','lead_contacted','lead_qualified',
+         'proposal_created','visit_scheduled','contract_signed','reminder','late','system','approval','info'))
+  ```
+- **Trigger de conversa** insere com type `info` — se esse tipo não estiver no CHECK, a trigger quebra e a conversa não é criada.
+- **Fallback:** Se der erro `violates check constraint "notifications_type_check"`, adicionar o tipo faltante com `ALTER TABLE`.
 
 ### Deploy Produção — Docroot Correto
 - **CRM ativo:** `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/` (acessível via `https://apexfyhub.com.br/ahut/`)
