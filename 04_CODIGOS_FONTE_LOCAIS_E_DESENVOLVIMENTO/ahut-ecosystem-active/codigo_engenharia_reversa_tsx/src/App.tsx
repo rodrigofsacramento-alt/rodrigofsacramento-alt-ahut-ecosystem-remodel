@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useReminders } from './hooks/useReminders';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { Sidebar, Header } from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Leads from './components/Leads';
@@ -56,7 +57,8 @@ function AppLayout({ children, title, subtitle, dark }: { children: React.ReactN
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
+      <LanguageProvider>
+        <Router>
         <Routes>
           {/* Auth Route */}
           <Route path="/login" element={<Login />} />
@@ -227,6 +229,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

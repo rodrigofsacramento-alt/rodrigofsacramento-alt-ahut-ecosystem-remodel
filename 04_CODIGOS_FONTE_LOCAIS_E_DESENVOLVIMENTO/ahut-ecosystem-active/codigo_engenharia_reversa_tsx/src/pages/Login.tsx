@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { LanguagePrompt } from '../contexts/LanguagePrompt';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -121,6 +122,7 @@ export default function Login() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-slate-950 flex">
       {/* Imagem lateral esquerda */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
@@ -229,5 +231,7 @@ export default function Login() {
         </div>
       </div>
     </div>
+    <LanguagePrompt />
+    </>
   );
 }
