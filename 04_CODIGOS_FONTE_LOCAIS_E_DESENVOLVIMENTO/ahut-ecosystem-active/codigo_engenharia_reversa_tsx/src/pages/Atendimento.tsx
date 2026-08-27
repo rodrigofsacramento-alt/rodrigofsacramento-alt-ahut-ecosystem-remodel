@@ -88,6 +88,7 @@ interface Message {
     name?: string;
     role?: string;
     avatar_url?: string | null;
+    phone?: string | null;
   };
   receiver_id?: string;
 }
@@ -864,36 +865,131 @@ export default function Atendimento() {
                     false;
                   
                   const senderName = msg.sender?.full_name || msg.sender?.name || (isAgentSender ? 'Você' : 'Participante');
+                  
+                  // ── AGENT HEADER (P_name + P_dept style from production) ──
+                  const agentName = isAgentSender
+                    ? (senderName + (profile?.role === 'admin' ? ' - Administração' : profile?.role === 'manager' ? ' - Gestão' : ''))
+                    : null;
+
+                  // ── GROUP LEAD HEADER: sender name + phone ──
+                  const showGroupHeader = isGroupActiveChat && !isAgentSender && (msg.sender?.full_name || msg.sender?.phone);
+                  const groupSenderLabel = msg.sender?.full_name || 'Desconhecido';
+                  const groupSenderPhone = msg.sender?.phone || null;
+
+                  const messageContent = msg.content || '';
+                  const isAudioMessage = msg.message_type === 'audio' || messageContent.startsWith('[Audio]') || messageContent.startsWith('[audio]');
+                  const isImageMessage = msg.message_type === 'image' || messageContent.startsWith('[Image]') || messageContent.startsWith('[image]');
+                  const isVideoMessage = msg.message_type === 'video' || messageContent.startsWith('[Video]') || messageContent.startsWith('[video]');
+                  const isDocumentMessage = msg.message_type === 'document' || messageContent.startsWith('[Arquivo]') || messageContent.startsWith('[Documento]');
+                  const isSystemMessage = msg.message_type === 'system';
+
+                  // Extract URL from content pattern: [Type] filename\nurl
+                  const extractUrl = (content: string): string | null => {
+                    const lines = content.split('\n');
+                    return lines.length > 1 ? lines[lines.length - 1].trim() : null;
+                  };
+                  const mediaUrl = extractUrl(messageContent);
+                  const audioFileName = messageContent.includes('.ogg') ? messageContent.split('\n')[0]?.replace('[Audio] ', '') : null;
 
                   return (
-                    <div key={msg.id} className={`flex flex-col ${isAgentSender ? 'items-end' : 'items-start'}`}>
-                      {/* Em grupos, exibir nome do remetente para TODAS as mensagens de participantes */}
-                      {isGroupActiveChat && (
-                        <div className="flex items-center gap-1.5 ml-1 mb-1">
-                          <span className={cn(
-                            'text-[10px] font-semibold',
-                            isAgentSender ? 'text-emerald-600' : 'text-slate-500'
-                          )}>
-                            {senderName}
+                    <div key={msg.id} className={`flex flex-col ${isAgentSender ? 'items-end' : 'items-start'} ${isSystemMessage ? 'items-center w-full' : ''}`}>
+                      {/* GROUP LEAD HEADER: nome + telefone do participante */}
+                      {showGroupHeader && (
+                        <div className="flex items-center gap-1 ml-1 mb-0.5 max-w-[300px]">
+                          <span className="text-[10px] font-semibold text-slate-500 ml-1 truncate">
+                            {groupSenderLabel}
                           </span>
+                          {groupSenderPhone && (
+                            <span className="text-[10px] font-normal text-slate-400 opacity-75 ml-0.5">
+                              ({groupSenderPhone})
+                            </span>
+                          )}
                         </div>
                       )}
 
-                      <div className={cn(
-                        'max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm',
-                        isAgentSender 
-                          ? 'bg-emerald-50 text-slate-900 rounded-tr-none border border-emerald-100' 
-                          : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
-                      )}>
-                        <p className="whitespace-pre-line break-words">{msg.content}</p>
+                      {/* AGENT HEADER: nome + departamento */}
+                      {isAgentSender && !isSystemMessage && (
+                        <div className="text-[10px] font-semibold text-muted-foreground mr-1 mb-0.5 max-w-[300px] truncate text-right">
+                          {agentName}
+                        </div>
+                      )}
+
+                      {/* SYSTEM MESSAGE (centralized) */}
+                      {isSystemMessage ? (
+                        <div className="bg-muted/50 border border-border text-center mx-auto text-xs font-medium py-1 px-3 rounded-full">
+                          {messageContent.replace('[system] ', '')}
+                        </div>
+                      ) : isAudioMessage && mediaUrl ? (
+                        /* ── AUDIO PLAYER ── */
                         <div className={cn(
-                          'flex items-center gap-1 text-[10px] mt-1',
+                          'max-w-[85%] sm:max-w-[75%] rounded-2xl p-3 shadow-sm',
+                          isAgentSender
+                            ? 'bg-emerald-50 border border-emerald-100 rounded-tr-none'
+                            : 'bg-white border border-slate-200 rounded-tl-none'
+                        )}>
+                          <audio controls className="w-full h-10" preload="metadata">
+                            <source src={mediaUrl} type="audio/ogg; codecs=opus" />
+                            <source src={mediaUrl} type="audio/ogg" />
+                            <source src={mediaUrl.replace('.ogg', '.webm')} type="audio/webm" />
+                            <source src={mediaUrl} type="audio/mpeg" />
+                            <source src={mediaUrl} type="audio/mp4" />
+                          </audio>
+                        </div>
+                      ) : isImageMessage && mediaUrl ? (
+                        /* ── IMAGE ── */
+                        <div className={cn(
+                          'max-w-[85%] sm:max-w-[75%] rounded-2xl overflow-hidden shadow-sm',
+                          isAgentSender
+                            ? 'rounded-tr-none'
+                            : 'rounded-tl-none'
+                        )}>
+                          <img src={mediaUrl} alt="Imagem" className="w-full h-auto max-h-80 object-contain bg-slate-100"
+                            onClick={() => window.open(mediaUrl, '_blank')} />
+                        </div>
+                      ) : isVideoMessage && mediaUrl ? (
+                        /* ── VIDEO ── */
+                        <div className={cn(
+                          'max-w-[85%] sm:max-w-[75%] rounded-2xl overflow-hidden shadow-sm',
+                          isAgentSender ? 'rounded-tr-none' : 'rounded-tl-none'
+                        )}>
+                          <video controls className="w-full max-h-80" preload="metadata">
+                            <source src={mediaUrl} />
+                          </video>
+                        </div>
+                      ) : isDocumentMessage && mediaUrl ? (
+                        /* ── DOCUMENT ── */
+                        <a href={mediaUrl} target="_blank" rel="noopener noreferrer"
+                          className={cn(
+                            'flex items-center gap-3 max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 shadow-sm text-sm font-medium',
+                            isAgentSender
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-tr-none'
+                              : 'bg-white text-slate-700 border border-slate-200 rounded-tl-none'
+                          )}>
+                          <FileText className="w-5 h-5 shrink-0" />
+                          <span className="truncate">{audioFileName || 'Documento'}</span>
+                        </a>
+                      ) : (
+                        /* ── TEXT ── */
+                        <div className={cn(
+                          'max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm',
+                          isAgentSender 
+                            ? 'bg-emerald-50 text-slate-900 rounded-tr-none border border-emerald-100' 
+                            : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
+                        )}>
+                          <p className="whitespace-pre-line break-words">{messageContent}</p>
+                        </div>
+                      )}
+
+                      {/* TIMESTAMP */}
+                      {!isSystemMessage && (
+                        <div className={cn(
+                          'flex items-center gap-1 text-[10px] mt-0.5',
                           isAgentSender ? 'text-slate-500 justify-end' : 'text-slate-400 justify-start'
                         )}>
                           <span>{new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                           {isAgentSender && <CheckCheck className="w-3 h-3 text-emerald-500" />}
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })
