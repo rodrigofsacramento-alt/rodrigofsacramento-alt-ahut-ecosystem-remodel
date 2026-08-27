@@ -274,6 +274,9 @@ O Squad Tech Ahut está construindo o **QUBITS**: um sistema que torna empresas 
 
 **90% de autonomia = TODAS as métricas acima de 90%**
 
+### Comando `/reuniao` — Convocar Reunião Geral do Squad
+Dispara o **ARGUS** como orchestrator para facilitar uma reunião com todos os 11 agentes. Cada agente dá 3 contribuições (bom, gargalo, sugestão). Gera relatório em `PLANO_MELHORIA_QUBITS.md` com diagnóstico, propostas priorizadas (P1/P2/P3), roadmap por sprints e métricas de autonomia.
+
 ### Comando `/executar fluxo completo`
 O Comandante pode disparar o fluxo de orquestração completo com o comando `/executar fluxo completo` no Telegram. Quando receber este comando:
 - **OBRIGATÓRIO** executar TODAS as 9 etapas do fluxo
