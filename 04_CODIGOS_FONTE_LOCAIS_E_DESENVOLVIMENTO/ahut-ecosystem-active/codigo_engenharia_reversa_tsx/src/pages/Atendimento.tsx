@@ -265,19 +265,19 @@ export default function Atendimento() {
     // Filtro por aba
     switch (activeTab) {
       case 'meus':
-        filtered = filtered.filter((c) => c.agent_id === user?.id);
+        filtered = filtered.filter((c) => c.agent_id === user?.id && c.status !== 'closed' && c.status !== 'deleted');
         break;
       case 'ativos':
         filtered = filtered.filter((c) => c.status === 'active' || c.status === 'open');
         break;
       case 'pendentes':
-        filtered = filtered.filter((c) => !c.agent_id || c.agent_id === null);
+        filtered = filtered.filter((c) => (!c.agent_id || c.agent_id === null) && c.status !== 'closed' && c.status !== 'deleted');
         break;
       case 'nao_atribuidos':
-        filtered = filtered.filter((c) => !c.agent_id);
+        filtered = filtered.filter((c) => !c.agent_id && c.status !== 'closed' && c.status !== 'deleted');
         break;
       case 'grupos':
-        filtered = filtered.filter((c) => checkIsGroup(c));
+        filtered = filtered.filter((c) => checkIsGroup(c) && c.status !== 'closed');
         break;
       default:
         break;

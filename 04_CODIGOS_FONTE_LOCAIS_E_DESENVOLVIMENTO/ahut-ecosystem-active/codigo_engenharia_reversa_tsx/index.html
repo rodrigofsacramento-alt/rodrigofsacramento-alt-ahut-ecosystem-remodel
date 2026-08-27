@@ -1,9 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR" class="notranslate" translate="no">
   <head>
     <meta charset="UTF-8" />
+    <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="https://i.imgur.com/bpzYwaT.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.imgur.com/bpzYwaT.png" />
     <title>Estate.ia CRM - Dev</title>
+    <meta name="description" content="Estate.ia CRM - Sistema de gestão imobiliária inteligente" />
+    <meta name="author" content="Estate.ia" />
+    <meta property="og:title" content="Estate.ia CRM" />
+    <meta property="og:description" content="Sistema de gestão imobiliária inteligente" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,9 +24,31 @@
       body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
       code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
     </style>
+    <script>
+      (function() {
+        if (typeof Node !== "undefined" && Node.prototype) {
+          var origRemoveChild = Node.prototype.removeChild;
+          Node.prototype.removeChild = function(child) {
+            if (child && child.parentNode !== this) {
+              if (child.parentNode) { return child.parentNode.removeChild(child); }
+              return child;
+            }
+            return origRemoveChild.apply(this, arguments);
+          };
+          var origInsertBefore = Node.prototype.insertBefore;
+          Node.prototype.insertBefore = function(newNode, referenceNode) {
+            if (referenceNode && referenceNode.parentNode !== this) {
+              if (referenceNode.parentNode) { return referenceNode.parentNode.insertBefore(newNode, referenceNode); }
+              return this.appendChild(newNode);
+            }
+            return origInsertBefore.apply(this, arguments);
+          };
+        }
+      })();
+    </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="notranslate" translate="no">
+    <div id="root" class="notranslate" translate="no"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
