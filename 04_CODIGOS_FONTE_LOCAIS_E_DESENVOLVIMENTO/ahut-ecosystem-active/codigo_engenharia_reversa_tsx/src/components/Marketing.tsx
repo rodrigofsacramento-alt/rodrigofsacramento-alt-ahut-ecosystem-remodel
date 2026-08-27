@@ -78,7 +78,7 @@ export default function Marketing() {
           </div>
 
           {/* Gráfico Alcance vs Engajamento */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <div className="glass-card rounded-2xl p-5">
             <h4 className="text-sm font-bold text-slate-900 mb-4">Alcance vs Engajamento (últimos 6 meses)</h4>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={alcanceMensal}>

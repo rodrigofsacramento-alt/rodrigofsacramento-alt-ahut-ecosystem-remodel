@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useReminders } from './hooks/useReminders';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { Sidebar, Header } from './components/Layout';
+import { AnimatePresence, motion } from 'framer-motion';
 import Dashboard from './components/Dashboard';
 import Leads from './components/Leads';
 import Atendimento from './pages/Atendimento';
@@ -38,7 +39,6 @@ const queryClient = new QueryClient({
 
 function AppLayout({ children, title, subtitle, dark }: { children: React.ReactNode; title: string; subtitle?: string; dark?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
-  // 🔔 Hook global de lembretes com alertas sonoros — roda em background para todas as telas
   useReminders();
 
   return (
@@ -46,9 +46,14 @@ function AppLayout({ children, title, subtitle, dark }: { children: React.ReactN
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header title={title} subtitle={subtitle} />
-        <main className={`p-6 flex-1 overflow-auto ${dark ? 'bg-slate-950' : ''}`}>
+        <motion.main
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className={`p-6 flex-1 overflow-auto ${dark ? 'bg-slate-950' : ''}`}
+        >
           {children}
-        </main>
+        </motion.main>
       </div>
     </div>
   );

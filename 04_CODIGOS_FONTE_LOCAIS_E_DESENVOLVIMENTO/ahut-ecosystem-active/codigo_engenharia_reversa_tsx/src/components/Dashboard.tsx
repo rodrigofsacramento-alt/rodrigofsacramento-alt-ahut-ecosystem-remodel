@@ -138,19 +138,19 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="h-[300px]">
+          <div className="h-[300px] glass-card rounded-2xl p-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
                 <defs>
                   <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F97316" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#F97316" stopOpacity={0.15}/>
                     <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748B'}} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748B'}} />
-                <Tooltip />
+                <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid rgba(249,115,22,0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.9)' }} />
                 <Area type="monotone" dataKey="leads" stroke="#F97316" strokeWidth={3} fillOpacity={1} fill="url(#colorLeads)" />
               </AreaChart>
             </ResponsiveContainer>
