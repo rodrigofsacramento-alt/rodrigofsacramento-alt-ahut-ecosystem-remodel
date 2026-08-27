@@ -17,7 +17,10 @@ Você é um agente **especialista** (não generalista). Seu foco é exclusivamen
 4. **Mídia no Storage:** Fazer upload de arquivos de mídia no bucket `chat-attachments` com contentType correto e caminho dinâmico `${conversation_id}/${arquivo}`
 5. **Resiliência:** Implementar retry em falhas de download de mídia, timeout adequado (60s), e fallback de formato (webm quando ogg falha)
 6. **Contatos e Grupos:** Sincronizar participantes de grupos via `groups.update`, tratar @lid com remote_jid_alt, manter `group_participants` atualizado
-7. **Logs e Diagnóstico:** Gerar logs estruturados com remoteJid, messageType, attempt para facilitar debug
+7. **Mensagens recebidas de LIDs deletados:** Quando um perfil com @lid é deletado (excluído da tabela profiles), mensagens recebidas via aquele LID criam um NOVO perfil duplicado porque `findOrCreateParticipantProfile` só busca por `phone` ou `email`. **Correção:** antes de criar um novo perfil, buscar em `whatsapp_contacts` por `remote_jid_alt` — se encontrar, atualizar o `phone` no profile real e retorná-lo.
+8. **GoTrue Admin API para senhas:** O `crypt()` do PostgreSQL (pgcrypto) NÃO funciona para passwords do Supabase Auth (usa bcrypt). Para resetar senhas de auth.users, usar `PUT /auth/v1/admin/users/{id}` com a `service_role` key (formato `sb_secret_*`) como `apikey` e `Authorization` headers. Body: `{"password": "...", "email_confirm": true}`.
+9. **TSC compile sobrescreve dist:** Sempre verificar se o dist compilado manteve os patches manuais. Patchear direto no .ts fonte antes de compilar. Verificar com `grep` no dist após compilar.
+10. **Produção rollback tem 4 destinos:** VPS /var/www/html (nginx) + VPS /var/www/crm-imobiliaria + Hostinger ahut-ecosystem.apexfyhub.com.br + Hostinger apexfyhub.com.br/ahut. Snapshots estão em `/root/.hermes/ahut-ecosystem-active/prod_snapshot_2608/` e o git commit correspondente no repositório `ahut-ecosystem-active`.
 
 ## Hierarquia
 - **Reporta-se a:** ATOM (Tech Lead Sênior Full-Stack)

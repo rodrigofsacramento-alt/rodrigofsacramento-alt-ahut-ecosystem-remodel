@@ -300,3 +300,49 @@ O Comandante pode disparar o fluxo de orquestração completo com o comando `/ex
 - Cache no nível do servidor, não acessível como arquivo
 - `.htaccess` com `CacheDisable` é ignorado
 - Solução: `purge.php` com `header("X-LiteSpeed-Purge: *")` ou hPanel → Avançado → Cache → Limpar Tudo
+
+### 🔴 PRODUÇÃO: 4 DESTINOS DE DEPLOY (aprendido 27/08)
+**REGRA CRÍTICA:** O frontend de produção é servido em **4 destinos simultâneos**. Um deploy só está completo quando TODOS os 4 estão atualizados:
+
+| # | Destino | Servidor | Acesso |
+|---|---|---|---|
+| 1 | VPS nginx: `/var/www/html/` | `2.24.95.98` root | SFTP/SCP via VPS |
+| 2 | VPS crm: `/var/www/crm-imobiliaria/` | `2.24.95.98` root | SFTP/SCP via VPS |
+| 3 | Hostinger subdomínio: `ahut-ecosystem.apexfyhub.com.br` → `~/domains/ahut-ecosystem.../public_html/` | `82.25.73.206:65002` u817195350 | SFTP/SCP (senha: Dir@5207411605) |
+| 4 | Hostinger ahut/: `apexfyhub.com.br/ahut/` → `~/domains/apexfyhub.com.br/public_html/ahut/` | `82.25.73.206:65002` u817195350 | SFTP/SCP (senha: Dir@5207411605) |
+
+### 🔄 RESTORE DE PRODUÇÃO (aprendido 27/08)
+Fluxo para restaurar versão anterior:
+
+1. **Identificar commit correto** no `ahut-ecosystem-active` repo:
+   - `git log --oneline` para listar versões
+   - 18:00-19:00 BRT = 21:00-22:00 UTC no log
+
+2. **Checkout os arquivos** do commit para o diretório de staging:
+   ```
+   cd /root/.hermes/ahut-ecosystem-active
+   git checkout <hash> -- 01_FRONTEND_PRODUCAO_HOSTINGER/
+   ```
+
+3. **Deploy para TODOS os 4 destinos** (nunca pular nenhum):
+   - VPS nginx + VPS crm → SFTP direto
+   - Hostinger subdomínio + ahut/ → SFTP via VPS como ponte
+
+4. **Verificar** em TODOS os 4 destinos:
+   - `curl -sk https://<host>/ | grep -o "index-.*.js"` deve mostrar o mesmo bundle
+   - Verificar `/tecnologia` SEPARADAMENTE (página estática, não faz parte do SPA)
+
+5. **Cache purge**: `https://ahut-ecosystem.apexfyhub.com.br/purge.php`
+
+### 📊 DIAGNÓSTICO DE VERSÃO (aprendido 27/08)
+Ao comparar bundles (produção vs dev), verificar:
+- **Páginas presentes no bundle** vs ausentes (404 no SPA)
+- **Features do Atendimento** no chunk separado (`Atendimento-DcqAjCvf.js`):
+  - Player áudio (ogg/webm/mpeg/mp4 sources)
+  - Renderização imagem/vídeo/documento
+  - Legenda lead grupo (nome+telefone)
+  - Header agente (P_hdr, P_name, P_dept)
+  - isAgentSender com from_me group fix
+  - textarea + auto-resize + whitespace-pre-wrap
+- **Chunks faltantes vs bundle único Vite**: produção usa chunk system (rolável), dev usa Vite single-bundle
+- **Pipeline áudio no broker**: verificar `convertBufferToWhatsAppAudio`, `return sendResult`, `convId` no `dist/session-manager.js`
