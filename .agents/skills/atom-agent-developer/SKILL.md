@@ -132,7 +132,50 @@ Como Tech Lead (Chefe de Tecnologia e Desenvolvimento), você está no topo da h
 - **NÃO** é `/domains/ahut-ecosystem...` nem `/public_html/ahut-ecosystem/`
 - Sempre verificar no hPanel → Subdomínios qual o diretório real
 
-### Document Root Real do DEV (aprendizado 26/08)
+## 📝 8. APRENDIZADOS REGISTRADOS — SPRINT 26-27/08/2026 (FIXES FINAIS)
+
+### ⚠️ PERIGO: TSC sobrescreve patches manuais no dist
+- **Problema:** Patches manuais feitos diretamente em `dist/session-manager.js` são **perdidos** na próxima execução de `npx tsc`
+- **Sequência correta:** Editar o `.ts` fonte → `npx tsc` (que gera o dist) → `pm2 reload`
+- **Sequência ERRADA (perde patches):** Editar `dist/session-manager.js` direto → esquecer de editar `.ts` → rodar `npx tsc` depois → dist volta ao estado original
+- **Solução:** Sempre fazer backup do `.ts` fonte (ex: `session-manager_fix_2608.ts`) E do `.js` dist antes de patches consecutivos
+- **Verificação pós-tsc:** `grep -c "caractere_do_patch" dist/session-manager.js` — se zero, o patch foi perdido
+
+### 🏷️ Legenda de Leads em Grupos: Resolução de pushName
+- **Problema:** `findOrCreateParticipantProfile` recebia `msg.pushName` que em grupos podia ser o **nome do grupo** (ex: "Sistema Hut - Suporte"), não o nome do participante individual
+- **Sintoma:** Leads em grupos apareciam com nome "Sistema Hut - Suporte", "Agência Hut", etc.
+- **Correção no broker:** `resolveWhatsappDisplayName` agora detecta nomes que parecem grupo:
+  ```typescript
+  const name = cleanWhatsappName(pushName);
+  if (name && name.includes(" - ") && name.split(" ").length > 3) {
+    return phone || "Membro do Grupo";  // ← fallback para phone
+  }
+  ```
+- **Correção no DB:** 10 perfis já existiam com nome de grupo — atualizados via UPDATE:
+  ```sql
+  UPDATE profiles SET full_name = phone 
+  WHERE full_name IN ('Sistema Hut - Suporte','Agência Hut','Suporte Achadinhos 4',...);
+  ```
+
+### 🔔 Sistema de Notificações (Feature)
+- **Tabela:** `notifications` — 15 colunas com tipos: `new_lead`, `sale_completed`, `lead_contacted`, `lead_qualified`, `proposal_created`, `visit_scheduled`, `contract_signed`, `reminder`, `late`, `system`, `approval`
+- **Triggers automáticos:**
+  - `trg_notify_new_lead` → AFTER INSERT ON leads → notifica responsável + admins
+  - `trg_notify_lead_contacted` → AFTER INSERT ON conversations → notifica agente
+  - `trg_notify_sale_completed` → AFTER UPDATE ON contracts (status='active') → notifica agente + admins
+- **Frontend:** `Notificacoes.tsx` com Realtime subscription, Toast pop-up, sons (venda = caixa registradora alto), cards de estatísticas, filtros por tipo
+- **Sounds:** Mixkit assets via `new Audio(url)`. Volume: sale=0.8, outros=0.4
+
+### 🔄 isAgentSender em Grupos (Frontend Bundle)
+- **Problema:** `isAgentSender = (!!t.sender_id&&!!P_cid&&t.sender_id!==P_cid)` fazia TODAS mensagens de grupo parecerem da empresa, porque `P_cid` (client_id da conversa) é o perfil do grupo, não do participante
+- **Correção no bundle:** `(t.from_me===!0&&!!t.sender_id&&!!P_cid&&t.sender_id!==P_cid)` — só trata como agente se `from_me=true` E sender_id != client_id
+- **Patch aplicado em:** `Atendimento-DcqAjCvf.js` (produção) e `ahut/assets/` (ambas as URLs)
+
+### Document Root Final (confirmado 26/08)
+- **Produção:** `https://ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/apexfyhub.com.br/public_html/ahut/`
+- **Dev:** `https://dev-ahut-ecosystem.apexfyhub.com.br` → `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
+- **NUNCA** tentar deploy em `domains/ahut-ecosystem.apexfyhub.com.br/public_html/` ou `domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/` — esses caminhos NÃO são os docroots reais
+- **Sempre verificar:** hPanel → Domínios → [subdomínio] → Documento Raiz
 - O domínio `dev-ahut-ecosystem.apexfyhub.com.br` aponta para `/home/u817195350/domains/apexfyhub.com.br/public_html/dev/`
 - **Também NÃO é o subdomínio isolado** — mesmo padrão da produção (subdiretório dentro do domínio principal)
 - **NUNCA** tentar deploy em `domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/` (erro comum)
