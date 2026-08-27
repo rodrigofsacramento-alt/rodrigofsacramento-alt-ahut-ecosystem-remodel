@@ -301,7 +301,27 @@ O Comandante pode disparar o fluxo de orquestração completo com o comando `/ex
 - `.htaccess` com `CacheDisable` é ignorado
 - Solução: `purge.php` com `header("X-LiteSpeed-Purge: *")` ou hPanel → Avançado → Cache → Limpar Tudo
 
-### 🔴 PRODUÇÃO: 4 DESTINOS DE DEPLOY (aprendido 27/08)
+### 🚀 Fluxo de Deploy Urgente vs Testes (27/08)
+Quando o Comandante disser que é **URGENTE**:
+1. **Fazer alteração direto na PRODUÇÃO** (bundle JS via Hostinger SFTP ou broker VPS)
+2. **Após validar que funcionou** → Commit no `ahut-ecosystem-active` (repositório de produção) com `git add -A && git commit -m "🐛..."`
+3. **Imediatamente após commit** → Fazer **engenharia reversa** do que foi alterado, implementando no código fonte TSX do `ahut-ecosystem-remodel`
+4. **Commit no remodel** com a engenharia reversa completa
+
+**Importante:** O Comandante vai DETALHAR que é urgente. Quando ele falar "urgente", é direto na produção. Quando ele não falar, é no dev primeiro.
+
+### 📋 Ambientes de Teste (NOVO)
+- **Frontend PRODUÇÃO** → conectado no **Supabase PRODUÇÃO** (`ptochsyoyatsydfysacc`)
+- **Frontend DEV** → conectado no **Supabase DEV** (novo, credenciais a fornecer)
+- **Isso não afeta a estrutura produtiva do cliente**
+- Testes no DEV usam banco separado, dados de teste
+
+### 🔄 Engenharia Reversa Contínua
+Após qualquer hotfix em produção (urgente):
+1. ✅ Commit no `ahut-ecosystem-active`
+2. ✅ Implementar no TSX do `ahut-ecosystem-remodel`
+3. ✅ Commit no remodel
+4. ✅ Assim o sistema DEV se equaliza com o PRODUTIVO rapidamente
 **REGRA CRÍTICA:** O frontend de produção é servido em **4 destinos simultâneos**. Um deploy só está completo quando TODOS os 4 estão atualizados:
 
 | # | Destino | Servidor | Acesso |
