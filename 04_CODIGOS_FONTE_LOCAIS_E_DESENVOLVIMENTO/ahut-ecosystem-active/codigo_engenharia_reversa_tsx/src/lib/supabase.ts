@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ⚠️ DEV ENVIRONMENT apenas — usa service_role para bypass de RLS
-// Para produção, trocar por anon key com RLS policies apropriadas
-const supabaseUrl = 'https://ptochsyoyatsydfysacc.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0b2Noc3lveWF0c3lkZnlzYWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NDM0MzUsImV4cCI6MjA4NDQxOTQzNX0.7VKER8NpJz5F9l0TOd6AWTg5U8f2IyXfcrIXCE0KwkQ';
+// 🟢 DEV ENVIRONMENT — Supabase DEV separado do cliente
+// Para testes sem afetar dados de produção
+const supabaseUrl = 'https://xmsulduzvufdzkfktovk.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhtc3VsZHV6dnVmZHprZmt0b3ZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNTU1OTgsImV4cCI6MjEwMDkzMTU5OH0.TkfD8EKunyPKUFamym-OTUQIuBMUtgHnU_s2iixEHl0';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 

@@ -304,17 +304,28 @@ O Comandante pode disparar o fluxo de orquestração completo com o comando `/ex
 ### 🚀 Fluxo de Deploy Urgente vs Testes (27/08)
 Quando o Comandante disser que é **URGENTE**:
 1. **Fazer alteração direto na PRODUÇÃO** (bundle JS via Hostinger SFTP ou broker VPS)
-2. **Após validar que funcionou** → Commit no `ahut-ecosystem-active` (repositório de produção) com `git add -A && git commit -m "🐛..."`
-3. **Imediatamente após commit** → Fazer **engenharia reversa** do que foi alterado, implementando no código fonte TSX do `ahut-ecosystem-remodel`
-4. **Commit no remodel** com a engenharia reversa completa
+2. **Testar a alteração** — pode ser testado no **Supabase DEV** (banco separado, `xmsulduzvufdzkfktovk`) OU no **Supabase PRODUÇÃO** (`ptochsyoyatsydfysacc`) dependendo da urgência e do escopo. O Comandante vai especificar qual banco usar.
+3. **Após validar que funcionou** → Commit no `ahut-ecosystem-active` (repositório de produção) com `git add -A && git commit -m "🐛..."`
+4. **Imediatamente após commit** → Fazer **engenharia reversa** do que foi alterado, implementando no código fonte TSX do `ahut-ecosystem-remodel`
+5. **Commit no remodel** com a engenharia reversa completa
 
 **Importante:** O Comandante vai DETALHAR que é urgente. Quando ele falar "urgente", é direto na produção. Quando ele não falar, é no dev primeiro.
 
-### 📋 Ambientes de Teste (NOVO)
+### 📋 Ambientes de Teste (NOVO 27/08)
 - **Frontend PRODUÇÃO** → conectado no **Supabase PRODUÇÃO** (`ptochsyoyatsydfysacc`)
-- **Frontend DEV** → conectado no **Supabase DEV** (novo, credenciais a fornecer)
+- **Frontend DEV** → conectado no **Supabase DEV** (`xmsulduzvufdzkfktovk`)
+  - Anon key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhtc3VsZHV6dnVmZHprZmt0b3ZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNTU1OTgsImV4cCI6MjEwMDkzMTU5OH0.TkfD8EKunyPKUFamym-OTUQIuBMUtgHnU_s2iixEHl0`
+  - Service role: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhtc3VsZHV6dnVmZHprZmt0b3ZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTM1NTU5OCwiZXhwIjoyMTAwOTMxNTk4fQ.EhchaQ1GsUrwG1QyJih68EEa8ArxD439ocHup7LwNOg`
+  - DB: `postgresql://postgres:Dir%40124!%40%24!%40%24@db.xmsulduzvufdzkfktovk.supabase.co:6543/postgres`
 - **Isso não afeta a estrutura produtiva do cliente**
 - Testes no DEV usam banco separado, dados de teste
+- Schema clonado da produção em 27/08: 68 tabelas, 179 funções, 55 triggers
+
+### 🟢 Destino de Deploy DEV (único, diferente da produção)
+Diferente da produção que tem **4 destinos**, o DEV tem **apenas 1**:
+| # | Destino | Servidor | Caminho |
+|---|---|---|---|
+| 1 | `dev-ahut-ecosystem.apexfyhub.com.br` | Hostinger `82.25.73.206:65002` u817195350 | `~/domains/dev-ahut-ecosystem.apexfyhub.com.br/public_html/` |
 
 ### 🔄 Engenharia Reversa Contínua
 Após qualquer hotfix em produção (urgente):
