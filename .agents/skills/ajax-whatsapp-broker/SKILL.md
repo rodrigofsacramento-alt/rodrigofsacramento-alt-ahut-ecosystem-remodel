@@ -120,3 +120,26 @@ if (matchedMsgs?.length > 0) {
 3. Monitorar logs de erro (grep -i "Falha na conversão\|timeout\|401\|disconnected")
 4. Se falha de áudio: diagnosticar, corrigir, registrar aprendizado
 5. Reportar para ATOM ao final do ciclo
+
+### Grupo Participants — Resolução de Nome (resolveWhatsappDisplayName)
+- **Problema:** `findOrCreateParticipantProfile` recebe `msg.pushName` que em grupos pode ser o **nome do grupo** (ex: "Sistema Hut - Suporte"), não do participante
+- **Correção no `resolveWhatsappDisplayName`:** detectar nomes com " - " + 3+ palavras → usar phone como fallback
+- **DB:** 10 perfis foram corrigidos manualmente (UPDATE full_name = phone)
+- **Regra:** nomes de grupo contêm " - " e várias palavras — são nomes de estabelecimento, não de pessoa
+- **Fallback final:** `phone || "Membro do Grupo"` quando pushName é inválido
+
+### ⚠️ TSC Sobrescreve Patches no Dist
+- **Regra:** `npx tsc` compila o dist a partir do TS source — patches feitos DIRETAMENTE no `.js` compilado são PERDIDOS na próxima compilação
+- **SEMPRE:** aplicar patches no `.ts` primeiro, depois compilar com `npx tsc`
+- **Exceção:** patches de emergência no `.js` (ex: bundle de produção) — documentar e depois replicar no TS source
+- **Verificação pós-compilação:** confirmar que `grep -c "seu_patch" dist/session-manager.js` > 0
+
+### LID Audit — Categorias de Ação
+| Cat | Situação | Qtd | Ação |
+|---|---|---|---|
+| A 🔴 | Ambos LID+REAL têm mensagens | 12 | Unificação MANUAL — transferir msgs LID→REAL |
+| B 🟡 | Só LID tem mensagens | 0 | N/A |
+| C ✅ | Só REAL tem mensagens | 218 | Unificação automática via `move_profile_to_trash()` |
+| D ⚪ | Nenhum tem mensagens | ~2.880 | Pode limpar |
+- **Filtro correto:** `LENGTH(phone) > 13` (LIDs podem ter 14 dígitos — não usar > 14)
+- **Função lixeira:** `move_profile_to_trash(p_profile_id UUID)` — parâmetro nomeado para evitar coluna ambígua

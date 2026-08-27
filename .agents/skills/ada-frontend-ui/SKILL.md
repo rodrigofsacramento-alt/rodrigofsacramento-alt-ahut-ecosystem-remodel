@@ -41,6 +41,24 @@ O Atom (Desenvolvedor Principal) irá extrair as lógicas de negócio dos arquiv
 - **Correção no TSX:** `isAgentSender = msg.sender_id === user?.id || (msg as any).from_me === true`
 - Só o usuário logado aparece do lado direito
 
+### Atendimento — Grupo: isAgentSender Patch no Bundle
+- **Problema:** Em grupos, a condição `(!!t.sender_id&&!!P_cid&&t.sender_id!==P_cid)` fazia **TODAS** as mensagens parecerem da empresa, porque `client_id` é o grupo e não o lead
+- **Correção no bundle Atendimento-DcqAjCvf.js:**
+  ```javascript
+  // ANTES:
+  ||(!!t.sender_id&&!!P_cid&&t.sender_id!==P_cid)
+  // DEPOIS:
+  ||(t.from_me===!0&&!!t.sender_id&&!!P_cid&&t.sender_id!==P_cid)
+  ```
+- **Regra:** Só tratar como "agente" se `from_me===true` E sender_id for diferente do client_id do grupo
+
+### Atendimento — Grupo: Legenda do Lead (Nome vs Grupo)
+- **Problema:** Em grupos, a legenda do lead mostrava o nome do grupo (ex: "Sistema Hut - Suporte") em vez do nome do lead
+- **Causa:** `t.sender.full_name` vinha preenchido com o pushName do participante, que pode ser o nome do grupo
+- **Correção no backend (broker):** `resolveWhatsappDisplayName` detecta nomes com " - " + 3+ palavras → usa phone como fallback
+- **Correção no DB:** 10 perfis com nome de grupo foram corrigidos (UPDATE full_name = phone)
+- **Regra visual:** Legenda do lead em grupo = `sender.full_name` + `sender.phone` | Se full_name parece nome de grupo → mostrar só phone
+
 ### Atendimento — Dashboard e Filtros
 - Filtros por período (hoje/semana/mês), corretor responsável, status (meus/ativos/pendentes/grupos)
 - Dashboard com cards: contatos, follow-ups, reuniões, propostas, vendas com variação ↑↓
