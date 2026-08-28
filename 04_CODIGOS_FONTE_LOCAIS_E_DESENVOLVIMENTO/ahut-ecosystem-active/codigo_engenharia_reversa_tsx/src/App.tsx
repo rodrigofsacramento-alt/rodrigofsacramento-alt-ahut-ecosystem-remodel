@@ -49,10 +49,10 @@ function AppLayout({ children, title, subtitle, dark }: { children: React.ReactN
   useEffect(() => { if (isMobile) setCollapsed(true); }, [isMobile]);
 
   return (
-    <div className={`flex min-h-screen relative ${useDark ? 'bg-black text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`flex min-h-screen relative ${useDark ? 'bg-transparent text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {useDark && <NeuralBackground />}
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      <div className="flex-1 flex flex-col min-w-0 relative" style={{ zIndex: 1 }}>
+      <div className="flex-1 flex flex-col min-w-0 relative" style={{ zIndex: 5, background: 'transparent' }}>
         <Header title={title} subtitle={subtitle} />
         <motion.main
           initial={{ opacity: 0, y: 12 }}

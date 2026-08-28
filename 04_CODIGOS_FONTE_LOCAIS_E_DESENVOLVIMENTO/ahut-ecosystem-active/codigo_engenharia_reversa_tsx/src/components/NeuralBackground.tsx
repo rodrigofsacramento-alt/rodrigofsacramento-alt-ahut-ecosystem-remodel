@@ -1,34 +1,34 @@
 import { useEffect, useRef } from 'react';
 
 // ── Types ──────────────────────────────────────────────
-interface TableNode {
+interface AtomicNode {
+  id: string; color: string; angle: number;
+  orbitRadius: number; orbitSpeed: number; radius: number;
+}
+
+interface LeadNode {
+  id: string; name: string;
   x: number; y: number;
+  startX: number; startY: number;
+  targetX: number; targetY: number;
   vx: number; vy: number;
-  radius: number; // 4-6px
-  phase: number;
-  label: string;
-  color: string;
-  brightness: number; // 0..1 comet trail decay
-  dataNodes: DataNode[];
+  radius: number; color: string;
+  isNewborn: boolean;
+  flightProgress: number;
+  spawnAlpha: number;
+  trail: { x: number; y: number; alpha: number }[];
+  atomicNodes: AtomicNode[];
+  connections: number[];
 }
 
-interface DataNode {
-  x: number; y: number;
-  radius: number; // 1-2px
-  phase: number;
-  color: string;
-  parentIdx: number;
-  brightness: number;
+interface MasterNode {
+  x: number; y: number; radius: number; color: string;
+  pulse: number; phase: number;
 }
 
-interface Connection {
-  a: number; b: number;
-  opacity: number;
-  lineWidth: number;
-}
-
-// ── Force-Directed Graph (Galaxy) ─────────────────────
-// Fundo #030303 | Nós de tabelas + dados | Física orgânica
+// ── Obsidian Living Graph ──────────────────────────────
+// Fundo #06080e | 200+ nós | Hierarquia 1/5
+// Master: 3.8px | Leads: 2.0px | Atomics: 0.9-1.2px
 export default function NeuralBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -39,259 +39,200 @@ export default function NeuralBackground() {
     if (!ctx) return;
 
     let animId: number;
-    let tableNodes: TableNode[] = [];
-    let connections: Connection[] = [];
+    let master: MasterNode;
+    let leadNodes: LeadNode[] = [];
     let time = 0;
+    const mouse = { x: null as number | null, y: null as number | null, radius: 250 };
 
-    // Mouse interaction
-    const mouse = { x: null as number | null, y: null as number | null, radius: 200 };
-
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
-    // ── Table labels ──────────────────────────
-    const tableLabels = [
-      'leads', 'properties', 'proposals', 'contracts',
-      'visits', 'conversations', 'notifications', 'profiles',
-      'gestao_tasks', 'financeiro', 'comissoes', 'marketing'
-    ];
-    const neonColors = [
-      '#00FFCC', '#00E5FF', '#00BFFF', '#00A3FF',
-      '#7B61FF', '#B026FF', '#FF26B0', '#FF4D6D',
-      '#FF6B35', '#FFB020', '#A8E600', '#00F5A0'
-    ];
-
-    // ── Initialize ────────────────────────────
     const init = () => {
-      tableNodes = [];
-      connections = [];
-
       const w = canvas.width;
       const h = canvas.height;
-      const centerX = w / 2;
-      const centerY = h / 2;
-      const nTables = isMobile ? 5 : tableLabels.length;
+      master = {
+        x: w / 2, y: h / 2,
+        radius: 3.8,
+        color: '#00FFCC',
+        pulse: 0, phase: 0,
+      };
 
-      // Galaxy: asymmetric spiral clusters
-      for (let i = 0; i < nTables; i++) {
-        const angle = (i / nTables) * Math.PI * 2 + (Math.random() - 0.5) * 1.2;
-        const armOffset = (Math.random() - 0.5) * 0.6;
-        const dist = Math.min(w, h) * 0.28 + Math.random() * Math.min(w, h) * 0.15;
-        const spiralX = Math.cos(angle + armOffset) * dist;
-        const spiralY = Math.sin(angle + armOffset) * dist;
-        // Add cluster scatter (galaxy arms aren't perfect)
-        const scatter = dist * 0.18;
-        const x = centerX + spiralX + (Math.random() - 0.5) * scatter;
-        const y = centerY + spiralY + (Math.random() - 0.5) * scatter;
+      // Generate 30-50 lead hubs (2.0px)
+      const nLeads = 30 + Math.floor(Math.random() * 20);
+      leadNodes = [];
+      for (let i = 0; i < nLeads; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * Math.min(w, h) * 0.35;
+        const scatter = dist * 0.15;
+        const tx = master.x + Math.cos(angle) * dist + (Math.random() - 0.5) * scatter;
+        const ty = master.y + Math.sin(angle) * dist + (Math.random() - 0.5) * scatter;
 
-        const radius = 4 + Math.random() * 2; // 4-6px
-        const color = neonColors[i % neonColors.length];
-        const nData = 4 + Math.floor(Math.random() * 6);
-        const dataNodes: DataNode[] = [];
-
-        // Data nodes orbiting the table node
-        for (let d = 0; d < nData; d++) {
-          const dAngle = (d / nData) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
-          const dDist = radius * 1.5 + Math.random() * 8;
-          dataNodes.push({
-            x: x + Math.cos(dAngle) * dDist,
-            y: y + Math.sin(dAngle) * dDist,
-            radius: 1 + Math.random() * 1, // 1-2px
-            phase: Math.random() * Math.PI * 2,
-            color,
-            parentIdx: i,
-            brightness: 1,
-          });
-        }
-
-        tableNodes.push({
-          x, y,
-          vx: (Math.random() - 0.5) * 0.15,
-          vy: (Math.random() - 0.5) * 0.15,
-          radius,
-          phase: Math.random() * Math.PI * 2,
-          label: tableLabels[i % tableLabels.length],
-          color,
-          brightness: 0.7 + Math.random() * 0.3,
-          dataNodes,
+        leadNodes.push({
+          id: `lead-${i}`,
+          name: `Lead ${i + 1}`,
+          x: master.x + (Math.random() - 0.5) * 30,
+          y: master.y + (Math.random() - 0.5) * 30,
+          startX: master.x, startY: master.y,
+          targetX: tx, targetY: ty,
+          vx: Math.cos(angle) * 3.0,
+          vy: Math.sin(angle) * 3.0,
+          radius: 2.0,
+          color: '#FFFFFF',
+          isNewborn: true,
+          flightProgress: 0,
+          spawnAlpha: 1.0,
+          trail: [],
+          connections: [],
+          atomicNodes: [
+            { id: 'name', color: '#00FFCC', angle: Math.random() * Math.PI * 2, orbitRadius: 8, orbitSpeed: 0.02, radius: 1.1 },
+            { id: 'phone', color: '#00F5A0', angle: Math.random() * Math.PI * 2, orbitRadius: 9, orbitSpeed: -0.02, radius: 0.9 },
+            { id: 'email', color: '#38BDF8', angle: Math.random() * Math.PI * 2, orbitRadius: 10, orbitSpeed: 0.015, radius: 0.9 },
+            { id: 'chat', color: '#00DF9A', angle: Math.random() * Math.PI * 2, orbitRadius: 8.5, orbitSpeed: -0.018, radius: 1.0 },
+          ],
         });
       }
 
-      // Connections between nearby table nodes
-      for (let a = 0; a < tableNodes.length; a++) {
-        for (let b = a + 1; b < tableNodes.length; b++) {
-          const dx = tableNodes[a].x - tableNodes[b].x;
-          const dy = tableNodes[a].y - tableNodes[b].y;
+      // Connections between nearby leads
+      for (let a = 0; a < leadNodes.length; a++) {
+        for (let b = a + 1; b < leadNodes.length; b++) {
+          const dx = leadNodes[a].targetX - leadNodes[b].targetX;
+          const dy = leadNodes[a].targetY - leadNodes[b].targetY;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const maxDist = Math.min(w, h) * 0.5;
-          if (dist < maxDist) {
-            const opacity = 0.15 + (1 - dist / maxDist) * 0.15; // 0.15-0.3
-            const lineWidth = 0.3 + (1 - dist / maxDist) * 0.4; // 0.3-0.7
-            connections.push({ a, b, opacity, lineWidth });
+          if (dist < Math.min(w, h) * 0.25) {
+            leadNodes[a].connections.push(b);
           }
         }
       }
     };
 
-    // ── Physics step ───────────────────────────
-    const physics = () => {
-      const w = canvas.width;
-      const h = canvas.height;
-      const centerX = w / 2;
-      const centerY = h / 2;
-
-      for (const tn of tableNodes) {
-        // Gravitational pull toward center (galaxy core)
-        const dxc = centerX - tn.x;
-        const dyc = centerY - tn.y;
-        const distC = Math.sqrt(dxc * dxc + dyc * dyc) + 0.1;
-        tn.vx += (dxc / distC) * 0.002;
-        tn.vy += (dyc / distC) * 0.002;
-
-        // Repulsion between table nodes (keep clusters separated)
-        for (const other of tableNodes) {
-          if (other === tn) continue;
-          const dx = tn.x - other.x;
-          const dy = tn.y - other.y;
-          const d = Math.sqrt(dx * dx + dy * dy) + 0.1;
-          if (d < 80) {
-            const force = 0.8 / (d + 1);
-            tn.vx += (dx / d) * force;
-            tn.vy += (dy / d) * force;
-          }
-        }
-
-        // Damping
-        tn.vx *= 0.98;
-        tn.vy *= 0.98;
-
-        // Breathing: microscopic constant float
-        const breathe = 0.08 * Math.sin(time * 0.003 + tn.phase);
-        tn.x += tn.vx + breathe * Math.cos(time * 0.002 + tn.phase);
-        tn.y += tn.vy + breathe * Math.sin(time * 0.002 + tn.phase * 1.3);
-
-        // Bounce off edges with soft damping
-        const margin = 40;
-        if (tn.x < margin) { tn.x = margin; tn.vx *= -0.5; }
-        if (tn.x > w - margin) { tn.x = w - margin; tn.vy *= -0.5; }
-        if (tn.y < margin) { tn.y = margin; tn.vx *= -0.5; }
-        if (tn.y > h - margin) { tn.y = h - margin; tn.vy *= -0.5; }
-
-        // Update data nodes (orbit around parent)
-        for (const dn of tn.dataNodes) {
-          const orbitSpeed = 0.008 + Math.random() * 0.005;
-          const orbitAngle = time * orbitSpeed + dn.phase;
-          const dxp = dn.x - tn.x;
-          const dyp = dn.y - tn.y;
-          const orbitDist = Math.sqrt(dxp * dxp + dyp * dyp) || 3;
-          dn.x = tn.x + Math.cos(orbitAngle) * orbitDist;
-          dn.y = tn.y + Math.sin(orbitAngle) * orbitDist;
-
-          // Comet trail brightness decay
-          if (dn.brightness > 0.6) {
-            dn.brightness -= 0.001; // stabilize over time
-          }
-        }
-      }
-
-      // Update connections (recalculate as nodes move)
-      for (const conn of connections) {
-        const a = tableNodes[conn.a];
-        const b = tableNodes[conn.b];
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = Math.min(w, h) * 0.5;
-        if (dist < maxDist) {
-          conn.opacity = 0.15 + (1 - dist / maxDist) * 0.15;
-          conn.lineWidth = 0.3 + (1 - dist / maxDist) * 0.4;
-        } else {
-          conn.opacity = 0;
-        }
-      }
-    };
-
-    // ── Draw ───────────────────────────────────
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width;
+      const h = canvas.height;
+      master.pulse = 0.7 + 0.3 * Math.sin(time * 0.003);
 
-      // Draw connections first (below nodes)
-      for (const conn of connections) {
-        if (conn.opacity <= 0) continue;
-        const a = tableNodes[conn.a];
-        const b = tableNodes[conn.b];
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = `rgba(0, 255, 204, ${conn.opacity})`;
-        ctx.lineWidth = conn.lineWidth;
-        ctx.stroke();
-      }
+      // ── Master Node (3.8px) ──
+      // Heartbeat glow
+      const masterGlow = ctx.createRadialGradient(master.x, master.y, 0, master.x, master.y, 60);
+      masterGlow.addColorStop(0, `rgba(0, 255, 204, ${0.08 * master.pulse})`);
+      masterGlow.addColorStop(1, 'rgba(0, 255, 204, 0)');
+      ctx.fillStyle = masterGlow;
+      ctx.beginPath(); ctx.arc(master.x, master.y, 60, 0, Math.PI * 2); ctx.fill();
 
-      // Draw table nodes
-      for (const tn of tableNodes) {
-        // Outer glow aura
-        const glowSize = tn.radius * 4;
-        const glow = ctx.createRadialGradient(tn.x, tn.y, 0, tn.x, tn.y, glowSize);
-        glow.addColorStop(0, `rgba(0, 255, 204, 0.08)`);
-        glow.addColorStop(1, `rgba(0, 255, 204, 0)`);
-        ctx.beginPath();
-        ctx.arc(tn.x, tn.y, glowSize, 0, Math.PI * 2);
-        ctx.fillStyle = glow;
-        ctx.fill();
+      // Master core
+      ctx.shadowColor = '#00FFCC';
+      ctx.shadowBlur = 20 * master.pulse;
+      ctx.beginPath(); ctx.arc(master.x, master.y, master.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#00FFCC';
+      ctx.fill();
+      ctx.shadowBlur = 0;
 
-        // Core solid node (table)
-        const pulse = 0.8 + 0.2 * Math.sin(time * 0.003 + tn.phase);
-        ctx.beginPath();
-        ctx.arc(tn.x, tn.y, tn.radius, 0, Math.PI * 2);
-        ctx.fillStyle = tn.color;
-        ctx.shadowColor = tn.color;
-        ctx.shadowBlur = 12 * pulse;
-        ctx.fill();
-        ctx.shadowBlur = 0;
+      // Master inner white
+      ctx.beginPath(); ctx.arc(master.x, master.y, master.radius * 0.35, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.7 * master.pulse})`;
+      ctx.fill();
 
-        // Bright inner core
-        ctx.beginPath();
-        ctx.arc(tn.x, tn.y, tn.radius * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * pulse})`;
-        ctx.fill();
+      // ── Lead Nodes ──
+      for (const lead of leadNodes) {
+        // Flight physics
+        if (lead.isNewborn) {
+          lead.flightProgress += 0.015;
+          const t = Math.min(lead.flightProgress, 1);
+          const ease = 1 - Math.pow(1 - t, 3);
+          lead.x = lead.startX + (lead.targetX - lead.startX) * ease;
+          lead.y = lead.startY + (lead.targetY - lead.startY) * ease;
+          lead.vx *= 0.97;
+          lead.vy *= 0.97;
 
-        // Draw data nodes
-        for (const dn of tn.dataNodes) {
-          // Comet trail gradient for newborn nodes
-          if (dn.brightness > 0.7) {
-            const trail = ctx.createRadialGradient(dn.x, dn.y, 0, dn.x, dn.y, dn.radius * 4);
-            trail.addColorStop(0, `rgba(0, 255, 204, ${0.4 * dn.brightness})`);
-            trail.addColorStop(1, `rgba(0, 255, 204, 0)`);
-            ctx.beginPath();
-            ctx.arc(dn.x, dn.y, dn.radius * 4, 0, Math.PI * 2);
-            ctx.fillStyle = trail;
-            ctx.fill();
+          // Comet trail
+          lead.trail.push({ x: lead.x, y: lead.y, alpha: 1.0 });
+          if (lead.trail.length > 15) lead.trail.shift();
+          for (const t2 of lead.trail) t2.alpha *= 0.92;
+
+          if (t >= 1) {
+            lead.isNewborn = false;
+            lead.color = '#00FFCC';
           }
-
-          const dPulse = 0.7 + 0.3 * Math.sin(time * 0.004 + dn.phase);
-          ctx.beginPath();
-          ctx.arc(dn.x, dn.y, dn.radius, 0, Math.PI * 2);
-          ctx.fillStyle = dn.color;
-          ctx.shadowColor = dn.color;
-          ctx.shadowBlur = 4 * dPulse;
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        } else {
+          // Breathing float
+          const breathe = 0.15 * Math.sin(time * 0.002 + lead.atomicNodes[0].angle);
+          lead.x += Math.cos(time * 0.001 + lead.atomicNodes[0].angle) * breathe * 0.1;
+          lead.y += Math.sin(time * 0.001 + lead.atomicNodes[0].angle) * breathe * 0.1;
         }
 
-        // Mouse interaction: draw connections to mouse
-        if (mouse.x != null && mouse.y != null) {
-          const dx = tn.x - mouse.x;
-          const dy = tn.y - mouse.y;
-          const mouseDist = Math.sqrt(dx * dx + dy * dy);
-          if (mouseDist < mouse.radius) {
+        // Comet trail rendering
+        if (lead.isNewborn && lead.trail.length > 1) {
+          for (let i = 1; i < lead.trail.length; i++) {
+            const alpha = (i / lead.trail.length) * 0.6;
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 - mouseDist / mouse.radius * 0.4})`;
-            ctx.lineWidth = 1;
-            ctx.moveTo(tn.x, tn.y);
-            ctx.lineTo(mouse.x, mouse.y);
+            ctx.moveTo(lead.trail[i - 1].x, lead.trail[i - 1].y);
+            ctx.lineTo(lead.trail[i].x, lead.trail[i].y);
+            ctx.strokeStyle = `rgba(0, 255, 204, ${alpha * lead.spawnAlpha})`;
+            ctx.lineWidth = 1.5 * (i / lead.trail.length);
             ctx.stroke();
           }
         }
+
+        // Connections to neighbors
+        if (!lead.isNewborn) {
+          for (const connIdx of lead.connections) {
+            const neighbor = leadNodes[connIdx];
+            if (!neighbor || neighbor.isNewborn) continue;
+            const dx = lead.x - neighbor.x;
+            const dy = lead.y - neighbor.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = Math.min(w, h) * 0.25;
+            if (dist < maxDist) {
+              const opacity = 0.15 * (1 - dist / maxDist);
+              ctx.beginPath();
+              ctx.moveTo(lead.x, lead.y);
+              ctx.lineTo(neighbor.x, neighbor.y);
+              ctx.strokeStyle = `rgba(0, 255, 204, ${opacity})`;
+              ctx.lineWidth = 0.3 + (1 - dist / maxDist) * 0.4;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Lead node glow
+        if (!lead.isNewborn) {
+          const glow = ctx.createRadialGradient(lead.x, lead.y, 0, lead.x, lead.y, 15);
+          glow.addColorStop(0, 'rgba(0, 255, 204, 0.06)');
+          glow.addColorStop(1, 'rgba(0, 255, 204, 0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(lead.x, lead.y, 15, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Lead node core
+        const leadPulse = lead.isNewborn ? lead.spawnAlpha : 0.7 + 0.3 * Math.sin(time * 0.003 + lead.atomicNodes[0].angle);
+        ctx.shadowColor = lead.color;
+        ctx.shadowBlur = lead.isNewborn ? 15 : 6;
+        ctx.beginPath(); ctx.arc(lead.x, lead.y, lead.radius, 0, Math.PI * 2);
+        ctx.fillStyle = lead.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // ── Atomic Nodes (0.9-1.2px) orbiting ──
+        for (const atom of lead.atomicNodes) {
+          atom.angle += atom.orbitSpeed;
+          const ax = lead.x + Math.cos(atom.angle) * atom.orbitRadius;
+          const ay = lead.y + Math.sin(atom.angle) * atom.orbitRadius;
+          const aPulse = 0.6 + 0.4 * Math.sin(time * 0.004 + atom.angle);
+
+          ctx.shadowColor = atom.color;
+          ctx.shadowBlur = 4 * aPulse;
+          ctx.beginPath(); ctx.arc(ax, ay, atom.radius * aPulse, 0, Math.PI * 2);
+          ctx.fillStyle = atom.color;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // ── Mouse interaction ──
+      if (mouse.x != null && mouse.y != null) {
+        ctx.beginPath();
+        ctx.moveTo(master.x, master.y);
+        ctx.lineTo(mouse.x, mouse.y);
+        ctx.strokeStyle = `rgba(0, 255, 204, 0.15)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
 
       time++;
@@ -323,13 +264,18 @@ export default function NeuralBackground() {
   }, []);
 
   return (
-    <>
-      <div className="fixed inset-0 w-full h-full bg-[#030303] -z-30" aria-hidden="true" />
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 w-full h-full -z-20 opacity-40 pointer-events-none mix-blend-screen"
-        aria-hidden="true"
-      />
-    </>
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        pointerEvents: 'none',
+        display: 'block',
+      }}
+    />
   );
 }
