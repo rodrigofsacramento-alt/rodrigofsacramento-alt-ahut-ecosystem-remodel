@@ -244,4 +244,155 @@ curl -sk https://dev-ahut-ecosystem.apexfyhub.com.br/ | head -5
 
 ---
 
+## 🛠️ GUIA PRÁTICO: ONDE EDITAR CADA COISA
+
+### 📁 Estrutura de Arquivos do Frontend
+
+```
+codigo_engenharia_reversa_tsx/src/
+├── pages/         ← PÁGINAS COMPLETAS (cada rota)
+├── components/    ← COMPONENTES REUTILIZÁVEIS
+├── hooks/         ← LÓGICA E DADOS (useState, useQuery)
+├── contexts/      ← CONTEXTOS GLOBAIS (i18n)
+├── lib/           ← CONFIGURAÇÕES (Supabase, utils)
+└── index.css      ← ESTILOS GLOBAIS
+```
+
+---
+
+### 🔍 ONDE EDITAR — POR TIPO DE ALTERAÇÃO
+
+#### 1. QUER MUDAR O QUE APARECE EM UMA PÁGINA?
+| Página | Arquivo para editar |
+|---|---|
+| **Login** | `src/pages/Login.tsx` |
+| **Dashboard** | `src/components/Dashboard.tsx` |
+| **Atendimento (Chat)** | `src/pages/Atendimento.tsx` |
+| **Leads** | `src/components/Leads.tsx` |
+| **Notificações** | `src/pages/Notificacoes.tsx` |
+| **Vendas** | `src/pages/Vendas.tsx` |
+| **Financeiro** | `src/components/Finance.tsx` |
+| **Marketing** | `src/components/Marketing.tsx` |
+| **Corretores** | `src/pages/Corretores.tsx` |
+| **Tecnologia** | `src/pages/Tecnologia.tsx` |
+| **Configurações** | `src/pages/Configuracoes.tsx` |
+| **Imóveis** | `src/components/Properties.tsx` |
+| **Propostas** | `src/components/Proposals.tsx` |
+| **Contratos** | `src/components/Contracts.tsx` |
+| **Jurídico** | `src/components/Juridico.tsx` |
+| **Agenda** | `src/components/Agenda.tsx` |
+| **Gestão** | `src/components/Gestao.tsx` |
+| **Clientes** | `src/components/GestaoClientes.tsx` |
+| **Comissões** | `src/components/Comissoes.tsx` |
+
+#### 2. QUER MUDAR O LAYOUT GLOBAL (sidebar, header)?
+**Arquivo:** `src/components/Layout.tsx`
+- Sidebar (menu lateral) → linhas 63-201
+- Header (barra superior) → linhas 204-241
+- NavItems (itens do menu) → linhas 37-56
+- Logo QUBITS → componente `QubitsLogo.tsx`
+
+#### 3. QUER MUDAR CORES, ESTILOS OU DESIGN?
+**Arquivo:** `src/index.css`
+- `:root` → variáveis de cor (neon-cyan, accent, glass)
+- `.glass-neon-card` → estilo dos cards de vidro
+- `.card-dark` → cards escuros
+- `.neon-text`, `.neon-glow` → efeitos neon
+- `@keyframes` → animações globais
+
+#### 4. QUER MUDAR O BACKGROUND DE NEURÔNIOS?
+**Arquivo:** `src/components/NeuralBackground.tsx`
+- Cores dos nós → array `neonColors` (linha 57-61)
+- Tamanho dos nós → `radius: 4 + Math.random() * 2` (tabelas)
+- Velocidade → `vx: (Math.random() - 0.5) * 0.15`
+- Densidade → `const count = ... / 10000` (quanto maior, menos nós)
+
+#### 5. QUER MUDAR TEXTO/TRADUÇÃO?
+**Arquivo:** `src/contexts/LanguageContext.tsx`
+- Português → objeto `pt: { ... }`
+- Espanhol → objeto `es: { ... }`
+- Para adicionar nova chave: colocar nos dois objetos
+
+#### 6. QUER MUDAR O LOGO?
+**Arquivo:** `src/components/QubitsLogo.tsx`
+- SVG do símbolo Q → dentro das tags `<svg>`
+- Texto "QUBITS" → no `<span>` final
+
+#### 7. QUER CONECTAR O SUPABASE?
+**Arquivo:** `src/lib/supabase.ts`
+- `supabaseUrl` → URL do projeto
+- `supabaseKey` → Anon key
+
+#### 8. QUER MUDAR GRÁFICOS DO DASHBOARD?
+**Arquivo:** `src/components/Dashboard.tsx`
+- `stats` → array com indicadores (linha 86-103)
+- `data` → dados do gráfico (linha 142-156)
+- `salesFunnel` → funil de vendas
+
+#### 9. QUER MUDAR O COMPORTAMENTO DO CHAT?
+**Arquivo:** `src/pages/Atendimento.tsx`
+- Filtros de conversa → `filteredConversations` (linha 252)
+- Envio de mensagem → `handleSendMessage`
+- Bolhas de chat → renderização de mensagens
+
+#### 10. QUER MUDAR DADOS (hooks/API)?
+| Hook | Arquivo | O que faz |
+|---|---|---|
+| Leads | `src/hooks/useLeads.ts` | Dados de leads |
+| Financeiro | `src/hooks/useFinance.ts` | Dados financeiros |
+| Vendas | `src/hooks/useSales.ts` | Dados de vendas |
+| WhatsApp | `src/hooks/useWhatsapp.ts` | Conexão WhatsApp |
+| Grafo Neural | `src/hooks/useRealtimeGraph.ts` | Tempo real do canvas |
+| Agenda | `src/hooks/useAgendaEvents.ts` | Eventos de agenda |
+| Auth | `src/hooks/useAuth.ts` | Autenticação |
+| Tech Tickets | `src/hooks/useTechTickets.ts` | Chamados tecnologia |
+
+---
+
+### 🔄 FLUXO COMPLETO DE UMA ALTERAÇÃO
+
+```
+1. git pull origin main
+2. Editar o arquivo certo (veja tabela acima)
+3. npm run dev          (testar local em http://localhost:5173)
+4. npm run build        (compilar para produção)
+5. Enviar por SFTP:
+   - dist/index.html  → /home/.../public_html/dev/
+   - dist/assets/*    → /home/.../public_html/dev/assets/
+6. git add . && git commit -m "descrição"
+7. git push origin main
+```
+
+---
+
+### 🚨 EXEMPLOS PRÁTICOS
+
+#### Exemplo 1: "Mudar a cor do botão de laranja para ciano"
+```
+1. Abrir src/components/Layout.tsx
+2. Procurar: bg-orange-500
+3. Substituir por: bg-cyan-500
+4. npm run build
+5. Deploy
+```
+
+#### Exemplo 2: "Adicionar um novo item no menu lateral"
+```
+1. Abrir src/components/Layout.tsx
+2. Procurar: const navItems = [ ... ]
+3. Adicionar: { id: 'novo', labelKey: 'nav.novo', icon: NovoIcone, path: '/novo' }
+4. Adicionar tradução em LanguageContext.tsx
+5. npm run build + deploy
+```
+
+#### Exemplo 3: "Mudar o título do Dashboard"
+```
+1. Abrir src/App.tsx
+2. Procurar: "Dashboard"
+3. Editar o title e subtitle na rota "/"
+4. npm run build + deploy
+```
+
+---
+
 **🚨 LEMBRE-SE: Uma única alteração na produção pode custar dados de clientes reais. Trabalhe apenas no DEV/ANTIGRAVITY.**
