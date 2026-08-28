@@ -9,9 +9,11 @@ interface QubitsLogoProps {
 export default function QubitsLogo({ collapsed, className }: QubitsLogoProps) {
   if (collapsed) {
     return (
-      <div className={cn("w-8 h-8 rounded flex items-center justify-center relative", className)}>
-        <svg viewBox="0 0 32 32" className="w-8 h-8">
-          {/* QUBITS compact mark - stylized Q with qubit dot */}
+      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center relative group", className)}>
+        {/* Glow background */}
+        <div className="absolute inset-0 bg-[#00FFCC] rounded-xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
+        {/* Q symbol */}
+        <svg viewBox="0 0 32 32" className="w-9 h-9 relative z-10">
           <defs>
             <linearGradient id="qGlow" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#00FFCC" />
@@ -25,76 +27,45 @@ export default function QubitsLogo({ collapsed, className }: QubitsLogoProps) {
               </feMerge>
             </filter>
           </defs>
-          {/* Outer ring + qubit */}
-          <circle cx="16" cy="16" r="13" fill="none" stroke="url(#qGlow)" strokeWidth="2" opacity="0.6" />
-          <circle cx="16" cy="16" r="4" fill="#00FFCC" filter="url(#glowFilter)" />
+          <circle cx="16" cy="16" r="13" fill="none" stroke="url(#qGlow)" strokeWidth="2.5" opacity="0.8" />
+          <circle cx="16" cy="16" r="4.5" fill="#00FFCC" filter="url(#glowFilter)" />
         </svg>
       </div>
     );
   }
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      {/* Full QUBITS logo with neon cyan + glow */}
-      <svg viewBox="0 0 180 40" className="h-9 w-auto">
-        <defs>
-          <linearGradient id="qubitsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#00FFCC" />
-            <stop offset="50%" stopColor="#00E5FF" />
-            <stop offset="100%" stopColor="#00FFCC" />
-          </linearGradient>
-          <filter id="qubitsGlow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <filter id="qubitsGlowSoft">
-            <feGaussianBlur stdDeviation="1.5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+    <div className={cn("flex items-center gap-4 group", className)}>
+      {/* Q symbol with glow */}
+      <div className="relative w-12 h-12 shrink-0">
+        <div className="absolute inset-0 bg-[#00FFCC] rounded-xl blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
+        <svg viewBox="0 0 36 36" className="w-12 h-12 relative z-10">
+          <defs>
+            <linearGradient id="qubitsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#00FFCC" />
+              <stop offset="100%" stopColor="#00E5FF" />
+            </linearGradient>
+            <filter id="qubitsGlow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {/* Outer ring */}
+          <circle cx="18" cy="18" r="15" fill="none" stroke="url(#qubitsGrad)" strokeWidth="2.5" opacity="0.7" />
+          {/* Inner qubit dot */}
+          <circle cx="18" cy="18" r="5" fill="#00FFCC" filter="url(#qubitsGlow)" />
+          {/* Orbital ring */}
+          <ellipse cx="18" cy="18" rx="10" ry="4" fill="none" stroke="#00FFCC" strokeWidth="1" opacity="0.4" transform="rotate(-30 18 18)" />
+        </svg>
+      </div>
 
-        {/* Q qubit symbol */}
-        <g filter="url(#qubitsGlow)">
-          {/* Q letter shape */}
-          <path
-            d="M 8 20 C 8 10, 26 10, 26 20 C 26 30, 8 30, 8 20 Z"
-            fill="none"
-            stroke="url(#qubitsGrad)"
-            strokeWidth="3"
-          />
-          {/* Q tail */}
-          <line x1="23" y1="27" x2="28" y2="34" stroke="#00FFCC" strokeWidth="3" strokeLinecap="round" />
-          {/* Qubit dot inside Q */}
-          <circle cx="17" cy="20" r="3.5" fill="#00FFCC" />
-        </g>
-
-        {/* U */}
-        <text x="38" y="30" fontFamily="'Inter', sans-serif" fontSize="28" fontWeight="700" fill="#00FFCC" filter="url(#qubitsGlowSoft)">
-          U
-        </text>
-        {/* B */}
-        <text x="62" y="30" fontFamily="'Inter', sans-serif" fontSize="28" fontWeight="700" fill="#00FFCC" filter="url(#qubitsGlowSoft)">
-          B
-        </text>
-        {/* I */}
-        <text x="88" y="30" fontFamily="'Inter', sans-serif" fontSize="28" fontWeight="700" fill="#00FFCC" filter="url(#qubitsGlowSoft)">
-          I
-        </text>
-        {/* T */}
-        <text x="107" y="30" fontFamily="'Inter', sans-serif" fontSize="28" fontWeight="700" fill="#00FFCC" filter="url(#qubitsGlowSoft)">
-          T
-        </text>
-        {/* S accent */}
-        <text x="133" y="30" fontFamily="'Inter', sans-serif" fontSize="28" fontWeight="700" fill="#00FFCC" filter="url(#qubitsGlow)">
-          S
-        </text>
-      </svg>
+      {/* QUBITS text */}
+      <span className="text-3xl font-black tracking-tighter text-white drop-shadow-[0_0_8px_rgba(0,255,204,0.3)]">
+        QUB<span className="text-[#00FFCC] drop-shadow-[0_0_10px_rgba(0,255,204,0.6)]">ITS</span>
+      </span>
     </div>
   );
 }

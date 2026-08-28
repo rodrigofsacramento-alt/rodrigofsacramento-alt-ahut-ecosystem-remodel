@@ -81,7 +81,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-full">
+    <div className="p-6 space-y-6 min-h-full">
       {/* Welcome Banner */}
       <div className="bg-[#1E293B] rounded-2xl p-8 text-white relative overflow-hidden">
         <div className="relative z-10">
@@ -106,10 +106,10 @@ export default function Dashboard() {
         {stats.map((stat) => (
           <div key={stat.label} className={`p-4 rounded-2xl border ${stat.highlight ? 'bg-orange-500 text-white border-orange-400' : 'card-dark-stat text-slate-200'}`}>
             <div className="flex items-center justify-between mb-2">
-              <div className={`p-2 rounded-lg ${stat.highlight ? 'bg-white/20' : 'bg-slate-100'}`}>
+              <div className={`p-2 rounded-lg ${stat.highlight ? 'bg-white/20' : 'bg-white/5'}`}>
                 <stat.icon className={`w-4 h-4 ${stat.highlight ? 'text-white' : 'text-slate-600'}`} />
               </div>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${stat.highlight ? 'bg-white/20' : 'bg-green-100 text-green-700'}`}>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${stat.highlight ? 'bg-white/20' : 'bg-emerald-500/20 text-emerald-400'}`}>
                 {stat.change} vs. mês ant.
               </span>
             </div>
