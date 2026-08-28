@@ -71,7 +71,7 @@ export default function GestaoClientes() {
               onClick={() => setAba(t)}
               className={cn(
                 'px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize',
-                aba === t ? 'bg-white shadow text-cyan-400' : 'text-slate-400 hover:text-slate-300'
+                aba === t ? 'bg-white/5 shadow text-cyan-400' : 'text-slate-400 hover:text-slate-300'
               )}
             >
               {t === 'ativos' ? `Ativos (${totalAtivos})` : t === 'inativos' ? 'Inativos' : 'Todos'}
@@ -93,7 +93,7 @@ export default function GestaoClientes() {
               onClick={() => setSelecionado(c)}
               className={cn(
                 'w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors',
-                selecionado?.id === c.id ? 'bg-cyan-500/10 border border-orange-500/30' : 'hover:bg-white/5 border border-transparent'
+                selecionado?.id === c.id ? 'bg-cyan-500/10 border border-cyan-500/30' : 'hover:bg-white/5 border border-transparent'
               )}
             >
               <div className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center font-bold text-sm shrink-0">
@@ -105,7 +105,7 @@ export default function GestaoClientes() {
               </div>
               <span className={cn(
                 'text-[10px] font-bold px-2 py-0.5 rounded-full',
-                c.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-white/5 text-slate-400'
+                c.ativo ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-slate-400'
               )}>
                 {c.ativo ? 'Cliente Ativo' : 'Cliente Inativo'}
               </span>
@@ -131,7 +131,7 @@ export default function GestaoClientes() {
                   <h3 className="text-lg font-bold text-white">{selecionado.nome}</h3>
                   <span className={cn(
                     'text-xs font-bold px-2 py-0.5 rounded-full',
-                    selecionado.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-white/5 text-slate-400'
+                    selecionado.ativo ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-slate-400'
                   )}>
                     {selecionado.ativo ? 'Cliente Ativo' : 'Cliente Inativo'}
                   </span>
@@ -142,19 +142,19 @@ export default function GestaoClientes() {
               <div>
                 <h4 className="text-sm font-bold text-white mb-3">Informações de Contato</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2 bg-slate-50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl p-3">
                     <Mail className="w-4 h-4 text-cyan-500" />
                     <span className="text-sm text-slate-300">{selecionado.email || 'Sem email'}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-slate-50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl p-3">
                     <Phone className="w-4 h-4 text-cyan-500" />
                     <span className="text-sm text-slate-300">{selecionado.telefone}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-slate-50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl p-3">
                     <Calendar className="w-4 h-4 text-cyan-500" />
                     <span className="text-sm text-slate-300">Cliente desde {selecionado.desde}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-slate-50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl p-3">
                     <FileText className="w-4 h-4 text-cyan-500" />
                     <span className="text-sm text-slate-300">{selecionado.propositas} Proposta(s)</span>
                   </div>

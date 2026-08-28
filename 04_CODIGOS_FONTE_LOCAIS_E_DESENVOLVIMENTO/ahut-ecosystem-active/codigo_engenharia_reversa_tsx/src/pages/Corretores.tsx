@@ -52,14 +52,14 @@ export default function Corretores() {
               placeholder="Buscar corretor..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white/5 border border-cyan-900/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-orange-500"
+              className="w-full pl-9 pr-4 py-2 bg-white/5 border border-cyan-900/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
             />
           </div>
           <button className="p-2 bg-white/5 border border-cyan-900/30 rounded-xl text-slate-300 hover:bg-white/5 transition-colors">
             <Filter className="w-4 h-4" />
           </button>
           {profile?.role === 'admin' && (
-            <button className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm shadow-cyan-600/20">
+            <button className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm shadow-cyan-600/20">
               <Plus className="w-4 h-4" />
               <span>Novo Corretor</span>
             </button>
@@ -111,7 +111,7 @@ export default function Corretores() {
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

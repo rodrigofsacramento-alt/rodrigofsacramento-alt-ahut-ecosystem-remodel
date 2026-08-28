@@ -41,7 +41,7 @@ export default function Properties() {
     <div className="p-6 space-y-6 bg-transparent min-h-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex p-1 bg-white/10/50 rounded-xl">
+          <div className="flex p-1 bg-white/5 rounded-xl">
             <button className="px-4 py-1.5 text-xs font-bold bg-white/5 text-white rounded-lg shadow-sm">Todos</button>
             <button className="px-4 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-300">Residencial</button>
             <button className="px-4 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-300">Comercial</button>
@@ -94,7 +94,7 @@ export default function Properties() {
                   "text-[10px] font-bold px-2 py-1 rounded-md uppercase",
                   prop.status === 'available' ? "bg-cyan-500 text-white" :
                   prop.status === 'reserved' ? "bg-[#0a0a0a] text-white" :
-                  "bg-white/50 text-white"
+                  "bg-white/10 text-white"
                 )}>
                   {prop.status === 'available' ? 'Disponível' : prop.status === 'reserved' ? 'Reservado' : 'Vendido'}
                 </span>

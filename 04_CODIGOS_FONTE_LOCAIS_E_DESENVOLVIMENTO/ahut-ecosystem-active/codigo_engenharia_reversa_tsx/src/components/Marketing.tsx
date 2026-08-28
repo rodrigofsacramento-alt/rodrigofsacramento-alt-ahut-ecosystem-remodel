@@ -51,7 +51,7 @@ export default function Marketing() {
               onClick={() => setTab(t.id)}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors',
-                tab === t.id ? 'bg-white shadow text-cyan-400' : 'text-slate-400 hover:text-slate-300'
+                tab === t.id ? 'bg-white/5 shadow text-cyan-400' : 'text-slate-400 hover:text-slate-300'
               )}
             >
               <t.icon className="w-3.5 h-3.5" /> {t.label}
@@ -110,7 +110,7 @@ export default function Marketing() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {midiasMock.map((m) => (
-              <div key={m.id} className="group bg-slate-50 rounded-xl border border-cyan-900/30 overflow-hidden">
+              <div key={m.id} className="group bg-white/5 rounded-xl border border-cyan-900/30 overflow-hidden">
                 <div className="h-32 bg-white/10 flex items-center justify-center text-slate-400 text-xs">{m.categoria}</div>
                 <div className="p-3">
                   <p className="text-sm font-bold text-white truncate">{m.nome}</p>
@@ -138,14 +138,14 @@ export default function Marketing() {
           )}
           <div className="space-y-2">
             {postsMock.map((p) => (
-              <div key={p.id} className="flex items-center justify-between bg-slate-50 rounded-xl p-3">
+              <div key={p.id} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
                 <div>
                   <p className="text-sm font-bold text-white">{p.titulo}</p>
                   <p className="text-xs text-slate-400">{p.data} · {p.categoria}</p>
                 </div>
                 <span className={cn(
                   'text-[10px] font-bold px-2 py-0.5 rounded-full capitalize',
-                  p.status === 'agendado' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-100 text-emerald-700'
+                  p.status === 'agendado' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'
                 )}>{p.status}</span>
               </div>
             ))}

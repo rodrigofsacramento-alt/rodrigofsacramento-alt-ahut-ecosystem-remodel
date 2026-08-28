@@ -188,7 +188,7 @@ export default function Proposals() {
           <input 
             type="text" 
             placeholder="Buscar proposta, cliente ou imóvel..."
-            className="w-full pl-12 pr-4 py-2.5 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-orange-500 transition-all text-sm font-medium"
+            className="w-full pl-12 pr-4 py-2.5 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm font-medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -339,7 +339,7 @@ export default function Proposals() {
                     <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Lead / Cliente *</label>
                     <select 
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-orange-500 transition-all text-sm font-medium"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm font-medium"
                       value={selectedLead}
                       onChange={(e) => setSelectedLead(e.target.value)}
                     >
@@ -355,7 +355,7 @@ export default function Proposals() {
                     <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Imóvel *</label>
                     <select 
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-orange-500 transition-all text-sm font-medium"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm font-medium"
                       value={selectedProperty}
                       onChange={(e) => setSelectedProperty(e.target.value)}
                     >
@@ -375,7 +375,7 @@ export default function Proposals() {
                         type="number" 
                         required
                         placeholder="0,00"
-                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-orange-500 transition-all text-sm font-bold"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm font-bold"
                         value={proposalValue}
                         onChange={(e) => setProposalValue(e.target.value)}
                       />
@@ -387,7 +387,7 @@ export default function Proposals() {
                     <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Forma de Pagamento *</label>
                     <select 
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-orange-500 transition-all text-sm font-medium"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm font-medium"
                       value={paymentType}
                       onChange={(e) => setPaymentType(e.target.value)}
                     >

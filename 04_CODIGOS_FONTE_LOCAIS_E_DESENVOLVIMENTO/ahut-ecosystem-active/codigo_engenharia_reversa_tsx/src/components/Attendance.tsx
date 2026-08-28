@@ -40,7 +40,7 @@ export default function Attendance() {
   const [activeChat, setActiveChat] = useState(1);
 
   return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden bg-white">
+    <div className="flex h-[calc(100vh-80px)] overflow-hidden card-dark">
       {/* Sidebar Conversas */}
       <div className="w-80 border-r border-slate-200 flex flex-col shrink-0">
         <div className="p-4 space-y-4">
@@ -49,7 +49,7 @@ export default function Attendance() {
             <span className="text-xs font-bold text-slate-400">8 ativos</span>
           </div>
           <div className="flex p-1 bg-slate-100 rounded-lg">
-            <button className="flex-1 py-1.5 text-xs font-bold bg-white text-orange-500 rounded-md shadow-sm">Meus (8)</button>
+            <button className="flex-1 py-1.5 text-xs font-bold card-dark text-orange-500 rounded-md shadow-sm">Meus (8)</button>
             <button className="flex-1 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700">Equipe</button>
           </div>
           <div className="relative">
@@ -107,7 +107,7 @@ export default function Attendance() {
       {/* Chat Area */}
       <div className="flex-1 flex flex-col bg-slate-50">
         {/* Chat Header */}
-        <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between">
+        <div className="p-4 card-dark border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500">RF</div>
             <div>
@@ -131,7 +131,7 @@ export default function Attendance() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="flex justify-center">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm">Hoje, 24 de Outubro</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider card-dark px-3 py-1 rounded-full border border-slate-100 shadow-sm">Hoje, 24 de Outubro</span>
           </div>
 
           {messages.map((msg) => (
@@ -150,7 +150,7 @@ export default function Attendance() {
                     "p-4 rounded-2xl text-sm relative",
                     msg.sender === 'agent' ? "bg-orange-500 text-white rounded-tr-none" : 
                     msg.sender === 'bot' ? "bg-slate-100 text-slate-700 rounded-tl-none border border-slate-200" :
-                    "bg-white text-slate-700 rounded-tl-none border border-slate-200"
+                    "card-dark text-slate-700 rounded-tl-none border border-slate-200"
                   )}>
                     {msg.content}
                     {msg.sender === 'bot' && <span className="absolute -right-10 top-0 text-[10px] font-bold text-slate-400 uppercase">Bot</span>}
@@ -169,7 +169,7 @@ export default function Attendance() {
         </div>
 
         {/* Chat Input */}
-        <div className="p-4 bg-white border-t border-slate-200">
+        <div className="p-4 card-dark border-t border-slate-200">
           <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
             <button className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Agendar Visita</button>
             <button className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Enviar Ficha Técnica</button>
@@ -205,7 +205,7 @@ export default function Attendance() {
       </div>
 
       {/* Right Sidebar Info */}
-      <div className="w-80 border-l border-slate-200 bg-white overflow-y-auto shrink-0 hidden xl:block">
+      <div className="w-80 border-l border-slate-200 card-dark overflow-y-auto shrink-0 hidden xl:block">
         <div className="p-6 text-center">
           <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center font-bold text-2xl text-slate-500 mx-auto mb-4">RF</div>
           <h3 className="text-lg font-bold text-slate-900">Ricardo Ferreira</h3>
@@ -265,11 +265,11 @@ export default function Attendance() {
         </div>
 
         <div className="p-6 border-t border-slate-100 space-y-3">
-          <button className="w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all">
+          <button className="w-full py-2.5 card-dark border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all">
             <Calendar className="w-4 h-4" />
             Agendar Visita
           </button>
-          <button className="w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all">
+          <button className="w-full py-2.5 card-dark border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all">
             <FileText className="w-4 h-4" />
             Criar Proposta
           </button>

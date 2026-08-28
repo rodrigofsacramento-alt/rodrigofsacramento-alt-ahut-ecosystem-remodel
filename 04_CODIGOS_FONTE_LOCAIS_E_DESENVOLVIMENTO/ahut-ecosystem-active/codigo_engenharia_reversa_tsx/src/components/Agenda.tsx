@@ -348,14 +348,14 @@ export default function Agenda() {
             className={cn(
               "px-4 py-2 border rounded-xl text-sm font-bold transition-colors",
               isCurrentMonth 
-                ? "bg-cyan-500 text-white border-orange-500" 
+                ? "bg-cyan-500 text-white border-cyan-500" 
                 : "bg-white/5 border-cyan-900/30 text-slate-300 hover:bg-white/5"
             )}
           >
             Hoje
           </button>
           
-          <div className="flex p-1 bg-white/10/50 rounded-xl ml-4">
+          <div className="flex p-1 bg-white/5 rounded-xl ml-4">
             <button 
               onClick={() => setViewMode('month')}
               className={cn(
@@ -444,8 +444,8 @@ export default function Agenda() {
               
               return (
                 <div key={i} className={cn(
-                  "min-h-[120px] p-2 border-r border-b border-slate-50 last:border-r-0 relative",
-                  !isValidDay ? "bg-white/[0.03]" : "bg-white hover:bg-white/50 transition-colors cursor-pointer"
+                  "min-h-[120px] p-2 border-r border-b border-white/5 last:border-r-0 relative",
+                  !isValidDay ? "bg-white/[0.03]" : "bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
                 )}>
                   {isValidDay && (
                     <>
@@ -544,10 +544,10 @@ export default function Agenda() {
                     <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center",
                       event.type === 'visita' ? 'bg-cyan-500/20 text-cyan-500' :
-                      event.type === 'ligacao' ? 'bg-blue-100 text-blue-500' :
-                      event.type === 'reuniao' ? 'bg-purple-100 text-purple-500' :
-                      event.type === 'lembrete' ? 'bg-amber-100 text-amber-500' :
-                      'bg-emerald-100 text-emerald-500'
+                      event.type === 'ligacao' ? 'bg-blue-500/20 text-blue-400' :
+                      event.type === 'reuniao' ? 'bg-purple-500/20 text-purple-400' :
+                      event.type === 'lembrete' ? 'bg-amber-500/20 text-amber-400' :
+                      'bg-emerald-500/20 text-emerald-400'
                     )}>
                       {getEventIcon(event.type)}
                     </div>
@@ -558,7 +558,7 @@ export default function Agenda() {
                     <span className={cn(
                       "text-[10px] font-bold px-2 py-0.5 rounded-full",
                       event.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
-                      event.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                      event.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
                       'bg-white/5 text-slate-400'
                     )}>
                       {event.status === 'pending' ? 'Pendente' : event.status === 'completed' ? 'Concluído' : 'Cancelado'}
@@ -579,10 +579,10 @@ export default function Agenda() {
               <div className="flex items-center gap-3">
                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", 
                   modalType === 'visita' ? 'bg-cyan-500/20 text-cyan-500' :
-                  modalType === 'ligacao' ? 'bg-blue-100 text-blue-500' :
-                  modalType === 'reuniao' ? 'bg-purple-100 text-purple-500' :
-                  modalType === 'lembrete' ? 'bg-amber-100 text-amber-500' :
-                  'bg-emerald-100 text-emerald-500'
+                  modalType === 'ligacao' ? 'bg-blue-500/20 text-blue-400' :
+                  modalType === 'reuniao' ? 'bg-purple-500/20 text-purple-400' :
+                  modalType === 'lembrete' ? 'bg-amber-500/20 text-amber-400' :
+                  'bg-emerald-500/20 text-emerald-400'
                 )}>
                   {getEventIcon(modalType)}
                 </div>

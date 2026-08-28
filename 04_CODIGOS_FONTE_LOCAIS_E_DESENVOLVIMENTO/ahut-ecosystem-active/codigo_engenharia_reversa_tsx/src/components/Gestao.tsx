@@ -134,10 +134,10 @@ export default function Gestao() {
   ];
 
   const statusColor: Record<TarefaGestao['status'], string> = {
-    nova: 'bg-sky-100 text-sky-700',
+    nova: 'bg-sky-500/20 text-sky-400',
     em_analise: 'bg-amber-500/20 text-amber-400',
     em_execucao: 'bg-cyan-500/20 text-cyan-300',
-    concluida: 'bg-emerald-100 text-emerald-700',
+    concluida: 'bg-emerald-500/20 text-emerald-400',
   };
   const origemLabel: Record<TarefaGestao['origem'], string> = {
     telegram_chris: '📱 Telegram (Chris)',
@@ -216,7 +216,7 @@ export default function Gestao() {
                     {colTarefas.map(task => (
                       <div
                         key={task.id}
-                        className={`group bg-white/5 hover:bg-white/5 border border-cyan-900/30 rounded-xl p-3.5 transition-all cursor-grab active:cursor-grabbing ${isChris ? 'hover:border-orange-300' : ''}`}
+                        className={`group bg-white/5 hover:bg-white/5 border border-cyan-900/30 rounded-xl p-3.5 transition-all cursor-grab active:cursor-grabbing ${isChris ? 'hover:border-cyan-300' : ''}`}
                         draggable
                         onDragStart={() => handleDragStart(task.id)}
                         onClick={() => setSelectedTask(task)}
@@ -382,7 +382,7 @@ export default function Gestao() {
             ) : (
               <div className="space-y-3">
                 {tarefas.filter((t) => t.origem === 'telegram_chris').map((t) => (
-                  <div key={t.id} className="bg-cyan-500/10 border border-orange-500/30 rounded-xl p-3">
+                  <div key={t.id} className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3">
                     <p className="text-sm font-bold text-white">{t.titulo}</p>
                     {t.mensagem && <p className="text-xs text-slate-300 mt-1">"{t.mensagem}"</p>}
                     <span className="text-[10px] text-slate-400 mt-1 block">{t.criada_em}</span>
@@ -434,7 +434,7 @@ export default function Gestao() {
   function colorDot(s: TarefaGestao['status']) {
     switch (s) {
       case 'em_analise': return 'bg-amber-500 border-amber-500';
-      case 'em_execucao': return 'bg-cyan-500 border-orange-500';
+      case 'em_execucao': return 'bg-cyan-500 border-cyan-500';
       case 'concluida': return 'bg-emerald-500 border-emerald-500';
       default: return 'bg-sky-500 border-sky-500';
     }

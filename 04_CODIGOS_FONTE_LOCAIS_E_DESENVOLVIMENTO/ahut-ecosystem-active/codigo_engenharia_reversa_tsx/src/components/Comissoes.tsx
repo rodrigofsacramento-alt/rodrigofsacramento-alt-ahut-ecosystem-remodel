@@ -111,7 +111,7 @@ export default function ComissoesComercial() {
                   <td className="px-5 py-3">
                     <span className={cn(
                       'text-[10px] font-bold px-2 py-0.5 rounded-full capitalize',
-                      c.status === 'paga' ? 'bg-emerald-100 text-emerald-700' :
+                      c.status === 'paga' ? 'bg-emerald-500/20 text-emerald-400' :
                       c.status === 'pendente' ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400'
                     )}>{c.status}</span>
                   </td>

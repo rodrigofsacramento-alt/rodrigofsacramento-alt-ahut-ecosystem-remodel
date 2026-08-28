@@ -195,17 +195,17 @@ export default function Notificacoes() {
           <div className={cn(
             "flex items-start gap-3 p-4 rounded-2xl border-2 shadow-2xl min-w-[320px] max-w-md",
             toast.type === 'sale_completed'
-              ? "bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-400"
+              ? "bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-amber-400"
               : "bg-emerald-500/10 border-emerald-300"
           )}>
             <div className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
-              toast.type === 'sale_completed' ? "bg-amber-100" : "bg-emerald-100"
+              toast.type === 'sale_completed' ? "bg-amber-500/20" : "bg-emerald-500/20"
             )}>
               {toast.type === 'sale_completed' ? (
                 <PartyPopper className="w-6 h-6 text-amber-400" />
               ) : (
-                <UserPlus className="w-6 h-6 text-emerald-600" />
+                <UserPlus className="w-6 h-6 text-emerald-400" />
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -268,7 +268,7 @@ export default function Notificacoes() {
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
-              className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-medium hover:bg-slate-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-medium hover:bg-white/5 transition-colors"
             >
               <Eye className="w-4 h-4" />
               Marcar todas lidas

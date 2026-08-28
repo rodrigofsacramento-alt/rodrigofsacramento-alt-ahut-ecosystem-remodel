@@ -67,7 +67,7 @@ export default function TreinamentoAula() {
         {/* Conteúdo principal */}
         <div className="lg:col-span-2 space-y-6">
           {/* Objetivo da aula */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <div className="card-dark rounded-2xl border border-slate-200 p-6">
             <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3"><Target className="w-5 h-5 text-orange-500" /> Objetivo da aula</h3>
             <p className="text-sm text-slate-600 leading-relaxed">
               Entender como o cérebro toma decisões de compra de alto valor — e aplicar isso na condução da negociação
@@ -76,7 +76,7 @@ export default function TreinamentoAula() {
           </div>
 
           {/* Tópicos */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <div className="card-dark rounded-2xl border border-slate-200 p-6">
             <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3"><BookOpen className="w-5 h-5 text-orange-500" /> O que você vai aprender</h3>
             <div className="space-y-2">
               {topics.map((t, i) => (
@@ -92,7 +92,7 @@ export default function TreinamentoAula() {
         {/* Coluna lateral */}
         <div className="space-y-6">
           {/* Gatilhos mentais */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <div className="card-dark rounded-2xl border border-slate-200 p-6">
             <h4 className="font-bold text-slate-900 flex items-center gap-2 mb-4"><Lightbulb className="w-4 h-4 text-orange-500" /> Gatilhos da aula</h4>
             {gatilhos.map((g) => (
               <div key={g.title} className="flex gap-3 mb-3 last:mb-0">
@@ -123,7 +123,7 @@ export default function TreinamentoAula() {
       </div>
 
       {/* Exercício / CTA */}
-      <div className="bg-white rounded-2xl border-2 border-orange-200 p-6 text-center">
+      <div className="card-dark rounded-2xl border-2 border-orange-200 p-6 text-center">
         <Award className="w-8 h-8 text-orange-500 mx-auto mb-2" />
         <h3 className="font-bold text-slate-900 text-lg mb-1">Exercício da Aula</h3>
         <p className="text-sm text-slate-500 mb-4 max-w-xl mx-auto">

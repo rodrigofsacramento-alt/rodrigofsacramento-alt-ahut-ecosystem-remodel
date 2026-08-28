@@ -120,7 +120,7 @@ export default function Treinamentos() {
                     </div>
                     <span className={cn(
                       'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase',
-                      aula.status === 'disponivel' ? 'bg-emerald-100 text-emerald-700' :
+                      aula.status === 'disponivel' ? 'bg-emerald-500/20 text-emerald-400' :
                       aula.status === 'em_producao' ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400'
                     )}>
                       {aula.status === 'disponivel' ? 'Disponível' : aula.status === 'em_producao' ? 'Em produção' : 'Em breve'}
@@ -143,7 +143,7 @@ export default function Treinamentos() {
                   <p className="text-sm text-slate-300">{t}</p>
                 </div>
               ))}
-              <div className="bg-cyan-500/10 border border-orange-500/30 rounded-xl p-4 text-sm text-cyan-300">
+              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 text-sm text-cyan-300">
                 <strong>🎯 Objetivo da aula:</strong> entender como o cérebro toma decisões de compra de alto valor
                 e os 3 gatilhos que movem a escolha de um imóvel.
               </div>

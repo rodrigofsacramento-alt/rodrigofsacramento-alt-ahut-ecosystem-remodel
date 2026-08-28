@@ -247,7 +247,7 @@ export default function Juridico() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setSelectedProcess(p)}
-              className="text-left glass-neon-card shadow-sm hover:shadow-md hover:border-orange-500/30 p-5 transition-all"
+              className="text-left glass-neon-card shadow-sm hover:shadow-md hover:border-cyan-500/30 p-5 transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3">
@@ -487,7 +487,7 @@ export default function Juridico() {
                       onClick={() => setActiveTab(tab)}
                       className={cn(
                         'px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors',
-                        activeTab === tab ? 'text-cyan-500 border-orange-500' : 'text-slate-400 border-transparent hover:text-slate-300',
+                        activeTab === tab ? 'text-cyan-500 border-cyan-500' : 'text-slate-400 border-transparent hover:text-slate-300',
                       )}
                     >
                       {tab === 'checklist' && 'Checklist de Validação'}
@@ -512,7 +512,7 @@ export default function Juridico() {
                       {docs.map((doc) => (
                         <div key={doc.id} className={cn(
                           'rounded-lg border p-4 flex items-start gap-3 transition-colors',
-                          doc.approved ? 'border-emerald-500/30 bg-emerald-500/10/50' : 'border-cyan-900/30 bg-white',
+                          doc.approved ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-cyan-900/30 bg-white/5',
                         )}>
                           {doc.approved ? (
                             <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
@@ -533,7 +533,7 @@ export default function Juridico() {
                                 <FileText className="w-3.5 h-3.5" />
                                 {f.name}
                                 <span className={cn('px-1.5 py-0.5 rounded-full text-[10px] font-bold',
-                                  f.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-500/20 text-amber-400')}>
+                                  f.status === 'Aprovado' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400')}>
                                   {f.status}
                                 </span>
                                 <button className="text-slate-400 hover:text-cyan-500 flex items-center gap-1">
@@ -545,7 +545,7 @@ export default function Juridico() {
                               <button className={cn(
                                 'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors',
                                 doc.approved
-                                  ? 'bg-emerald-100 text-emerald-700'
+                                  ? 'bg-emerald-500/20 text-emerald-400'
                                   : 'bg-cyan-500 hover:bg-cyan-600 text-white',
                               )} onClick={() => { }}>
                                 {doc.approved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
@@ -599,9 +599,9 @@ export default function Juridico() {
                       <FlowStep icon={CheckCircle2} done={selectedProcess.status === 'Aprovado' || selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento'} label="Confirmar Assinatura e Venda" sub="Registro de venda e finalização do contrato" />
                     </div>
 
-                    <div className={cn('rounded-lg border p-4', selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento' ? 'border-emerald-500/30 bg-emerald-500/10/50' : 'border-cyan-900/30 bg-white')}>
+                    <div className={cn('rounded-lg border p-4', selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento' ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-cyan-900/30 bg-white/5')}>
                       {selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento' ? (
-                        <div className="flex items-center gap-2 text-emerald-700 font-semibold">
+                        <div className="flex items-center gap-2 text-emerald-400 font-semibold">
                           <CheckCircle2 className="w-5 h-5" />
                           ✓ Venda Finalizada
                         </div>
@@ -694,7 +694,7 @@ function FlowStep({ icon: Icon, done, label, sub }: { icon: React.ElementType; d
         <Icon className={cn('w-4 h-4', done ? 'text-white' : 'text-slate-400')} />
       </div>
       <div>
-        <p className={cn('text-sm font-semibold', done ? 'text-emerald-700' : 'text-slate-300')}>{label}</p>
+        <p className={cn('text-sm font-semibold', done ? 'text-emerald-400' : 'text-slate-300')}>{label}</p>
         <p className="text-xs text-slate-400">{sub}</p>
       </div>
     </div>
