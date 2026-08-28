@@ -39,18 +39,18 @@ export default function Finance() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Financeiro</h1>
-          <p className="text-slate-500">Controle de receitas, despesas e comissões.</p>
+          <h1 className="text-2xl font-bold text-white">Financeiro</h1>
+          <p className="text-slate-400">Controle de receitas, despesas e comissões.</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors"
+            className="bg-white/5 border border-cyan-900/30 text-slate-300 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-white/5 transition-colors"
           >
             <Filter className="w-4 h-4" />
             Filtros
           </button>
-          <button className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
+          <button className="bg-white/5 border border-cyan-900/30 text-slate-300 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-white/5 transition-colors">
             <Download className="w-4 h-4" />
             Exportar
           </button>
@@ -59,18 +59,18 @@ export default function Finance() {
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <div className="glass-neon-card p-4 shadow-sm">
           <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600">Período</label>
-              <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+              <label className="text-xs font-bold text-slate-300">Período</label>
+              <div className="flex gap-1 bg-white/5 rounded-lg p-1">
                 {(['month', 'quarter', 'year'] as const).map(p => (
                   <button
                     key={p}
                     onClick={() => setFilters({ ...filters, period: p })}
                     className={cn(
                       'px-3 py-1.5 rounded-md text-xs font-bold transition-colors',
-                      filters.period === p ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+                      filters.period === p ? 'bg-white/5 shadow text-cyan-500' : 'text-slate-400 hover:text-slate-300'
                     )}
                   >
                     {periodLabel[p]}
@@ -79,9 +79,9 @@ export default function Finance() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600">Tipo</label>
+              <label className="text-xs font-bold text-slate-300">Tipo</label>
               <select
-                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                className="bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan-500"
                 value={filters.type}
                 onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
               >
@@ -92,9 +92,9 @@ export default function Finance() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600">Corretor</label>
+              <label className="text-xs font-bold text-slate-300">Corretor</label>
               <select
-                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                className="bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan-500"
                 value={filters.broker_id || ''}
                 onChange={(e) => setFilters({ ...filters, broker_id: e.target.value || undefined })}
               >
@@ -106,7 +106,7 @@ export default function Finance() {
             </div>
             <button
               onClick={() => setFilters({ period: 'month', type: 'all', broker_id: undefined })}
-              className="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 flex items-center gap-1"
+              className="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-300 flex items-center gap-1"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Limpar
             </button>
@@ -116,61 +116,61 @@ export default function Finance() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white/5 p-6 rounded-xl border border-cyan-900/30 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
               <TrendingUp className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded-full">
               {isLoading ? '...' : `${(cashflow?.deltaReceita ?? 0) >= 0 ? '+' : ''}${cashflow?.deltaReceita ?? 0}%`}
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-medium">Receita Total ({periodLabel[filters.period || 'month']})</p>
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-sm text-slate-400 font-medium">Receita Total ({periodLabel[filters.period || 'month']})</p>
+          <p className="text-2xl font-bold text-white">
             {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.receitaTotal ?? 0)}
           </p>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white/5 p-6 rounded-xl border border-cyan-900/30 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
+            <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-600">
               <TrendingDown className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
+            <span className="text-xs font-bold text-rose-600 bg-rose-500/10 px-2 py-1 rounded-full">
               {isLoading ? '...' : `${(cashflow?.deltaDespesa ?? 0) >= 0 ? '+' : ''}${cashflow?.deltaDespesa ?? 0}%`}
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-medium">Despesas Totais ({periodLabel[filters.period || 'month']})</p>
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-sm text-slate-400 font-medium">Despesas Totais ({periodLabel[filters.period || 'month']})</p>
+          <p className="text-2xl font-bold text-white">
             {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.despesasTotal ?? 0)}
           </p>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white/5 p-6 rounded-xl border border-cyan-900/30 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-cyan-500">
               <DollarSign className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
+            <span className="text-xs font-bold text-cyan-500 bg-indigo-500/10 px-2 py-1 rounded-full">
               {isLoading ? '...' : `${(cashflow?.deltaSaldo ?? 0) >= 0 ? '+' : ''}${cashflow?.deltaSaldo ?? 0}%`}
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-medium">Saldo Previsto</p>
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-sm text-slate-400 font-medium">Saldo Previsto</p>
+          <p className="text-2xl font-bold text-white">
             {isLoading ? <Loader2 className="w-5 h-5 inline-block animate-spin text-slate-300" /> : formatCurrency(cashflow?.saldoPrevisto ?? 0)}
           </p>
         </div>
       </div>
 
       {/* Transactions Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-900">
+      <div className="glass-neon-card shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-white/5 flex items-center justify-between">
+          <h3 className="font-bold text-white">
             Transações Recentes
             {transactions.length > 0 && (
               <span className="text-sm font-normal text-slate-400 ml-2">({transactions.length})</span>
             )}
           </h3>
           <div className="flex gap-2">
-            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50">
+            <button className="p-2 text-slate-400 hover:text-slate-300 rounded-lg hover:bg-white/5">
               <Calendar className="w-4 h-4" />
             </button>
           </div>
@@ -178,12 +178,12 @@ export default function Finance() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50">
-                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Descrição</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Tipo</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Valor</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Data</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
+              <tr className="bg-white/5">
+                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase">Descrição</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase">Tipo</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase">Valor</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase">Data</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -201,10 +201,10 @@ export default function Finance() {
                 </tr>
               )}
               {!isLoading && transactions.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={t.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
                     <div>
-                      <span className="text-sm font-medium text-slate-900">{t.description}</span>
+                      <span className="text-sm font-medium text-white">{t.description}</span>
                       {t.broker_name && (
                         <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
                           <Users className="w-3 h-3" /> {t.broker_name}
@@ -235,15 +235,15 @@ export default function Finance() {
                       {t.type === 'income' ? '+' : '-'} {formatCurrency(t.value)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-500">
+                  <td className="px-6 py-4 text-sm text-slate-400">
                     {t.date ? new Date(t.date + (t.date.includes('-') ? '' : '')).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'}
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(
                       "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
                       t.status === 'received' || t.status === 'paid' 
-                        ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
-                        : "bg-amber-50 text-amber-600 border-amber-100"
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                     )}>
                       {t.status === 'received' ? 'Recebido' : t.status === 'paid' ? 'Pago' : 'Pendente'}
                     </span>

@@ -69,23 +69,23 @@ export default function Treinamentos() {
       {/* Cabeçalho do curso */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-8 text-white relative overflow-hidden">
         <div className="relative z-10 max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 bg-orange-500/20 text-orange-300 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider mb-4">
+          <span className="inline-flex items-center gap-1.5 bg-cyan-500/20 text-orange-300 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider mb-4">
             <Award className="w-3.5 h-3.5" /> Curso Oficial · Neurovendas Imobiliárias
           </span>
           <h2 className="text-3xl font-bold mb-3 flex items-center gap-3">
-            <Brain className="w-8 h-8 text-orange-400" /> Neurovendas: a ciência de vender imóveis
+            <Brain className="w-8 h-8 text-cyan-400" /> Neurovendas: a ciência de vender imóveis
           </h2>
           <p className="text-slate-300 text-sm leading-relaxed mb-6">
             Aprenda a aplicar os princípios da neurociência nas negociações imobiliárias — como o cérebro do seu cliente
             decide, e como conduzir a conversa para fechar mais vendas com ética e autoridade.
           </p>
           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-orange-400" /> Instrutor: Chris Racanelli</span>
-            <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-orange-400" /> 3 aulas · 3 módulos</span>
-            <span className="flex items-center gap-1.5"><Timer className="w-4 h-4 text-orange-400" /> ~ 1h35 de conteúdo</span>
+            <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-cyan-400" /> Instrutor: Chris Racanelli</span>
+            <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-cyan-400" /> 3 aulas · 3 módulos</span>
+            <span className="flex items-center gap-1.5"><Timer className="w-4 h-4 text-cyan-400" /> ~ 1h35 de conteúdo</span>
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-72 h-72 bg-orange-500/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
+        <div className="absolute top-0 right-0 w-72 h-72 bg-cyan-500/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
       </div>
 
       {/* Grid: conteúdo + progresso */}
@@ -93,20 +93,20 @@ export default function Treinamentos() {
         {/* Coluna principal: módulos/aulas */}
         <div className="lg:col-span-2 space-y-6">
           {/* Módulo 1 */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-orange-500" /> Módulo 1 — Fundamentos
+          <div className="glass-neon-card overflow-hidden">
+            <div className="px-6 py-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-cyan-500" /> Módulo 1 — Fundamentos
               </h3>
-              <span className="text-xs text-slate-500 font-medium">1 aula disponível</span>
+              <span className="text-xs text-slate-400 font-medium">1 aula disponível</span>
             </div>
             <div className="divide-y divide-slate-100">
               {modulo1.map((aula) => (
-                <div key={aula.id} className="p-5 flex items-start gap-4 hover:bg-slate-50/50 transition-colors">
+                <div key={aula.id} className="p-5 flex items-start gap-4 hover:bg-white/50 transition-colors">
                   <div className={cn(
                     'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
-                    aula.status === 'disponivel' ? 'bg-orange-100 text-orange-600' :
-                    aula.status === 'em_producao' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'
+                    aula.status === 'disponivel' ? 'bg-cyan-500/20 text-cyan-400' :
+                    aula.status === 'em_producao' ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400'
                   )}>
                     {aula.status === 'disponivel' ? <Play className="w-5 h-5" /> : aula.status === 'em_producao' ? <Timer className="w-5 h-5" /> : <Lock className="w-4 h-4" />}
                   </div>
@@ -115,13 +115,13 @@ export default function Treinamentos() {
                     className="flex-1 text-left"
                   >
                     <div className="flex items-center justify-between">
-                      <p className="font-bold text-slate-900 text-sm">{aula.title}</p>
+                      <p className="font-bold text-white text-sm">{aula.title}</p>
                       <span className="text-xs text-slate-400 font-medium">{aula.duration}</span>
                     </div>
                     <span className={cn(
                       'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase',
                       aula.status === 'disponivel' ? 'bg-emerald-100 text-emerald-700' :
-                      aula.status === 'em_producao' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
+                      aula.status === 'em_producao' ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400'
                     )}>
                       {aula.status === 'disponivel' ? 'Disponível' : aula.status === 'em_producao' ? 'Em produção' : 'Em breve'}
                     </span>
@@ -133,17 +133,17 @@ export default function Treinamentos() {
 
           {/* Detalhe da Aula 1 */}
           {aulaAberta === 1 && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
-              <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-orange-500" /> Conteúdo da Aula 1
+            <div className="glass-neon-card p-6 space-y-5">
+              <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-cyan-500" /> Conteúdo da Aula 1
               </h4>
               {modulo1.find((a) => a.id === 1)!.topics.map((t, i) => (
-                <div key={i} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3">
+                <div key={i} className="flex items-start gap-3 bg-white/5 rounded-xl p-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                  <p className="text-sm text-slate-700">{t}</p>
+                  <p className="text-sm text-slate-300">{t}</p>
                 </div>
               ))}
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-orange-800">
+              <div className="bg-cyan-500/10 border border-orange-500/30 rounded-xl p-4 text-sm text-cyan-300">
                 <strong>🎯 Objetivo da aula:</strong> entender como o cérebro toma decisões de compra de alto valor
                 e os 3 gatilhos que movem a escolha de um imóvel.
               </div>
@@ -152,17 +152,17 @@ export default function Treinamentos() {
 
           {/* Técnicas de Neurovenda */}
           <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-orange-500" /> Técnicas de Neurovenda aplicadas ao mercado imobiliário
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-cyan-500" /> Técnicas de Neurovenda aplicadas ao mercado imobiliário
             </h3>
             <div className="grid sm:grid-cols-2 gap-4">
               {tecnicas.map((t) => (
-                <div key={t.title} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:shadow-slate-100 transition-shadow">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3">
+                <div key={t.title} className="glass-neon-card p-5 hover:shadow-lg hover:shadow-cyan-900/10 transition-shadow">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-3">
                     <t.icon className="w-5 h-5" />
                   </div>
-                  <p className="font-bold text-slate-900 text-sm mb-1">{t.title}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{t.desc}</p>
+                  <p className="font-bold text-white text-sm mb-1">{t.title}</p>
+                  <p className="text-xs text-slate-400 leading-relaxed">{t.desc}</p>
                 </div>
               ))}
             </div>
@@ -172,17 +172,17 @@ export default function Treinamentos() {
         {/* Coluna lateral: script + métricas */}
         <div className="space-y-6">
           {/* Script de Neurovenda */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6">
-            <h4 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
-              <MessageCircle className="w-4 h-4 text-orange-500" /> Script de Neurovenda — 5 passos
+          <div className="glass-neon-card p-6">
+            <h4 className="font-bold text-white flex items-center gap-2 mb-4">
+              <MessageCircle className="w-4 h-4 text-cyan-500" /> Script de Neurovenda — 5 passos
             </h4>
             <div className="space-y-3">
               {scriptNeurovenda.map((s) => (
                 <div key={s.passo} className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">{s.passo}</div>
+                  <div className="w-6 h-6 rounded-full bg-cyan-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">{s.passo}</div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">{s.titulo}</p>
-                    <p className="text-xs text-slate-500 italic leading-relaxed">{s.fala}</p>
+                    <p className="text-sm font-bold text-white">{s.titulo}</p>
+                    <p className="text-xs text-slate-400 italic leading-relaxed">{s.fala}</p>
                   </div>
                 </div>
               ))}
@@ -190,15 +190,15 @@ export default function Treinamentos() {
           </div>
 
           {/* Métricas de referência */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6">
-            <h4 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
-              <Target className="w-4 h-4 text-orange-500" /> Métricas de referência
+          <div className="glass-neon-card p-6">
+            <h4 className="font-bold text-white flex items-center gap-2 mb-4">
+              <Target className="w-4 h-4 text-cyan-500" /> Métricas de referência
             </h4>
             <div className="space-y-3">
               {metricasNeuro.map((m) => (
-                <div key={m.label} className="bg-slate-50 rounded-xl p-3">
-                  <p className="text-xs text-slate-500 mb-0.5">{m.label}</p>
-                  <p className="text-lg font-bold text-orange-600">{m.valor}</p>
+                <div key={m.label} className="bg-white/5 rounded-xl p-3">
+                  <p className="text-xs text-slate-400 mb-0.5">{m.label}</p>
+                  <p className="text-lg font-bold text-cyan-400">{m.valor}</p>
                   <p className="text-[10px] text-slate-400">{m.nota}</p>
                 </div>
               ))}
@@ -206,8 +206,8 @@ export default function Treinamentos() {
           </div>
 
           {/* CTA: próxima aula em produção */}
-          <div className="bg-slate-900 rounded-2xl p-6 text-white">
-            <p className="text-sm font-bold mb-1 flex items-center gap-2"><Award className="w-4 h-4 text-orange-400" /> Curso em evolução</p>
+          <div className="bg-[#0a0a0a] rounded-2xl p-6 text-white">
+            <p className="text-sm font-bold mb-1 flex items-center gap-2"><Award className="w-4 h-4 text-cyan-400" /> Curso em evolução</p>
             <p className="text-xs text-slate-400 leading-relaxed">
               As Aulas 2 e 3 estão em produção. Acompanhamento de desempenho dos corretores no curso será liberado em breve.
             </p>

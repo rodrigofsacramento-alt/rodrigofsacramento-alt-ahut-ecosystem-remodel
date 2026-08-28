@@ -41,17 +41,17 @@ export default function Marketing() {
       {/* Cabeçalho + abas */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Marketing</h2>
-          <p className="text-sm text-slate-500">Agende postagens e acompanhe o engajamento.</p>
+          <h2 className="text-lg font-bold text-white">Marketing</h2>
+          <p className="text-sm text-slate-400">Agende postagens e acompanhe o engajamento.</p>
         </div>
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-1 flex-wrap">
+        <div className="flex gap-1 bg-white/5 rounded-xl p-1 flex-wrap">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors',
-                tab === t.id ? 'bg-white shadow text-orange-600' : 'text-slate-500 hover:text-slate-700'
+                tab === t.id ? 'bg-white shadow text-cyan-400' : 'text-slate-400 hover:text-slate-300'
               )}
             >
               <t.icon className="w-3.5 h-3.5" /> {t.label}
@@ -69,9 +69,9 @@ export default function Marketing() {
               { label: 'Cliques nos Links', valor: '3.940', sub: '12,4% CTR' },
               { label: 'Conversões de tráfego', valor: '127', sub: '+8,2% vs anterior' },
             ].map((k) => (
-              <div key={k.label} className="bg-white rounded-2xl border border-slate-200 p-5">
-                <p className="text-xs text-slate-500 font-bold uppercase flex items-center gap-1.5"><Megaphone className="w-3.5 h-3.5 text-orange-500" /> {k.label}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-2">{k.valor}</p>
+              <div key={k.label} className="glass-neon-card p-5">
+                <p className="text-xs text-slate-400 font-bold uppercase flex items-center gap-1.5"><Megaphone className="w-3.5 h-3.5 text-cyan-500" /> {k.label}</p>
+                <p className="text-2xl font-bold text-white mt-2">{k.valor}</p>
                 <p className="text-[11px] text-slate-400 mt-1">{k.sub}</p>
               </div>
             ))}
@@ -79,7 +79,7 @@ export default function Marketing() {
 
           {/* Gráfico Alcance vs Engajamento */}
           <div className="glass-card rounded-2xl p-5">
-            <h4 className="text-sm font-bold text-slate-900 mb-4">Alcance vs Engajamento (últimos 6 meses)</h4>
+            <h4 className="text-sm font-bold text-white mb-4">Alcance vs Engajamento (últimos 6 meses)</h4>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={alcanceMensal}>
                 <defs>
@@ -101,22 +101,22 @@ export default function Marketing() {
       )}
 
       {tab === 'midias' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="glass-neon-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-sm font-bold text-slate-900">Biblioteca de Mídias</h4>
-            <button className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-xl text-sm font-bold transition-colors">
+            <h4 className="text-sm font-bold text-white">Biblioteca de Mídias</h4>
+            <button className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-xl text-sm font-bold transition-colors">
               <Plus className="w-4 h-4" /> Concluir Upload
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {midiasMock.map((m) => (
-              <div key={m.id} className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
-                <div className="h-32 bg-slate-200 flex items-center justify-center text-slate-400 text-xs">{m.categoria}</div>
+              <div key={m.id} className="group bg-slate-50 rounded-xl border border-cyan-900/30 overflow-hidden">
+                <div className="h-32 bg-white/10 flex items-center justify-center text-slate-400 text-xs">{m.categoria}</div>
                 <div className="p-3">
-                  <p className="text-sm font-bold text-slate-900 truncate">{m.nome}</p>
+                  <p className="text-sm font-bold text-white truncate">{m.nome}</p>
                   <div className="flex gap-1 mt-2">
-                    <button className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg" title="Baixar"><Download className="w-4 h-4" /></button>
-                    <button className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Apagar mídia"><Trash2 className="w-4 h-4" /></button>
+                    <button className="p-1.5 text-slate-400 hover:text-slate-300 hover:bg-white/5 rounded-lg" title="Baixar"><Download className="w-4 h-4" /></button>
+                    <button className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-red-500/10 rounded-lg" title="Apagar mídia"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               </div>
@@ -126,10 +126,10 @@ export default function Marketing() {
       )}
 
       {tab === 'publicacoes' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="glass-neon-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-sm font-bold text-slate-900">Agende postagens e acompanhe o engajamento.</h4>
-            <button className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-xl text-sm font-bold transition-colors">
+            <h4 className="text-sm font-bold text-white">Agende postagens e acompanhe o engajamento.</h4>
+            <button className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-xl text-sm font-bold transition-colors">
               <Plus className="w-4 h-4" /> Criar Nova Publicação
             </button>
           </div>
@@ -140,12 +140,12 @@ export default function Marketing() {
             {postsMock.map((p) => (
               <div key={p.id} className="flex items-center justify-between bg-slate-50 rounded-xl p-3">
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{p.titulo}</p>
-                  <p className="text-xs text-slate-500">{p.data} · {p.categoria}</p>
+                  <p className="text-sm font-bold text-white">{p.titulo}</p>
+                  <p className="text-xs text-slate-400">{p.data} · {p.categoria}</p>
                 </div>
                 <span className={cn(
                   'text-[10px] font-bold px-2 py-0.5 rounded-full capitalize',
-                  p.status === 'agendado' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                  p.status === 'agendado' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-100 text-emerald-700'
                 )}>{p.status}</span>
               </div>
             ))}
@@ -155,29 +155,29 @@ export default function Marketing() {
 
       {tab === 'integracoes' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <div className="glass-neon-card p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center"><MessageCircle className="w-5 h-5" /></div>
+                <div className="w-10 h-10 rounded-xl bg-[#0a0a0a] text-white flex items-center justify-center"><MessageCircle className="w-5 h-5" /></div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">WhatsApp</p>
+                  <p className="text-sm font-bold text-white">WhatsApp</p>
                   <span className="text-xs text-emerald-600 font-semibold">Conta Conectada</span>
                 </div>
               </div>
-              <button className="text-xs text-slate-500 hover:text-red-600 font-semibold">Desconectar</button>
+              <button className="text-xs text-slate-400 hover:text-rose-400 font-semibold">Desconectar</button>
             </div>
             <p className="text-xs text-slate-400 mt-3">Atenda clientes via WhatsApp diretamente no sistema.</p>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <div className="glass-neon-card p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center"><Share2 className="w-5 h-5" /></div>
+                <div className="w-10 h-10 rounded-xl bg-cyan-600 text-white flex items-center justify-center"><Share2 className="w-5 h-5" /></div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">Redes Sociais</p>
-                  <span className="text-xs text-slate-500 font-semibold">Desconectado</span>
+                  <p className="text-sm font-bold text-white">Redes Sociais</p>
+                  <span className="text-xs text-slate-400 font-semibold">Desconectado</span>
                 </div>
               </div>
-              <button className="inline-flex items-center gap-1.5 text-xs text-orange-600 font-bold"><Settings className="w-3.5 h-3.5" /> Conectar</button>
+              <button className="inline-flex items-center gap-1.5 text-xs text-cyan-400 font-bold"><Settings className="w-3.5 h-3.5" /> Conectar</button>
             </div>
             <p className="text-xs text-slate-400 mt-3">Conecte o User Access Token para gerenciar publicações.</p>
           </div>

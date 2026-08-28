@@ -636,11 +636,11 @@ export default function Atendimento() {
     <div className="flex h-[calc(100vh-80px)] w-full overflow-hidden glass-neon-card rounded-3xl">
       
       {/* ── 1. SIDEBAR CONVERSAS ── */}
-      <div className="w-80 border-r border-slate-200 flex flex-col shrink-0 bg-white">
-        <div className="p-4 space-y-4 border-b border-slate-100">
+      <div className="w-80 border-r border-cyan-900/30 flex flex-col shrink-0 bg-white/5">
+        <div className="p-4 space-y-4 border-b border-white/5">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">Conversas</h2>
-            <span className="text-xs text-slate-500 font-medium">{filteredConversations.length}</span>
+            <h2 className="text-base font-bold text-white">Conversas</h2>
+            <span className="text-xs text-slate-400 font-medium">{filteredConversations.length}</span>
           </div>
 
           {/* Busca */}
@@ -651,7 +651,7 @@ export default function Atendimento() {
               placeholder="Buscar cliente..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-xl py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all"
+              className="w-full bg-white/5 border border-cyan-900/30 focus:border-orange-500 rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder-slate-400 outline-none transition-all"
             />
           </div>
 
@@ -664,8 +664,8 @@ export default function Atendimento() {
                 className={cn(
                   'px-2.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap',
                   activeTab === tab
-                    ? 'bg-orange-100 text-orange-600'
-                    : 'text-slate-500 hover:bg-slate-50'
+                    ? 'bg-cyan-500/20 text-cyan-400'
+                    : 'text-slate-400 hover:bg-white/5'
                 )}
               >
                 {tab === 'todos' ? 'Todos' :
@@ -685,7 +685,7 @@ export default function Atendimento() {
                 onClick={() => setPeriodoFiltro(p)}
                 className={cn(
                   'px-2 py-1 rounded font-medium',
-                  periodoFiltro === p ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'
+                  periodoFiltro === p ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5'
                 )}
               >
                 {p === 'hoje' ? 'Hoje' : p === 'semana' ? '7d' : p === 'mes' ? '30d' : 'Tudo'}
@@ -698,7 +698,7 @@ export default function Atendimento() {
             <select
               value={filtroCorretor}
               onChange={(e) => setFiltroCorretor(e.target.value)}
-              className="w-full text-xs p-2 border border-slate-200 rounded-lg outline-none"
+              className="w-full text-xs p-2 border border-cyan-900/30 rounded-lg outline-none"
             >
               <option value="">Todos corretores</option>
               {agents.map((a: any) => (
@@ -723,16 +723,16 @@ export default function Atendimento() {
                 key={chat.id}
                 onClick={() => setActiveChatId(chat.id)}
                 className={cn(
-                  'w-full p-4 flex items-start gap-3 border-b border-slate-50 hover:bg-slate-50 transition-colors text-left',
-                  isActive && 'bg-orange-50/70 border-l-2 border-l-orange-500'
+                  'w-full p-4 flex items-start gap-3 border-b border-slate-50 hover:bg-white/5 transition-colors text-left',
+                  isActive && 'bg-cyan-500/10/70 border-l-2 border-l-orange-500'
                 )}
               >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 bg-slate-800 text-white">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 bg-white/10 text-white">
                   {isGroup ? <Users className="w-5 h-5" /> : (chat.client?.full_name || '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-sm text-slate-900 truncate">
+                    <span className="font-bold text-sm text-white truncate">
                       {chat.client?.full_name || chat.client?.name || (isGroup ? 'Grupo WhatsApp' : 'Cliente')}
                     </span>
                     <span className="text-[10px] text-slate-400 shrink-0">
@@ -751,10 +751,10 @@ export default function Atendimento() {
                   {/* Badges */}
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     {isGroup && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">Grupo</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-cyan-500 border border-blue-500/20">Grupo</span>
                     )}
                     {chat.ai_enabled !== false && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">IA</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">IA</span>
                     )}
                     {(chat.unread_count || 0) > 0 && (
                       <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white font-bold ml-auto">
@@ -770,20 +770,20 @@ export default function Atendimento() {
       </div>
 
       {/* ── 2. ÁREA CENTRAL: CHAT ── */}
-      <div className="flex-1 flex flex-col h-full bg-slate-50 relative">
+      <div className="flex-1 flex flex-col h-full bg-white/5 relative">
         {activeChat ? (
           <>
             {/* Header do Chat */}
-            <div className="h-16 border-b border-slate-200 px-6 flex items-center justify-between shrink-0 bg-white">
+            <div className="h-16 border-b border-cyan-900/30 px-6 flex items-center justify-between shrink-0 bg-white/5">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-800 text-white">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-white/10 text-white">
                   {isGroupActiveChat ? <Users className="w-5 h-5" /> : (activeChat.client?.full_name || 'C').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
                     {activeChat.client?.full_name || activeChat.client?.name || (isGroupActiveChat ? 'Grupo WhatsApp' : 'Cliente')}
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-slate-400 font-medium">
                     {isGroupActiveChat ? `${groupParticipants.length} participantes` : 'Conversa'}
                   </p>
                 </div>
@@ -803,7 +803,7 @@ export default function Atendimento() {
                   <select
                     onChange={(e) => e.target.value && handleTransfer(e.target.value)}
                     defaultValue=""
-                    className="px-2 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 outline-none cursor-pointer"
+                    className="px-2 py-1.5 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 outline-none cursor-pointer"
                   >
                     <option value="" disabled>Transferir...</option>
                     {agents.filter((a: any) => a.id !== activeChat?.agent_id).map((a: any) => (
@@ -812,34 +812,34 @@ export default function Atendimento() {
                   </select>
                   <button
                     onClick={handleIgnore}
-                    className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                    className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
                     title="Ignorar conversa"
                   >
                     Ignorar
                   </button>
                 </div>
-                <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/30">
                   <Bot className="w-4 h-4 text-emerald-600" />
                   <span className="text-xs font-bold text-emerald-600 mr-2">IA</span>
                   <div className="w-8 h-4 bg-emerald-500 rounded-full relative cursor-pointer">
-                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white/5 rounded-full"></div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 border-l border-slate-200 pl-4">
+                <div className="flex items-center gap-1 border-l border-cyan-900/30 pl-4">
                   {isGroupActiveChat && (
                     <button
-                      className={cn('p-2 rounded-full transition-colors', showParticipants ? 'bg-orange-100 text-orange-600' : 'text-slate-600 hover:bg-slate-100')}
+                      className={cn('p-2 rounded-full transition-colors', showParticipants ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-300 hover:bg-white/5')}
                       onClick={() => setShowParticipants(!showParticipants)}
                       title="Participantes do grupo"
                     >
                       <Users className="w-5 h-5" />
                     </button>
                   )}
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" onClick={() => setShowNotes(!showNotes)}>
+                  <button className="p-2 text-slate-300 hover:bg-white/5 rounded-full transition-colors" onClick={() => setShowNotes(!showNotes)}>
                     <Info className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                  <button className="p-2 text-slate-300 hover:bg-white/5 rounded-full transition-colors">
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
@@ -849,7 +849,7 @@ export default function Atendimento() {
             {/* Lista de Mensagens */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {isLoadingMessages ? (
-                <div className="flex items-center justify-center h-full text-slate-500 text-xs">Carregando mensagens...</div>
+                <div className="flex items-center justify-center h-full text-slate-400 text-xs">Carregando mensagens...</div>
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-400 text-sm space-y-3">
                   <MessageSquare className="w-10 h-10 text-slate-300" />
@@ -896,7 +896,7 @@ export default function Atendimento() {
                       {/* GROUP LEAD HEADER: nome + telefone do participante */}
                       {showGroupHeader && (
                         <div className="flex items-center gap-1 ml-1 mb-0.5 max-w-[300px]">
-                          <span className="text-[10px] font-semibold text-slate-500 ml-1 truncate">
+                          <span className="text-[10px] font-semibold text-slate-400 ml-1 truncate">
                             {groupSenderLabel}
                           </span>
                           {groupSenderPhone && (
@@ -924,8 +924,8 @@ export default function Atendimento() {
                         <div className={cn(
                           'max-w-[85%] sm:max-w-[75%] rounded-2xl p-3 shadow-sm',
                           isAgentSender
-                            ? 'bg-emerald-50 border border-emerald-100 rounded-tr-none'
-                            : 'bg-white border border-slate-200 rounded-tl-none'
+                            ? 'bg-emerald-500/10 border border-emerald-500/20 rounded-tr-none'
+                            : 'bg-white/5 border border-cyan-900/30 rounded-tl-none'
                         )}>
                           <audio controls className="w-full h-10" preload="metadata">
                             <source src={mediaUrl} type="audio/ogg; codecs=opus" />
@@ -943,7 +943,7 @@ export default function Atendimento() {
                             ? 'rounded-tr-none'
                             : 'rounded-tl-none'
                         )}>
-                          <img src={mediaUrl} alt="Imagem" className="w-full h-auto max-h-80 object-contain bg-slate-100"
+                          <img src={mediaUrl} alt="Imagem" className="w-full h-auto max-h-80 object-contain bg-white/5"
                             onClick={() => window.open(mediaUrl, '_blank')} />
                         </div>
                       ) : isVideoMessage && mediaUrl ? (
@@ -962,8 +962,8 @@ export default function Atendimento() {
                           className={cn(
                             'flex items-center gap-3 max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 shadow-sm text-sm font-medium',
                             isAgentSender
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-tr-none'
-                              : 'bg-white text-slate-700 border border-slate-200 rounded-tl-none'
+                              ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 rounded-tr-none'
+                              : 'bg-white/5 text-slate-300 border border-cyan-900/30 rounded-tl-none'
                           )}>
                           <FileText className="w-5 h-5 shrink-0" />
                           <span className="truncate">{audioFileName || 'Documento'}</span>
@@ -973,8 +973,8 @@ export default function Atendimento() {
                         <div className={cn(
                           'max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm',
                           isAgentSender 
-                            ? 'bg-emerald-50 text-slate-900 rounded-tr-none border border-emerald-100' 
-                            : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
+                            ? 'bg-emerald-500/10 text-white rounded-tr-none border border-emerald-500/20' 
+                            : 'bg-white/5 text-white rounded-tl-none border border-cyan-900/30'
                         )}>
                           <p className="whitespace-pre-line break-words">{messageContent}</p>
                         </div>
@@ -984,7 +984,7 @@ export default function Atendimento() {
                       {!isSystemMessage && (
                         <div className={cn(
                           'flex items-center gap-1 text-[10px] mt-0.5',
-                          isAgentSender ? 'text-slate-500 justify-end' : 'text-slate-400 justify-start'
+                          isAgentSender ? 'text-slate-400 justify-end' : 'text-slate-400 justify-start'
                         )}>
                           <span>{new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                           {isAgentSender && <CheckCheck className="w-3 h-3 text-emerald-500" />}
@@ -998,50 +998,50 @@ export default function Atendimento() {
             </div>
 
             {/* Input de Mensagem */}
-            <div className="border-t border-slate-200 bg-white">
+            <div className="border-t border-cyan-900/30 bg-white/5">
               {/* Atalhos */}
-              <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 overflow-x-auto no-scrollbar bg-slate-50/50 action-dropdown-container">
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-white/5 overflow-x-auto no-scrollbar bg-white/[0.03] action-dropdown-container">
                 <div className="relative">
-                  <button onClick={() => setActiveDropdown(activeDropdown === 'message' ? null : 'message')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
+                  <button onClick={() => setActiveDropdown(activeDropdown === 'message' ? null : 'message')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-500/30/50">
                     <MessageSquare className="w-4 h-4" /> Agendar
                   </button>
                   {activeDropdown === 'message' && (
-                    <div className="absolute bottom-full mb-2 left-0 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
-                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Mensagem</h4>
-                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
-                      <input type="time" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
-                      <textarea placeholder="Mensagem..." className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg resize-none" rows={2} value={scheduleData.message} onChange={e => setScheduleData({...scheduleData, message: e.target.value})} />
-                      <button onClick={() => { alert('Mensagem agendada!'); setActiveDropdown(null); }} className="w-full py-2 bg-orange-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
+                    <div className="absolute bottom-full mb-2 left-0 w-64 bg-white/5 rounded-xl shadow-xl border border-cyan-900/30 p-4 z-50">
+                      <h4 className="text-sm font-bold text-slate-200 mb-3">Agendar Mensagem</h4>
+                      <input type="date" className="w-full mb-2 text-sm p-2 border border-cyan-900/30 rounded-lg" value={scheduleData.date} onChange={e => setScheduleData({...scheduleData, date: e.target.value})} />
+                      <input type="time" className="w-full mb-2 text-sm p-2 border border-cyan-900/30 rounded-lg" value={scheduleData.time} onChange={e => setScheduleData({...scheduleData, time: e.target.value})} />
+                      <textarea placeholder="Mensagem..." className="w-full mb-3 text-sm p-2 border border-cyan-900/30 rounded-lg resize-none" rows={2} value={scheduleData.message} onChange={e => setScheduleData({...scheduleData, message: e.target.value})} />
+                      <button onClick={() => { alert('Mensagem agendada!'); setActiveDropdown(null); }} className="w-full py-2 bg-cyan-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
                     </div>
                   )}
                 </div>
 
                 <div className="relative">
-                  <button onClick={() => setActiveDropdown(activeDropdown === 'call' ? null : 'call')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
+                  <button onClick={() => setActiveDropdown(activeDropdown === 'call' ? null : 'call')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-500/30/50">
                     <Phone className="w-4 h-4" /> Ligação
                   </button>
                   {activeDropdown === 'call' && (
-                    <div className="absolute bottom-full mb-2 left-0 w-56 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
-                      <h4 className="text-sm font-bold text-slate-800 mb-3">Registrar Ligação</h4>
-                      <select className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg">
+                    <div className="absolute bottom-full mb-2 left-0 w-56 bg-white/5 rounded-xl shadow-xl border border-cyan-900/30 p-4 z-50">
+                      <h4 className="text-sm font-bold text-slate-200 mb-3">Registrar Ligação</h4>
+                      <select className="w-full mb-2 text-sm p-2 border border-cyan-900/30 rounded-lg">
                         <option>Realizada</option><option>Recebida</option><option>Não atendeu</option>
                       </select>
-                      <textarea placeholder="Anotações..." className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg resize-none" rows={2} />
+                      <textarea placeholder="Anotações..." className="w-full mb-3 text-sm p-2 border border-cyan-900/30 rounded-lg resize-none" rows={2} />
                       <button className="w-full py-2 bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase">Registrar</button>
                     </div>
                   )}
                 </div>
 
                 <div className="relative">
-                  <button onClick={() => setActiveDropdown(activeDropdown === 'visit' ? null : 'visit')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-700 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-200/50">
+                  <button onClick={() => setActiveDropdown(activeDropdown === 'visit' ? null : 'visit')} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-orange-500/30/50">
                     <Calendar className="w-4 h-4" /> Visita
                   </button>
                   {activeDropdown === 'visit' && (
-                    <div className="absolute bottom-full mb-2 left-0 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
-                      <h4 className="text-sm font-bold text-slate-800 mb-3">Agendar Visita</h4>
-                      <input type="date" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" />
-                      <input type="time" className="w-full mb-2 text-sm p-2 border border-slate-200 rounded-lg" />
-                      <input placeholder="Imóvel / local" className="w-full mb-3 text-sm p-2 border border-slate-200 rounded-lg" />
+                    <div className="absolute bottom-full mb-2 left-0 w-64 bg-white/5 rounded-xl shadow-xl border border-cyan-900/30 p-4 z-50">
+                      <h4 className="text-sm font-bold text-slate-200 mb-3">Agendar Visita</h4>
+                      <input type="date" className="w-full mb-2 text-sm p-2 border border-cyan-900/30 rounded-lg" />
+                      <input type="time" className="w-full mb-2 text-sm p-2 border border-cyan-900/30 rounded-lg" />
+                      <input placeholder="Imóvel / local" className="w-full mb-3 text-sm p-2 border border-cyan-900/30 rounded-lg" />
                       <button className="w-full py-2 bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase">Confirmar</button>
                     </div>
                   )}
@@ -1049,7 +1049,7 @@ export default function Atendimento() {
               </div>
 
               <form onSubmit={handleSendMessage} className="p-4 flex items-end gap-3 w-full">
-                <button type="button" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors shrink-0">
+                <button type="button" className="p-2 text-slate-400 hover:text-slate-300 hover:bg-white/5 rounded-full transition-colors shrink-0">
                   <Paperclip className="w-5 h-5" />
                 </button>
                 <textarea 
@@ -1082,14 +1082,14 @@ export default function Atendimento() {
                     }
                   }}
                   rows={1}
-                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl py-3 px-4 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all resize-none overflow-y-auto whitespace-pre-wrap min-h-[44px] max-h-[200px]"
+                  className="flex-1 bg-white/5 border border-cyan-900/30 focus:border-orange-500 focus:ring-2 focus:ring-cyan-500/20 rounded-2xl py-3 px-4 text-sm text-white placeholder-slate-400 outline-none transition-all resize-none overflow-y-auto whitespace-pre-wrap min-h-[44px] max-h-[200px]"
                 />
                 {messageInput.trim() ? (
-                  <button type="submit" disabled={sendMessageMutation.isPending} className="p-3 rounded-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white transition-all shadow-md shrink-0">
+                  <button type="submit" disabled={sendMessageMutation.isPending} className="p-3 rounded-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-white transition-all shadow-md shrink-0">
                     <Send className="w-5 h-5" />
                   </button>
                 ) : (
-                  <button type="button" className="p-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all shrink-0">
+                  <button type="button" className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 transition-all shrink-0">
                     <Mic className="w-5 h-5" />
                   </button>
                 )}
@@ -1106,13 +1106,13 @@ export default function Atendimento() {
 
       {/* ── 3. SIDEBAR DIREITA: PARTICIPANTES DO GRUPO (BUG FIX 1) ── */}
       {activeChat && isGroupActiveChat && showParticipants && (
-        <div className="w-72 border-l border-slate-200 bg-white flex flex-col shrink-0">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Users className="w-4 h-4 text-orange-500" /> Participantes
+        <div className="w-72 border-l border-cyan-900/30 bg-white/5 flex flex-col shrink-0">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Users className="w-4 h-4 text-cyan-500" /> Participantes
               <span className="text-xs font-medium text-slate-400">({groupParticipants.length})</span>
             </h3>
-            <button onClick={() => setShowParticipants(false)} className="text-slate-400 hover:text-slate-600">
+            <button onClick={() => setShowParticipants(false)} className="text-slate-400 hover:text-slate-300">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -1126,15 +1126,15 @@ export default function Atendimento() {
               const nome = p.full_name || p.profile?.full_name || p.profile?.phone || p.phone || `Membro ${i + 1}`;
               const phone = p.phone || p.profile?.phone || '';
               return (
-                <div key={p.profile_id || i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
+                <div key={p.profile_id || i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-slate-300 shrink-0">
                     {(nome as string).charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{nome}</p>
+                    <p className="text-sm font-semibold text-white truncate">{nome}</p>
                     {phone && <p className="text-[10px] text-slate-400">{phone}</p>}
                   </div>
-                  <button className="text-slate-400 hover:text-orange-600 p-1 rounded-full hover:bg-orange-50 transition-colors" title="Chamar no privado">
+                  <button className="text-slate-400 hover:text-cyan-400 p-1 rounded-full hover:bg-cyan-500/10 transition-colors" title="Chamar no privado">
                     <MessageSquare className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1151,30 +1151,30 @@ export default function Atendimento() {
 
       {/* ── 3b. SIDEBAR DIREITA: NOTAS ── */}
       {activeChat && showNotes && (
-        <div className="w-72 border-l border-slate-200 bg-white flex flex-col shrink-0">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900">Anotações Internas</h3>
-            <button onClick={() => setShowNotes(false)} className="text-slate-400 hover:text-slate-600">
+        <div className="w-72 border-l border-cyan-900/30 bg-white/5 flex flex-col shrink-0">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white">Anotações Internas</h3>
+            <button onClick={() => setShowNotes(false)} className="text-slate-400 hover:text-slate-300">
               <X className="w-4 h-4" />
             </button>
           </div>
           <div className="flex-1 p-4 flex flex-col gap-4 overflow-y-auto">
-            <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
+            <div className="bg-yellow-500/10 border border-yellow-100 rounded-xl p-3">
               <p className="text-[10px] text-yellow-800 font-medium leading-relaxed">
                 <Info className="w-3 h-3 inline mr-1" /> 
                 Anotações visíveis <strong>apenas para a equipe interna</strong>.
               </p>
             </div>
             <div className="flex-1 flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-700">Notas sobre o Lead</label>
+              <label className="text-xs font-bold text-slate-300">Notas sobre o Lead</label>
               <textarea 
                 placeholder="Escreva detalhes importantes..."
                 value={leadNotes}
                 onChange={(e) => setLeadNotes(e.target.value)}
-                className="flex-1 bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-xl p-3 text-sm text-slate-700 resize-none outline-none"
+                className="flex-1 bg-white/5 border border-cyan-900/30 focus:border-orange-500 rounded-xl p-3 text-sm text-slate-300 resize-none outline-none"
               />
             </div>
-            <button className="w-full py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors">
+            <button className="w-full py-2 bg-[#0a0a0a] text-white text-sm font-bold rounded-xl hover:bg-white/10 transition-colors">
               Salvar Notas
             </button>
           </div>
@@ -1184,32 +1184,32 @@ export default function Atendimento() {
       {/* ── DASHBOARD / RANKING MODAL ── */}
       {showRanking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRanking(false)}>
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white/5 rounded-2xl max-w-lg w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Award className="w-5 h-5 text-orange-500" /> Ranking de Corretores
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Award className="w-5 h-5 text-cyan-500" /> Ranking de Corretores
               </h3>
-              <button onClick={() => setShowRanking(false)} className="text-slate-400 hover:text-slate-600 p-1"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowRanking(false)} className="text-slate-400 hover:text-slate-300 p-1"><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-2">
               {ranking.map((r, i) => (
                 <div key={r.agent_id} className={cn(
                   'flex items-center gap-3 p-3 rounded-xl',
-                  i === 0 ? 'bg-yellow-50 border border-yellow-200' :
-                  i === 1 ? 'bg-slate-50 border border-slate-200' :
-                  i === 2 ? 'bg-orange-50 border border-orange-200' :
-                  'bg-white border border-slate-100'
+                  i === 0 ? 'bg-yellow-500/10 border border-yellow-200' :
+                  i === 1 ? 'bg-white/5 border border-cyan-900/30' :
+                  i === 2 ? 'bg-cyan-500/10 border border-orange-500/30' :
+                  'bg-white/5 border border-white/5'
                 )}>
                   <span className={cn(
                     'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold',
                     i === 0 ? 'bg-yellow-400 text-yellow-900' :
-                    i === 1 ? 'bg-slate-300 text-slate-700' :
+                    i === 1 ? 'bg-slate-300 text-slate-300' :
                     i === 2 ? 'bg-orange-300 text-orange-900' :
-                    'bg-slate-100 text-slate-500'
+                    'bg-white/5 text-slate-400'
                   )}>{i + 1}º</span>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-900">{r.full_name}</p>
-                    <p className="text-xs text-slate-500">{r.contatos} contatos</p>
+                    <p className="text-sm font-bold text-white">{r.full_name}</p>
+                    <p className="text-xs text-slate-400">{r.contatos} contatos</p>
                   </div>
                 </div>
               ))}
@@ -1221,7 +1221,7 @@ export default function Atendimento() {
       {/* MODAL DE ADICIONAR CONTATO */}
       {showAddContactModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl">
+          <div className="bg-[#0a0a0a] border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
@@ -1232,7 +1232,7 @@ export default function Atendimento() {
                   <p className="text-xs text-slate-400">Criar lead e iniciar conversa</p>
                 </div>
               </div>
-              <button onClick={() => setShowAddContactModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors">
+              <button onClick={() => setShowAddContactModal(false)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1240,17 +1240,17 @@ export default function Atendimento() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nome Completo *</label>
                 <input type="text" required placeholder="Nome do Cliente" value={newContact.name} onChange={e => setNewContact({...newContact, name: e.target.value})}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600" />
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-300" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Telefone *</label>
                 <input type="tel" required placeholder="(41) 99999-9999" value={newContact.phone} onChange={e => setNewContact({...newContact, phone: e.target.value})}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600" />
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-300" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">E-mail (opcional)</label>
                 <input type="email" placeholder="cliente@email.com" value={newContact.email} onChange={e => setNewContact({...newContact, email: e.target.value})}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-600" />
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all placeholder:text-slate-300" />
               </div>
               <button type="submit" className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors">
                 Adicionar & Iniciar Conversa

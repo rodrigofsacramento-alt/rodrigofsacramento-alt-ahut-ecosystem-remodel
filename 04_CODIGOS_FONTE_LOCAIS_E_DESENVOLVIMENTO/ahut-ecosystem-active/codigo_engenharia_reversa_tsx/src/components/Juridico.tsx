@@ -81,11 +81,11 @@ const ETAPAS = [
 ];
 
 const STATUS_META: Record<ProcessStatus, { color: string; dot: string }> = {
-  'Em Análise': { color: 'text-blue-600 bg-blue-50 border-blue-100', dot: 'bg-blue-500' },
-  'Em Andamento': { color: 'text-amber-600 bg-amber-50 border-amber-100', dot: 'bg-amber-500' },
-  Aprovado: { color: 'text-emerald-600 bg-emerald-50 border-emerald-100', dot: 'bg-emerald-500' },
-  'Aguardando Fechamento': { color: 'text-violet-600 bg-violet-50 border-violet-100', dot: 'bg-violet-500' },
-  Aprovados: { color: 'text-indigo-600 bg-indigo-50 border-indigo-100', dot: 'bg-indigo-500' },
+  'Em Análise': { color: 'text-cyan-500 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-500' },
+  'Em Andamento': { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', dot: 'bg-amber-500' },
+  Aprovado: { color: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-500' },
+  'Aguardando Fechamento': { color: 'text-violet-600 bg-violet-500/10 border-violet-500/20', dot: 'bg-violet-500' },
+  Aprovados: { color: 'text-cyan-500 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-500' },
 };
 
 /* Dados mock locais (sem backend) — estilo compatível com os demais componentes */
@@ -201,15 +201,15 @@ export default function Juridico() {
       {/* Cabeçalho + ações */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Scale className="w-6 h-6 text-orange-500" />
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Scale className="w-6 h-6 text-cyan-500" />
             Processos Jurídicos
           </h2>
-          <p className="text-sm text-slate-500">Gerencie processos jurídicos e contratos · Comissão padrão 5%</p>
+          <p className="text-sm text-slate-400">Gerencie processos jurídicos e contratos · Comissão padrão 5%</p>
         </div>
         <button
           onClick={openCreate}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+          className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Novo Processo
@@ -218,7 +218,7 @@ export default function Juridico() {
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard icon={FileText} label="Total de Processos" value={String(processos.length)} bg="bg-orange-500" />
+        <SummaryCard icon={FileText} label="Total de Processos" value={String(processos.length)} bg="bg-cyan-500" />
         <SummaryCard icon={Hourglass} label="Em Análise" value={String(processos.filter((p) => p.status === 'Em Análise').length)} bg="bg-blue-500" />
         <SummaryCard icon={CheckCircle2} label="Aprovados" value={String(processos.filter((p) => p.status === 'Aprovado' || p.status === 'Aprovados').length)} bg="bg-emerald-500" />
         <SummaryCard icon={TrendingUp} label="Valor Total" value={formatCurrency(totalValue)} bg="bg-violet-500" />
@@ -232,7 +232,7 @@ export default function Juridico() {
           placeholder="Buscar por cliente ou número do processo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-1 focus:ring-orange-500 outline-none text-slate-900"
+          className="w-full bg-white/5 border border-cyan-900/30 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-1 focus:ring-cyan-500 outline-none text-white"
         />
       </div>
 
@@ -247,16 +247,16 @@ export default function Juridico() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setSelectedProcess(p)}
-              className="text-left bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-orange-200 p-5 transition-all"
+              className="text-left glass-neon-card shadow-sm hover:shadow-md hover:border-orange-500/30 p-5 transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-sm text-orange-600">
+                  <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center font-bold text-sm text-cyan-400">
                     {p.cliente.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">{p.cliente}</p>
-                    <p className="text-xs text-slate-500">{p.numero}</p>
+                    <p className="font-semibold text-white">{p.cliente}</p>
+                    <p className="text-xs text-slate-400">{p.numero}</p>
                   </div>
                 </div>
                 <span className={cn('text-[11px] font-bold px-2 py-1 rounded-full border', meta.color)}>
@@ -265,10 +265,10 @@ export default function Juridico() {
               </div>
 
               <div className="mt-3 space-y-1.5 text-sm">
-                <p className="text-slate-600"><span className="text-slate-400">Comprador/Locatário:</span> {p.compradorLocatario}</p>
-                <p className="text-slate-600"><span className="text-slate-400">Tipo:</span> {p.tipo}</p>
-                <p className="text-slate-600"><span className="text-slate-400">Advogado:</span> {p.advogadoResponsavel}</p>
-                <p className="text-slate-600"><span className="text-slate-400">Comissão:</span> {p.comissao}% · {formatCurrency(p.valor * p.comissao / 100)}</p>
+                <p className="text-slate-300"><span className="text-slate-400">Comprador/Locatário:</span> {p.compradorLocatario}</p>
+                <p className="text-slate-300"><span className="text-slate-400">Tipo:</span> {p.tipo}</p>
+                <p className="text-slate-300"><span className="text-slate-400">Advogado:</span> {p.advogadoResponsavel}</p>
+                <p className="text-slate-300"><span className="text-slate-400">Comissão:</span> {p.comissao}% · {formatCurrency(p.valor * p.comissao / 100)}</p>
               </div>
 
               {/* Barra de etapas */}
@@ -279,7 +279,7 @@ export default function Juridico() {
                       key={et.label}
                       className={cn(
                         'flex-1 h-1.5 rounded-full',
-                        i < p.etapa ? 'bg-emerald-500' : i === p.etapa ? 'bg-orange-500' : 'bg-slate-200',
+                        i < p.etapa ? 'bg-emerald-500' : i === p.etapa ? 'bg-cyan-500' : 'bg-white/10',
                       )}
                     />
                   ))}
@@ -292,7 +292,7 @@ export default function Juridico() {
           );
         })}
         {filtered.length === 0 && (
-          <div className="col-span-full text-center py-16 text-slate-500">
+          <div className="col-span-full text-center py-16 text-slate-400">
             Nenhum processo encontrado para "{searchTerm}".
           </div>
         )}
@@ -314,78 +314,78 @@ export default function Juridico() {
               exit={{ scale: 0.95, y: 10 }}
               onClick={(e) => e.stopPropagation()}
               onSubmit={handleCreate}
-              className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white/5 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
             >
-              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-5 flex items-center justify-between">
+              <div className="sticky top-0 bg-white/5 border-b border-cyan-900/30 px-6 py-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                    <Scale className="h-5 w-5 text-orange-500" />
+                  <div className="h-10 w-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                    <Scale className="h-5 w-5 text-cyan-500" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">Criar Processo</h3>
-                    <p className="text-sm text-slate-500">Novo processo jurídico</p>
+                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">Criar Processo</h3>
+                    <p className="text-sm text-slate-400">Novo processo jurídico</p>
                   </div>
                 </div>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:bg-white/5 rounded-full">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="px-6 py-5 space-y-5">
-                <Field label="Cliente" icon={<User className="h-4 w-4 text-orange-500" />}>
+                <Field label="Cliente" icon={<User className="h-4 w-4 text-cyan-500" />}>
                   <input
                     required
                     placeholder="Ex: João Silva"
                     value={form.cliente}
                     onChange={(e) => setForm({ ...form, cliente: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
+                    className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                   />
                 </Field>
 
-                <Field label="Comprador/Locatário" icon={<User className="h-4 w-4 text-orange-500" />}>
+                <Field label="Comprador/Locatário" icon={<User className="h-4 w-4 text-cyan-500" />}>
                   <input
                     required
                     placeholder="Ex: Maria Souza"
                     value={form.compradorLocatario}
                     onChange={(e) => setForm({ ...form, compradorLocatario: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
+                    className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                   />
                 </Field>
 
-                <Field label="Advogado Responsável" icon={<Gavel className="h-4 w-4 text-orange-500" />}>
+                <Field label="Advogado Responsável" icon={<Gavel className="h-4 w-4 text-cyan-500" />}>
                   <input
                     required
                     placeholder="Ex: Dr. Silvio Santos"
                     value={form.advogadoResponsavel}
                     onChange={(e) => setForm({ ...form, advogadoResponsavel: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
+                    className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                   />
                 </Field>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <Field label="Tipo" icon={<FileText className="h-4 w-4 text-orange-500" />}>
+                  <Field label="Tipo" icon={<FileText className="h-4 w-4 text-cyan-500" />}>
                     <select
                       value={form.tipo}
                       onChange={(e) => setForm({ ...form, tipo: e.target.value as ProcessType })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
+                      className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                     >
                       <option>Compra e Venda</option>
                       <option>Cessão de Direitos</option>
                       <option>Distrato</option>
                     </select>
                   </Field>
-                  <Field label="Comissão (%)" icon={<TrendingUp className="h-4 w-4 text-orange-500" />}>
+                  <Field label="Comissão (%)" icon={<TrendingUp className="h-4 w-4 text-cyan-500" />}>
                     <input
                       type="number"
                       min={0}
                       value={form.comissao}
                       onChange={(e) => setForm({ ...form, comissao: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
+                      className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                     />
                   </Field>
                 </div>
 
-                <Field label="Valor do Contrato (R$)" icon={<TrendingUp className="h-4 w-4 text-orange-500" />}>
+                <Field label="Valor do Contrato (R$)" icon={<TrendingUp className="h-4 w-4 text-cyan-500" />}>
                   <input
                     required
                     type="number"
@@ -393,25 +393,25 @@ export default function Juridico() {
                     placeholder="Ex: 1250000"
                     value={form.valor || ''}
                     onChange={(e) => setForm({ ...form, valor: Number(e.target.value) })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
+                    className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                   />
                 </Field>
 
-                <Field label="Observações" icon={<StickyNote className="h-4 w-4 text-orange-500" />}>
+                <Field label="Observações" icon={<StickyNote className="h-4 w-4 text-cyan-500" />}>
                   <textarea
                     placeholder="Notas adicionais sobre o processo..."
                     value={form.observacoes}
                     onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none min-h-[70px]"
+                    className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-cyan-500 outline-none min-h-[70px]"
                   />
                 </Field>
               </div>
 
-              <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">
+              <div className="sticky bottom-0 bg-white/5 border-t border-cyan-900/30 px-6 py-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-300 border border-cyan-900/40 rounded-lg hover:bg-white/5">
                   Cancelar
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-bold text-white bg-cyan-500 hover:bg-cyan-600 rounded-lg">
                   Criar Processo
                 </button>
               </div>
@@ -435,25 +435,25 @@ export default function Juridico() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white/5 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-5">
+              <div className="sticky top-0 bg-white/5 border-b border-cyan-900/30 px-6 py-5">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center font-bold text-sm text-orange-600">
+                    <div className="w-11 h-11 rounded-full bg-cyan-500/20 flex items-center justify-center font-bold text-sm text-cyan-400">
                       {selectedProcess.cliente.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900">{selectedProcess.cliente}</h3>
-                      <p className="text-sm text-slate-500">{selectedProcess.numero} · {selectedProcess.tipo}</p>
+                      <h3 className="text-lg font-bold text-white">{selectedProcess.cliente}</h3>
+                      <p className="text-sm text-slate-400">{selectedProcess.numero} · {selectedProcess.tipo}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn('text-[11px] font-bold px-2 py-1 rounded-full border', STATUS_META[selectedProcess.status].color)}>
                       {selectedProcess.status}
                     </span>
-                    <button onClick={() => setSelectedProcess(null)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full">
+                    <button onClick={() => setSelectedProcess(null)} className="p-2 text-slate-400 hover:bg-white/5 rounded-full">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
@@ -465,12 +465,12 @@ export default function Juridico() {
                     const current = i === selectedProcess.etapa;
                     return (
                       <React.Fragment key={et.label}>
-                        {i > 0 && <div className="flex-1 h-0.5 bg-slate-200"><div className={cn('h-full bg-emerald-500', done ? 'w-full' : 'w-0')} /></div>}
+                        {i > 0 && <div className="flex-1 h-0.5 bg-white/10"><div className={cn('h-full bg-emerald-500', done ? 'w-full' : 'w-0')} /></div>}
                         <div className="flex flex-col items-center gap-1">
-                          <div className={cn('w-5 h-5 rounded-full flex items-center justify-center', done ? 'bg-emerald-500' : current ? 'bg-orange-500' : 'bg-slate-200')}>
+                          <div className={cn('w-5 h-5 rounded-full flex items-center justify-center', done ? 'bg-emerald-500' : current ? 'bg-cyan-500' : 'bg-white/10')}>
                             {done ? <CheckCircle2 className="w-3.5 h-3.5 text-white" /> : <span className="text-[9px] text-white font-bold">{i + 1}</span>}
                           </div>
-                          <span className={cn('text-[10px] font-medium', current ? 'text-orange-500' : done ? 'text-emerald-600' : 'text-slate-400')}>{et.label}</span>
+                          <span className={cn('text-[10px] font-medium', current ? 'text-cyan-500' : done ? 'text-emerald-600' : 'text-slate-400')}>{et.label}</span>
                         </div>
                       </React.Fragment>
                     );
@@ -480,14 +480,14 @@ export default function Juridico() {
 
               <div className="px-6 py-5 space-y-5">
                 {/* Abas */}
-                <div className="flex gap-2 border-b border-slate-200">
+                <div className="flex gap-2 border-b border-cyan-900/30">
                   {(['checklist', 'juridico', 'assinatura'] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
                       className={cn(
                         'px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors',
-                        activeTab === tab ? 'text-orange-500 border-orange-500' : 'text-slate-500 border-transparent hover:text-slate-700',
+                        activeTab === tab ? 'text-cyan-500 border-orange-500' : 'text-slate-400 border-transparent hover:text-slate-300',
                       )}
                     >
                       {tab === 'checklist' && 'Checklist de Validação'}
@@ -501,10 +501,10 @@ export default function Juridico() {
                 {activeTab === 'checklist' && (
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-slate-700">Certidões Negativas — cíveis, trabalhistas e fiscais</p>
+                      <p className="text-sm font-semibold text-slate-300">Certidões Negativas — cíveis, trabalhistas e fiscais</p>
                       <span className="text-sm font-bold text-emerald-600">{approvedCount}/{docs.length} aprovado(s)</span>
                     </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                    <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-4">
                       <div className="h-full bg-emerald-500 transition-all" style={{ width: `${progress}%` }} />
                     </div>
 
@@ -512,7 +512,7 @@ export default function Juridico() {
                       {docs.map((doc) => (
                         <div key={doc.id} className={cn(
                           'rounded-lg border p-4 flex items-start gap-3 transition-colors',
-                          doc.approved ? 'border-emerald-200 bg-emerald-50/50' : 'border-slate-200 bg-white',
+                          doc.approved ? 'border-emerald-500/30 bg-emerald-500/10/50' : 'border-cyan-900/30 bg-white',
                         )}>
                           {doc.approved ? (
                             <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
@@ -520,8 +520,8 @@ export default function Juridico() {
                             <Clock className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-slate-800">{doc.title}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">
+                            <p className="font-medium text-sm text-slate-200">{doc.title}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">
                               {doc.title.includes('Certidões') ? 'Certidões cíveis, trabalhistas e fiscais' :
                                doc.title.includes('Matrícula') ? 'Matrícula do cartório de registro' :
                                doc.title.includes('Minuta') ? 'Revisão e aprovação jurídica' :
@@ -529,14 +529,14 @@ export default function Juridico() {
                                'Documentos do comprador'}
                             </p>
                             {doc.files.map((f, i) => (
-                              <div key={i} className="flex items-center gap-2 text-xs text-slate-500 mt-2">
+                              <div key={i} className="flex items-center gap-2 text-xs text-slate-400 mt-2">
                                 <FileText className="w-3.5 h-3.5" />
                                 {f.name}
                                 <span className={cn('px-1.5 py-0.5 rounded-full text-[10px] font-bold',
-                                  f.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')}>
+                                  f.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-500/20 text-amber-400')}>
                                   {f.status}
                                 </span>
-                                <button className="text-slate-400 hover:text-orange-500 flex items-center gap-1">
+                                <button className="text-slate-400 hover:text-cyan-500 flex items-center gap-1">
                                   <Download className="w-3.5 h-3.5" /> Baixar
                                 </button>
                               </div>
@@ -546,13 +546,13 @@ export default function Juridico() {
                                 'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors',
                                 doc.approved
                                   ? 'bg-emerald-100 text-emerald-700'
-                                  : 'bg-orange-500 hover:bg-orange-600 text-white',
+                                  : 'bg-cyan-500 hover:bg-cyan-600 text-white',
                               )} onClick={() => { }}>
                                 {doc.approved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
                                 {doc.approved ? 'Aprovado' : 'Anexar'}
                               </button>
                               {!doc.approved && (
-                                <button className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 flex items-center gap-1.5">
+                                <button className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 border border-cyan-900/30 hover:bg-white/5 flex items-center gap-1.5">
                                   <FileCheck className="w-3.5 h-3.5" /> Aprovar
                                 </button>
                               )}
@@ -567,12 +567,12 @@ export default function Juridico() {
                 {/* Análise Jurídica */}
                 {activeTab === 'juridico' && (
                   <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-300">
                       Análise jurídica do processo <strong>{selectedProcess.numero}</strong> — {selectedProcess.tipo} de
                       <strong> {selectedProcess.cliente}</strong>. Advogado responsável: <strong>{selectedProcess.advogadoResponsavel}</strong>.
                     </p>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                      <p className="font-semibold text-slate-800 mb-2 flex items-center gap-2"><Gavel className="h-4 w-4 text-orange-500" /> Parecer Jurídico</p>
+                    <div className="rounded-lg border border-cyan-900/30 bg-white/5 p-4 text-sm text-slate-300">
+                      <p className="font-semibold text-slate-200 mb-2 flex items-center gap-2"><Gavel className="h-4 w-4 text-cyan-500" /> Parecer Jurídico</p>
                       <p>{selectedProcess.observacoes || 'Nenhuma observação cadastrada para este processo.'}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -589,17 +589,17 @@ export default function Juridico() {
                 {/* Assinatura / Fechamento */}
                 {activeTab === 'assinatura' && (
                   <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-300">
                       Fluxo de assinatura digital. Aprovação da minuta do contrato, assinatura eletrônica das partes e confirmação da venda.
                     </p>
 
-                    <div className="rounded-lg border border-slate-200 p-4 space-y-3">
+                    <div className="rounded-lg border border-cyan-900/30 p-4 space-y-3">
                       <FlowStep icon={FileSignature} done={selectedProcess.etapa >= 3} label="Aprovação da Minuta do Contrato" sub="Revisão e aprovação jurídica da minuta" />
                       <FlowStep icon={FileSignature} done={selectedProcess.etapa >= 3} label="Assinatura Digital" sub="Assinatura eletrônica das partes" />
                       <FlowStep icon={CheckCircle2} done={selectedProcess.status === 'Aprovado' || selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento'} label="Confirmar Assinatura e Venda" sub="Registro de venda e finalização do contrato" />
                     </div>
 
-                    <div className={cn('rounded-lg border p-4', selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento' ? 'border-emerald-200 bg-emerald-50/50' : 'border-slate-200 bg-white')}>
+                    <div className={cn('rounded-lg border p-4', selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento' ? 'border-emerald-500/30 bg-emerald-500/10/50' : 'border-cyan-900/30 bg-white')}>
                       {selectedProcess.status === 'Aprovados' || selectedProcess.status === 'Aguardando Fechamento' ? (
                         <div className="flex items-center gap-2 text-emerald-700 font-semibold">
                           <CheckCircle2 className="w-5 h-5" />
@@ -607,7 +607,7 @@ export default function Juridico() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2 text-slate-600">
+                          <div className="flex items-center gap-2 text-slate-300">
                             <AlertCircle className="w-4 h-4 text-amber-500" />
                             <span className="text-sm">Aguardando assinatura digital para fechar a venda.</span>
                           </div>
@@ -652,11 +652,11 @@ export default function Juridico() {
 /* -------- Componentes auxiliares -------- */
 function SummaryCard({ icon: Icon, label, value, bg }: { icon: React.ElementType; label: string; value: string; bg: string }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+    <div className="glass-neon-card p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
+          <p className="text-xs font-medium text-slate-400">{label}</p>
+          <p className="text-2xl font-bold text-white mt-1">{value}</p>
         </div>
         <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', bg)}>
           <Icon className="h-5 w-5 text-white" />
@@ -669,8 +669,8 @@ function SummaryCard({ icon: Icon, label, value, bg }: { icon: React.ElementType
 function Field({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-        <span className="text-orange-500">{icon}</span>
+      <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+        <span className="text-cyan-500">{icon}</span>
         {label}
       </label>
       {children}
@@ -680,9 +680,9 @@ function Field({ label, icon, children }: { label: string; icon: React.ReactNode
 
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-50 rounded-lg border border-slate-200 p-3">
+    <div className="bg-white/5 rounded-lg border border-cyan-900/30 p-3">
       <p className="text-xs text-slate-400">{label}</p>
-      <p className="text-sm font-semibold text-slate-800 mt-0.5">{value}</p>
+      <p className="text-sm font-semibold text-slate-200 mt-0.5">{value}</p>
     </div>
   );
 }
@@ -690,12 +690,12 @@ function InfoItem({ label, value }: { label: string; value: string }) {
 function FlowStep({ icon: Icon, done, label, sub }: { icon: React.ElementType; done: boolean; label: string; sub: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className={cn('w-7 h-7 rounded-full flex items-center justify-center shrink-0', done ? 'bg-emerald-500' : 'bg-slate-200')}>
+      <div className={cn('w-7 h-7 rounded-full flex items-center justify-center shrink-0', done ? 'bg-emerald-500' : 'bg-white/10')}>
         <Icon className={cn('w-4 h-4', done ? 'text-white' : 'text-slate-400')} />
       </div>
       <div>
-        <p className={cn('text-sm font-semibold', done ? 'text-emerald-700' : 'text-slate-700')}>{label}</p>
-        <p className="text-xs text-slate-500">{sub}</p>
+        <p className={cn('text-sm font-semibold', done ? 'text-emerald-700' : 'text-slate-300')}>{label}</p>
+        <p className="text-xs text-slate-400">{sub}</p>
       </div>
     </div>
   );

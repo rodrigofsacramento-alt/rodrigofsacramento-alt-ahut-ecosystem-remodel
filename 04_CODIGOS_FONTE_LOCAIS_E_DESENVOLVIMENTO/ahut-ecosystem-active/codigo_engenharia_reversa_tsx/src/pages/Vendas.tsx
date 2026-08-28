@@ -50,7 +50,7 @@ export default function Vendas() {
       <div className="flex justify-end mb-6">
         <button
           onClick={() => navigate('/financeiro/comissoes')}
-          className="flex items-center gap-2 px-4 py-2 border border-amber-500/30 text-slate-700 font-medium rounded-lg hover:bg-amber-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 border border-amber-500/30 text-slate-300 font-medium rounded-lg hover:bg-amber-500/10 transition-colors"
         >
           <Coins className="h-4 w-4 text-amber-500" />
           <span>Ver Comissões</span>
@@ -60,42 +60,42 @@ export default function Vendas() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="glass-neon-card p-5 flex items-center justify-between relative overflow-hidden">
           <div className="space-y-1 z-10">
-            <p className="text-sm font-medium text-slate-500">Volume de Vendas</p>
-            <p className="text-3xl font-bold text-slate-900">{formatCurrency(totalVolume)}</p>
+            <p className="text-sm font-medium text-slate-400">Volume de Vendas</p>
+            <p className="text-3xl font-bold text-white">{formatCurrency(totalVolume)}</p>
             <div className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
               <DollarSign className="h-3 w-3" />
               <span>Resultado consolidado</span>
             </div>
           </div>
-          <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 z-10 shrink-0">
+          <div className="h-12 w-12 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 z-10 shrink-0">
             <DollarSign className="h-6 w-6" />
           </div>
         </div>
 
         <div className="glass-neon-card p-5 flex items-center justify-between relative overflow-hidden">
           <div className="space-y-1 z-10">
-            <p className="text-sm font-medium text-slate-500">Imóveis Vendidos</p>
-            <p className="text-3xl font-bold text-slate-900">{totalSales}</p>
-            <div className="flex items-center gap-1 text-xs text-orange-600 font-medium">
+            <p className="text-sm font-medium text-slate-400">Imóveis Vendidos</p>
+            <p className="text-3xl font-bold text-white">{totalSales}</p>
+            <div className="flex items-center gap-1 text-xs text-cyan-400 font-medium">
               <Home className="h-3 w-3" />
               <span>Contratos fechados</span>
             </div>
           </div>
-          <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 z-10 shrink-0">
+          <div className="h-12 w-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-500 z-10 shrink-0">
             <Home className="h-6 w-6" />
           </div>
         </div>
 
         <div className="glass-neon-card p-5 flex items-center justify-between relative overflow-hidden">
           <div className="space-y-1 z-10">
-            <p className="text-sm font-medium text-slate-500">Comissão Estimada (5%)</p>
-            <p className="text-3xl font-bold text-slate-900">{formatCurrency(estimatedCommission)}</p>
+            <p className="text-sm font-medium text-slate-400">Comissão Estimada (5%)</p>
+            <p className="text-3xl font-bold text-white">{formatCurrency(estimatedCommission)}</p>
             <div className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
               <Coins className="h-3 w-3" />
               <span>Comissão global gerada</span>
             </div>
           </div>
-          <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 z-10 shrink-0">
+          <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 z-10 shrink-0">
             <Coins className="h-6 w-6" />
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function Vendas() {
             placeholder="Buscar por comprador, código ou título..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-cyan-900/30 bg-white/5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -117,7 +117,7 @@ export default function Vendas() {
           <select
             value={agentFilter}
             onChange={e => setAgentFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-cyan-900/30 bg-white/5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Todos os Corretores</option>
             {uniqueAgents.map(agent => (
@@ -134,11 +134,11 @@ export default function Vendas() {
           </div>
         ) : filteredSales.length === 0 ? (
           <div className="text-center py-20 px-4">
-            <div className="h-16 w-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="h-16 w-16 bg-white/5 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
                <FileX className="h-8 w-8" />
             </div>
-            <h3 className="font-semibold text-slate-900 text-lg">Nenhuma venda encontrada</h3>
-            <p className="text-slate-500 max-w-sm mx-auto mt-1">
+            <h3 className="font-semibold text-white text-lg">Nenhuma venda encontrada</h3>
+            <p className="text-slate-400 max-w-sm mx-auto mt-1">
               Os registros de vendas aparecem aqui quando os contratos jurídicos correspondentes são assinados e concluídos.
             </p>
           </div>
@@ -146,7 +146,7 @@ export default function Vendas() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium select-none">
+                <tr className="border-b border-cyan-900/30 bg-white/5 text-slate-400 font-medium select-none">
                   <th className="p-4 pl-6">Imóvel de Referência</th>
                   <th className="p-4">Cliente Comprador</th>
                   <th className="p-4">Corretor Responsável</th>
@@ -157,17 +157,17 @@ export default function Vendas() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {filteredSales.map(sale => (
-                  <tr key={sale.id} className="hover:bg-slate-50 transition-colors group">
+                  <tr key={sale.id} className="hover:bg-white/5 transition-colors group">
                     <td className="p-4 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 shrink-0 font-bold text-xs select-none">
+                        <div className="h-10 w-10 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0 font-bold text-xs select-none">
                           {sale.property?.code.slice(0, 3) || "REF"}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900 truncate max-w-[200px]">
+                          <p className="font-semibold text-white truncate max-w-[200px]">
                             {sale.property?.title || "Imóvel sem título"}
                           </p>
-                          <span className="font-mono text-xs text-slate-500">
+                          <span className="font-mono text-xs text-slate-400">
                             {sale.property?.code || "REF-000"}
                           </span>
                         </div>
@@ -176,27 +176,27 @@ export default function Vendas() {
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <User className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="font-medium text-slate-900">{sale.buyer_name}</span>
+                        <span className="font-medium text-white">{sale.buyer_name}</span>
                       </div>
                     </td>
                     <td className="p-4">
                       {sale.agent ? (
                         <div className="flex items-center gap-2.5">
-                          <div className="h-7 w-7 shrink-0 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px]">
+                          <div className="h-7 w-7 shrink-0 rounded-full bg-cyan-600 flex items-center justify-center text-white text-[10px]">
                             {getInitials(sale.agent.full_name)}
                           </div>
-                          <span className="font-medium text-slate-900">{sale.agent.full_name}</span>
+                          <span className="font-medium text-white">{sale.agent.full_name}</span>
                         </div>
                       ) : (
-                        <span className="text-slate-500 italic text-xs">Sem corretor</span>
+                        <span className="text-slate-400 italic text-xs">Sem corretor</span>
                       )}
                     </td>
                     <td className="p-4">
-                      <span className="font-bold text-slate-900">
+                      <span className="font-bold text-white">
                         {formatCurrency(Number(sale.sale_value))}
                       </span>
                     </td>
-                    <td className="p-4 text-slate-500">
+                    <td className="p-4 text-slate-400">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
                         <span>{formatDate(sale.contract_signed_at || '')}</span>
@@ -204,7 +204,7 @@ export default function Vendas() {
                     </td>
                     <td className="p-4 pr-6 text-right">
                       <button
-                        className="h-8 w-8 text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all rounded-md flex items-center justify-center ml-auto"
+                        className="h-8 w-8 text-rose-400 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 transition-all rounded-md flex items-center justify-center ml-auto"
                         title="Estornar/Excluir Venda"
                         disabled={deleteSale.isPending}
                         onClick={() => setDeleteDialog({ id: sale.id, propertyId: sale.property_id || '', buyerName: sale.buyer_name })}
@@ -226,12 +226,12 @@ export default function Vendas() {
 
       {deleteDialog && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg border border-slate-200">
-            <h3 className="text-lg font-bold text-slate-900">Estornar/Excluir Venda</h3>
-            <p className="text-slate-500 mt-2">Deseja realmente excluir o registro de venda de {deleteDialog.buyerName}? O imóvel correspondente voltará a ficar Disponível.</p>
+          <div className="bg-white/5 rounded-xl p-6 max-w-md w-full shadow-lg border border-cyan-900/30">
+            <h3 className="text-lg font-bold text-white">Estornar/Excluir Venda</h3>
+            <p className="text-slate-400 mt-2">Deseja realmente excluir o registro de venda de {deleteDialog.buyerName}? O imóvel correspondente voltará a ficar Disponível.</p>
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setDeleteDialog(null)} className="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium">Cancelar</button>
-              <button onClick={handleDelete} disabled={deleteSale.isPending} className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium">
+              <button onClick={() => setDeleteDialog(null)} className="px-4 py-2 bg-white/5 text-slate-300 hover:bg-white/10 rounded-lg transition-colors font-medium">Cancelar</button>
+              <button onClick={handleDelete} disabled={deleteSale.isPending} className="px-4 py-2 bg-rose-600 text-white hover:bg-rose-700 rounded-lg transition-colors font-medium">
                 {deleteSale.isPending ? 'Excluindo...' : 'Excluir'}
               </button>
             </div>

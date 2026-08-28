@@ -263,17 +263,17 @@ export default function Agenda() {
 
   const getEventColor = (type: EventType) => {
     switch (type) {
-      case 'visita': return "bg-orange-50 text-orange-600 border-orange-100";
-      case 'ligacao': return "bg-blue-50 text-blue-600 border-blue-100";
-      case 'mensagem': return "bg-emerald-50 text-emerald-600 border-emerald-100";
-      case 'reuniao': return "bg-purple-50 text-purple-600 border-purple-100";
-      case 'lembrete': return "bg-amber-50 text-amber-600 border-amber-100";
+      case 'visita': return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+      case 'ligacao': return "bg-blue-500/10 text-cyan-500 border-blue-500/20";
+      case 'mensagem': return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+      case 'reuniao': return "bg-purple-500/10 text-purple-600 border-purple-500/20";
+      case 'lembrete': return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     }
   };
 
   const getEventColorBg = (type: EventType) => {
     switch (type) {
-      case 'visita': return "bg-orange-500";
+      case 'visita': return "bg-cyan-500";
       case 'ligacao': return "bg-blue-500";
       case 'mensagem': return "bg-emerald-500";
       case 'reuniao': return "bg-purple-500";
@@ -298,33 +298,33 @@ export default function Agenda() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-full">
+    <div className="p-6 space-y-6 bg-transparent min-h-full">
       {/* Toast de notificação */}
       {showSnoozeToast && toastMessage && (
         <div className="fixed top-4 right-4 z-[100] animate-in slide-in-from-right-5 fade-in duration-200">
-          <div className="bg-white border border-amber-200 rounded-2xl shadow-2xl p-4 max-w-sm flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+          <div className="bg-white/5 border border-amber-500/30 rounded-2xl shadow-2xl p-4 max-w-sm flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
               <Bell className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-900 mb-1">Lembrete</p>
-              <p className="text-xs text-slate-600">{toastMessage}</p>
+              <p className="text-sm font-bold text-white mb-1">Lembrete</p>
+              <p className="text-xs text-slate-300">{toastMessage}</p>
               <div className="flex items-center gap-2 mt-3">
                 <button
                   onClick={() => setShowSnoozeToast(false)}
-                  className="px-3 py-1 text-[10px] font-bold bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+                  className="px-3 py-1 text-[10px] font-bold bg-white/5 text-slate-300 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   OK
                 </button>
                 <button
                   onClick={handleSnooze}
-                  className="px-3 py-1 text-[10px] font-bold bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors flex items-center gap-1"
+                  className="px-3 py-1 text-[10px] font-bold bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-200 transition-colors flex items-center gap-1"
                 >
                   <Clock className="w-3 h-3" /> Snooze 5min
                 </button>
               </div>
             </div>
-            <button onClick={() => setShowSnoozeToast(false)} className="text-slate-400 hover:text-slate-600 p-1">
+            <button onClick={() => setShowSnoozeToast(false)} className="text-slate-400 hover:text-slate-300 p-1">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -334,12 +334,12 @@ export default function Agenda() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1">
-            <button onClick={goToPrevMonth} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400">
+          <div className="flex items-center gap-2 bg-white/5 border border-cyan-900/30 rounded-xl p-1">
+            <button onClick={goToPrevMonth} className="p-2 hover:bg-white/5 rounded-lg text-slate-400">
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="text-sm font-bold px-4 min-w-[140px] text-center">{currentMonthStr}</span>
-            <button onClick={goToNextMonth} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400">
+            <button onClick={goToNextMonth} className="p-2 hover:bg-white/5 rounded-lg text-slate-400">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -348,19 +348,19 @@ export default function Agenda() {
             className={cn(
               "px-4 py-2 border rounded-xl text-sm font-bold transition-colors",
               isCurrentMonth 
-                ? "bg-orange-500 text-white border-orange-500" 
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                ? "bg-cyan-500 text-white border-orange-500" 
+                : "bg-white/5 border-cyan-900/30 text-slate-300 hover:bg-white/5"
             )}
           >
             Hoje
           </button>
           
-          <div className="flex p-1 bg-slate-200/50 rounded-xl ml-4">
+          <div className="flex p-1 bg-white/10/50 rounded-xl ml-4">
             <button 
               onClick={() => setViewMode('month')}
               className={cn(
                 "px-4 py-1.5 text-xs font-bold rounded-lg transition-all",
-                viewMode === 'month' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                viewMode === 'month' ? "bg-white/5 text-white shadow-sm" : "text-slate-400 hover:text-slate-300"
               )}
             >
               Mês
@@ -369,7 +369,7 @@ export default function Agenda() {
               onClick={() => setViewMode('week')}
               className={cn(
                 "px-4 py-1.5 text-xs font-bold rounded-lg transition-all",
-                viewMode === 'week' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                viewMode === 'week' ? "bg-white/5 text-white shadow-sm" : "text-slate-400 hover:text-slate-300"
               )}
             >
               Semana
@@ -378,7 +378,7 @@ export default function Agenda() {
               onClick={() => setViewMode('day')}
               className={cn(
                 "px-4 py-1.5 text-xs font-bold rounded-lg transition-all",
-                viewMode === 'day' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                viewMode === 'day' ? "bg-white/5 text-white shadow-sm" : "text-slate-400 hover:text-slate-300"
               )}
             >
               Dia
@@ -389,37 +389,37 @@ export default function Agenda() {
         <div className="flex items-center gap-3">
           {/* Badge de Lembretes Pendentes */}
           {pendingCount > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full">
               <Bell className="w-4 h-4 text-amber-500" />
-              <span className="text-xs font-bold text-amber-700">{pendingCount} pendente{pendingCount > 1 ? 's' : ''}</span>
+              <span className="text-xs font-bold text-amber-300">{pendingCount} pendente{pendingCount > 1 ? 's' : ''}</span>
             </div>
           )}
 
           <div className="relative">
             <button 
               onClick={() => setShowDropdown(!showDropdown)}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Novo Evento
             </button>
             
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-2">
-                <button onClick={() => { setModalType('mensagem'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+              <div className="absolute right-0 mt-2 w-56 bg-white/5 border border-cyan-900/30 rounded-xl shadow-lg z-20 py-2">
+                <button onClick={() => { setModalType('mensagem'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/5 flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-emerald-500" /> Agendar Mensagem
                 </button>
-                <button onClick={() => { setModalType('ligacao'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                <button onClick={() => { setModalType('ligacao'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/5 flex items-center gap-2">
                   <Phone className="w-4 h-4 text-blue-500" /> Registrar Ligação
                 </button>
-                <button onClick={() => { setModalType('visita'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-orange-500" /> Agendar Visita
+                <button onClick={() => { setModalType('visita'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/5 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-cyan-500" /> Agendar Visita
                 </button>
-                <button onClick={() => { setModalType('reuniao'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                <button onClick={() => { setModalType('reuniao'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/5 flex items-center gap-2">
                   <Video className="w-4 h-4 text-purple-500" /> Agendar Reunião
                 </button>
-                <div className="border-t border-slate-100 my-1" />
-                <button onClick={() => { setModalType('lembrete'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                <div className="border-t border-white/5 my-1" />
+                <button onClick={() => { setModalType('lembrete'); setShowDropdown(false); }} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/5 flex items-center gap-2">
                   <Bell className="w-4 h-4 text-amber-500" /> Criar Lembrete
                 </button>
               </div>
@@ -430,8 +430,8 @@ export default function Agenda() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Calendar Grid */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-slate-100">
+        <div className="lg:col-span-2 glass-neon-card overflow-hidden">
+          <div className="grid grid-cols-7 border-b border-white/5">
             {days.map(day => (
               <div key={day} className="p-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">{day}</div>
             ))}
@@ -445,13 +445,13 @@ export default function Agenda() {
               return (
                 <div key={i} className={cn(
                   "min-h-[120px] p-2 border-r border-b border-slate-50 last:border-r-0 relative",
-                  !isValidDay ? "bg-slate-50/50" : "bg-white hover:bg-slate-50/50 transition-colors cursor-pointer"
+                  !isValidDay ? "bg-white/[0.03]" : "bg-white hover:bg-white/50 transition-colors cursor-pointer"
                 )}>
                   {isValidDay && (
                     <>
                       <span className={cn(
                         "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full mb-1",
-                        isToday ? "bg-orange-500 text-white" : "text-slate-400"
+                        isToday ? "bg-cyan-500 text-white" : "text-slate-400"
                       )}>
                         {dayNum}
                       </span>
@@ -482,9 +482,9 @@ export default function Agenda() {
 
         {/* Sidebar Info */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200">
+          <div className="bg-white/5 p-6 rounded-2xl border border-cyan-900/30">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 className="text-lg font-bold text-white">
                 {viewMode === 'day' ? 'Eventos do Dia' : 'Próximos Eventos'}
               </h3>
               <span className="text-xs text-slate-400">
@@ -514,7 +514,7 @@ export default function Agenda() {
                     {nextEvent.time}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="flex-1 py-2 bg-white text-slate-900 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors">
+                    <button className="flex-1 py-2 bg-white/5 text-white rounded-lg text-xs font-bold hover:bg-white/5 transition-colors">
                       {nextEvent.type === 'visita' ? 'Iniciar Rota' : 'Confirmar'}
                     </button>
                     <button className="flex-1 py-2 bg-white/20 text-white rounded-lg text-xs font-bold hover:bg-white/30 transition-colors">
@@ -527,9 +527,9 @@ export default function Agenda() {
             )}
 
             {!nextEvent && (
-              <div className="bg-slate-50 rounded-2xl p-8 text-center mb-6">
+              <div className="bg-white/5 rounded-2xl p-8 text-center mb-6">
                 <CalendarIcon className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-slate-500">Nenhum evento hoje</p>
+                <p className="text-sm font-semibold text-slate-400">Nenhum evento hoje</p>
                 <p className="text-xs text-slate-400 mt-1">Clique em "Novo Evento" para agendar</p>
               </div>
             )}
@@ -540,10 +540,10 @@ export default function Agenda() {
                 <p className="text-xs text-slate-400 text-center py-4">Nenhum evento pendente para hoje.</p>
               ) : (
                 todayEvents.map(event => (
-                  <div key={event.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div key={event.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
                     <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center",
-                      event.type === 'visita' ? 'bg-orange-100 text-orange-500' :
+                      event.type === 'visita' ? 'bg-cyan-500/20 text-cyan-500' :
                       event.type === 'ligacao' ? 'bg-blue-100 text-blue-500' :
                       event.type === 'reuniao' ? 'bg-purple-100 text-purple-500' :
                       event.type === 'lembrete' ? 'bg-amber-100 text-amber-500' :
@@ -552,14 +552,14 @@ export default function Agenda() {
                       {getEventIcon(event.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-900 truncate">{event.client}</p>
-                      <p className="text-[10px] text-slate-500">{event.time}{event.property ? ` · ${event.property}` : ''}</p>
+                      <p className="text-xs font-bold text-white truncate">{event.client}</p>
+                      <p className="text-[10px] text-slate-400">{event.time}{event.property ? ` · ${event.property}` : ''}</p>
                     </div>
                     <span className={cn(
                       "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                      event.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                      event.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
                       event.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                      'bg-slate-100 text-slate-500'
+                      'bg-white/5 text-slate-400'
                     )}>
                       {event.status === 'pending' ? 'Pendente' : event.status === 'completed' ? 'Concluído' : 'Cancelado'}
                     </span>
@@ -574,11 +574,11 @@ export default function Agenda() {
       {/* Modal Multi-uso */}
       {modalType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+          <div className="bg-white/5 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-white/5 z-10">
               <div className="flex items-center gap-3">
                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", 
-                  modalType === 'visita' ? 'bg-orange-100 text-orange-500' :
+                  modalType === 'visita' ? 'bg-cyan-500/20 text-cyan-500' :
                   modalType === 'ligacao' ? 'bg-blue-100 text-blue-500' :
                   modalType === 'reuniao' ? 'bg-purple-100 text-purple-500' :
                   modalType === 'lembrete' ? 'bg-amber-100 text-amber-500' :
@@ -587,16 +587,16 @@ export default function Agenda() {
                   {getEventIcon(modalType)}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 capitalize">
+                  <h3 className="text-lg font-bold text-white capitalize">
                     {modalType === 'mensagem' ? 'Agendar Mensagem' :
                      modalType === 'ligacao' ? 'Registrar Ligação' :
                      modalType === 'reuniao' ? 'Agendar Reunião' :
                      modalType === 'lembrete' ? 'Criar Lembrete' : 'Agendar Visita'}
                   </h3>
-                  <p className="text-xs text-slate-500">Configure os detalhes do evento</p>
+                  <p className="text-xs text-slate-400">Configure os detalhes do evento</p>
                 </div>
               </div>
-              <button onClick={() => setModalType(null)} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+              <button onClick={() => setModalType(null)} className="p-2 text-slate-400 hover:text-slate-300 rounded-full hover:bg-white/5">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -604,10 +604,10 @@ export default function Agenda() {
             <div className="p-6 space-y-6">
               {modalType !== 'lembrete' && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Lead *</label>
+                  <label className="text-xs font-bold text-slate-300">Lead *</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="text" placeholder="Buscar lead pelo nome, email ou telefone..." value={eventForm.leadName} onChange={(e) => setEventForm({ ...eventForm, leadName: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
+                    <input type="text" placeholder="Buscar lead pelo nome, email ou telefone..." value={eventForm.leadName} onChange={(e) => setEventForm({ ...eventForm, leadName: e.target.value })} className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
                   </div>
                 </div>
               )}
@@ -615,31 +615,31 @@ export default function Agenda() {
               {/* Lembrete: campo de título */}
               {modalType === 'lembrete' && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Título do Lembrete *</label>
+                  <label className="text-xs font-bold text-slate-300">Título do Lembrete *</label>
                   <input 
                     type="text" 
                     placeholder="Ex: Revisar proposta do cliente, Ligar para Maria..." 
                     value={eventForm.leadName}
                     onChange={(e) => setEventForm({ ...eventForm, leadName: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
               )}
 
               {modalType === 'visita' && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Imóvel *</label>
+                  <label className="text-xs font-bold text-slate-300">Imóvel *</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="text" placeholder="Buscar imóvel..." value={eventForm.property} onChange={(e) => setEventForm({ ...eventForm, property: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-orange-500" />
+                    <input type="text" placeholder="Buscar imóvel..." value={eventForm.property} onChange={(e) => setEventForm({ ...eventForm, property: e.target.value })} className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-10 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan-500" />
                   </div>
                 </div>
               )}
 
               {modalType === 'reuniao' && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Tipo de Reunião *</label>
-                  <select value={eventForm.meetingType} onChange={(e) => setEventForm({ ...eventForm, meetingType: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-purple-500">
+                  <label className="text-xs font-bold text-slate-300">Tipo de Reunião *</label>
+                  <select value={eventForm.meetingType} onChange={(e) => setEventForm({ ...eventForm, meetingType: e.target.value })} className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-purple-500">
                     <option>Online (Google Meet/Zoom)</option>
                     <option>Presencial (Escritório)</option>
                     <option>Presencial (Cliente)</option>
@@ -649,31 +649,31 @@ export default function Agenda() {
 
               {(modalType === 'mensagem' || modalType === 'lembrete') && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">
+                  <label className="text-xs font-bold text-slate-300">
                     {modalType === 'mensagem' ? 'Mensagem (Template ou Texto Livre) *' : 'Descrição (opcional)'}
                   </label>
-                  <textarea rows={3} placeholder={modalType === 'lembrete' ? "Detalhes do lembrete..." : "Escreva a mensagem a ser enviada..."} value={eventForm.message} onChange={(e) => setEventForm({ ...eventForm, message: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-amber-500" />
+                  <textarea rows={3} placeholder={modalType === 'lembrete' ? "Detalhes do lembrete..." : "Escreva a mensagem a ser enviada..."} value={eventForm.message} onChange={(e) => setEventForm({ ...eventForm, message: e.target.value })} className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-amber-500" />
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Data *</label>
-                  <input type="date" value={eventForm.date} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
+                  <label className="text-xs font-bold text-slate-300">Data *</label>
+                  <input type="date" value={eventForm.date} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Horário *</label>
-                  <input type="time" value={eventForm.time} onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
+                  <label className="text-xs font-bold text-slate-300">Horário *</label>
+                  <input type="time" value={eventForm.time} onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })} className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400" />
                 </div>
               </div>
 
               {/* Seletor de tempo do lembrete */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Lembrete</label>
+                <label className="text-xs font-bold text-slate-300">Lembrete</label>
                 <select 
                   value={eventForm.reminderMinutes} 
                   onChange={(e) => setEventForm({ ...eventForm, reminderMinutes: Number(e.target.value) })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400"
+                  className="w-full bg-white/5 border border-cyan-900/30 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-400"
                 >
                   {REMINDER_TRIGGERS.filter(t => t.offsetMinutes <= 0).map(t => (
                     <option key={t.offsetMinutes} value={Math.abs(t.offsetMinutes)}>
@@ -685,14 +685,14 @@ export default function Agenda() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3 sticky bottom-0 bg-white">
-              <button onClick={() => setModalType(null)} className="px-6 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+            <div className="p-6 border-t border-white/5 flex items-center justify-end gap-3 sticky bottom-0 bg-white/5">
+              <button onClick={() => setModalType(null)} className="px-6 py-2 rounded-lg text-sm font-bold text-slate-300 hover:bg-white/5 transition-colors">
                 Cancelar
               </button>
               <button onClick={handleSaveEvent} disabled={eventForm.saving} className={cn(
                 "px-6 py-2 rounded-lg text-sm font-bold text-white transition-colors shadow-lg flex items-center gap-2 disabled:opacity-60",
-                modalType === 'visita' ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20' :
-                modalType === 'ligacao' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/20' :
+                modalType === 'visita' ? 'bg-cyan-500 hover:bg-cyan-600 shadow-cyan-500/20' :
+                modalType === 'ligacao' ? 'bg-blue-500 hover:bg-cyan-600 shadow-blue-500/20' :
                 modalType === 'reuniao' ? 'bg-purple-500 hover:bg-purple-600 shadow-purple-500/20' :
                 modalType === 'lembrete' ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20' :
                 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'

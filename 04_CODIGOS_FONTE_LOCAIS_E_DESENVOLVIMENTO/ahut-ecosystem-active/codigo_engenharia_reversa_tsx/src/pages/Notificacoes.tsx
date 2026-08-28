@@ -43,17 +43,17 @@ interface Notification {
 }
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string; sound?: string }> = {
-  new_lead:        { icon: UserPlus,     color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', sound: 'new_lead' },
-  sale_completed:  { icon: PartyPopper,  color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-200',    sound: 'sale' },
-  lead_contacted:  { icon: Phone,        color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-200' },
-  lead_qualified:  { icon: Sparkles,     color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' },
-  proposal_created:{ icon: Handshake,    color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' },
-  visit_scheduled: { icon: Calendar,     color: 'text-teal-600',   bg: 'bg-teal-50 border-teal-200' },
-  contract_signed: { icon: TrendingUp,   color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-300' },
-  reminder:        { icon: Bell,         color: 'text-sky-600',    bg: 'bg-sky-50 border-sky-100' },
-  late:            { icon: AlertTriangle,color: 'text-rose-600',   bg: 'bg-rose-50 border-rose-100' },
-  system:          { icon: ShieldAlert,  color: 'text-slate-600',  bg: 'bg-slate-50 border-slate-100' },
-  approval:        { icon: Check,        color: 'text-emerald-600',bg: 'bg-emerald-50 border-emerald-100' },
+  new_lead:        { icon: UserPlus,     color: 'text-emerald-600', bg: 'bg-emerald-500/10 border-emerald-500/30', sound: 'new_lead' },
+  sale_completed:  { icon: PartyPopper,  color: 'text-amber-400',  bg: 'bg-amber-500/10 border-amber-500/30',    sound: 'sale' },
+  lead_contacted:  { icon: Phone,        color: 'text-cyan-500',   bg: 'bg-blue-500/10 border-blue-500/30' },
+  lead_qualified:  { icon: Sparkles,     color: 'text-violet-600', bg: 'bg-violet-500/10 border-violet-500/30' },
+  proposal_created:{ icon: Handshake,    color: 'text-cyan-500', bg: 'bg-indigo-500/10 border-indigo-500/30' },
+  visit_scheduled: { icon: Calendar,     color: 'text-teal-600',   bg: 'bg-teal-500/10 border-teal-500/30' },
+  contract_signed: { icon: TrendingUp,   color: 'text-amber-300',  bg: 'bg-amber-500/10 border-amber-500/30' },
+  reminder:        { icon: Bell,         color: 'text-sky-600',    bg: 'bg-sky-500/10 border-sky-500/20' },
+  late:            { icon: AlertTriangle,color: 'text-rose-600',   bg: 'bg-rose-500/10 border-rose-100' },
+  system:          { icon: ShieldAlert,  color: 'text-slate-300',  bg: 'bg-white/5 border-white/5' },
+  approval:        { icon: Check,        color: 'text-emerald-600',bg: 'bg-emerald-500/10 border-emerald-500/20' },
 };
 
 function formatTimeAgo(dateStr: string): string {
@@ -196,28 +196,28 @@ export default function Notificacoes() {
             "flex items-start gap-3 p-4 rounded-2xl border-2 shadow-2xl min-w-[320px] max-w-md",
             toast.type === 'sale_completed'
               ? "bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-400"
-              : "bg-emerald-50 border-emerald-300"
+              : "bg-emerald-500/10 border-emerald-300"
           )}>
             <div className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
               toast.type === 'sale_completed' ? "bg-amber-100" : "bg-emerald-100"
             )}>
               {toast.type === 'sale_completed' ? (
-                <PartyPopper className="w-6 h-6 text-amber-600" />
+                <PartyPopper className="w-6 h-6 text-amber-400" />
               ) : (
                 <UserPlus className="w-6 h-6 text-emerald-600" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm text-slate-900">{toast.title}</p>
-              <p className="text-xs text-slate-600 mt-0.5">{toast.body}</p>
+              <p className="font-bold text-sm text-white">{toast.title}</p>
+              <p className="text-xs text-slate-300 mt-0.5">{toast.body}</p>
               {toast.sale_value && (
-                <p className="text-lg font-black text-amber-600 mt-1">
+                <p className="text-lg font-black text-amber-400 mt-1">
                   {formatCurrency(Number(toast.sale_value))}
                 </p>
               )}
             </div>
-            <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-600">
+            <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-300">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -227,11 +227,11 @@ export default function Notificacoes() {
       {/* ─── Header ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
             {unreadCount > 0 ? <BellRing className="w-6 h-6 text-white" /> : <Bell className="w-6 h-6 text-white" />}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold text-white">
               Notificações
               {unreadCount > 0 && (
                 <span className="ml-3 text-sm font-black text-white bg-rose-500 px-2.5 py-0.5 rounded-full">
@@ -239,7 +239,7 @@ export default function Notificacoes() {
                 </span>
               )}
             </h1>
-            <p className="text-slate-500 text-sm">
+            <p className="text-slate-400 text-sm">
               {isAdmin
                 ? `Visão Admin — ${notifications.length} registros`
                 : 'Seus alertas e eventos'}
@@ -254,21 +254,21 @@ export default function Notificacoes() {
             className={cn(
               "p-2 rounded-xl border transition-all",
               soundEnabled
-                ? "bg-sky-50 border-sky-200 text-sky-600"
-                : "bg-slate-100 border-slate-200 text-slate-400"
+                ? "bg-sky-500/10 border-sky-500/30 text-sky-600"
+                : "bg-white/5 border-cyan-900/30 text-slate-400"
             )}
           >
             <Volume2 className="w-4 h-4" />
           </button>
 
-          <button onClick={fetchNotifications} className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+          <button onClick={fetchNotifications} className="p-2 rounded-xl border border-cyan-900/30 text-slate-400 hover:bg-white/5 transition-colors">
             <RefreshCw className="w-4 h-4" />
           </button>
 
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-medium hover:bg-slate-700 transition-colors"
             >
               <Eye className="w-4 h-4" />
               Marcar todas lidas
@@ -284,28 +284,28 @@ export default function Notificacoes() {
             <UserPlus className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Novos Leads</span>
           </div>
-          <p className="text-2xl font-black text-slate-900">{leadCount}</p>
+          <p className="text-2xl font-black text-white">{leadCount}</p>
         </div>
         <div className="glass-neon-card p-4">
-          <div className="flex items-center gap-2 text-amber-600 mb-1">
+          <div className="flex items-center gap-2 text-amber-400 mb-1">
             <PartyPopper className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Vendas</span>
           </div>
-          <p className="text-2xl font-black text-slate-900">{saleCount}</p>
+          <p className="text-2xl font-black text-white">{saleCount}</p>
         </div>
         <div className="glass-neon-card p-4">
           <div className="flex items-center gap-2 text-sky-600 mb-1">
             <BellRing className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Não lidas</span>
           </div>
-          <p className="text-2xl font-black text-slate-900">{unreadCount}</p>
+          <p className="text-2xl font-black text-white">{unreadCount}</p>
         </div>
         <div className="glass-neon-card p-4">
-          <div className="flex items-center gap-2 text-slate-600 mb-1">
+          <div className="flex items-center gap-2 text-slate-300 mb-1">
             <Bell className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Total</span>
           </div>
-          <p className="text-2xl font-black text-slate-900">{notifications.length}</p>
+          <p className="text-2xl font-black text-white">{notifications.length}</p>
         </div>
       </div>
 
@@ -325,8 +325,8 @@ export default function Notificacoes() {
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-semibold border transition-all",
               filter === f.key
-                ? "bg-slate-900 text-white border-slate-900"
-                : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                ? "bg-[#0a0a0a] text-white border-slate-900"
+                : "bg-white/5 text-slate-400 border-cyan-900/30 hover:border-cyan-900/40"
             )}
           >
             {f.label}
@@ -337,14 +337,14 @@ export default function Notificacoes() {
       {/* ─── Lista ─── */}
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <div className="w-8 h-8 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600" />
+          <div className="w-8 h-8 animate-spin rounded-full border-2 border-cyan-900/30 border-t-indigo-600" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass-neon-card p-16 flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
             <Bell className="w-8 h-8 text-slate-300" />
           </div>
-          <h3 className="text-lg font-bold text-slate-700 mb-1">Tudo em dia!</h3>
+          <h3 className="text-lg font-bold text-slate-300 mb-1">Tudo em dia!</h3>
           <p className="text-sm text-slate-400">Nenhuma notificação {filter !== 'all' ? 'nessa categoria' : 'pendente'}.</p>
         </div>
       ) : (
@@ -358,26 +358,26 @@ export default function Notificacoes() {
                 className={cn(
                   "flex items-start gap-4 p-4 rounded-2xl border transition-all group",
                   notif.is_read
-                    ? "bg-white border-slate-200"
+                    ? "bg-white/5 border-cyan-900/30"
                     : `${cfg.bg} border-2 shadow-sm`
                 )}
               >
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", notif.is_read ? "bg-slate-100" : "bg-white shadow-sm")}>
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", notif.is_read ? "bg-white/5" : "bg-white/5 shadow-sm")}>
                   <Icon className={cn("w-5 h-5", notif.is_read ? "text-slate-400" : cfg.color)} />
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className={cn("font-bold text-sm", notif.is_read ? "text-slate-600" : "text-slate-900")}>
+                      <p className={cn("font-bold text-sm", notif.is_read ? "text-slate-300" : "text-white")}>
                         {notif.title}
                         {!notif.is_read && (
                           <span className="ml-2 inline-block w-2 h-2 rounded-full bg-sky-500" />
                         )}
                       </p>
-                      <p className="text-sm text-slate-500 mt-0.5">{notif.body}</p>
+                      <p className="text-sm text-slate-400 mt-0.5">{notif.body}</p>
                       {notif.sale_value && (
-                        <p className="text-base font-bold text-amber-600 mt-1">
+                        <p className="text-base font-bold text-amber-400 mt-1">
                           {formatCurrency(Number(notif.sale_value))}
                         </p>
                       )}
@@ -398,7 +398,7 @@ export default function Notificacoes() {
                     <button
                       onClick={() => markRead(notif.id)}
                       title="Marcar como lida"
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors"
                     >
                       <Check className="w-4 h-4" />
                     </button>
@@ -406,7 +406,7 @@ export default function Notificacoes() {
                   <button
                     onClick={() => deleteNotification(notif.id)}
                     title="Remover"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
