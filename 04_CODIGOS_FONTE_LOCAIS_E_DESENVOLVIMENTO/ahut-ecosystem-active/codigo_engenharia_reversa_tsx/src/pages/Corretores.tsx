@@ -68,7 +68,7 @@ export default function Corretores() {
       </div>
 
       {tab === 'performance' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="glass-neon-card p-6">
           <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-6">
             <TrendingUp className="w-5 h-5 text-orange-500" /> Ranking e Performance dos Corretores
           </h3>
@@ -116,7 +116,7 @@ export default function Corretores() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredAgents.map(agent => (
-            <div key={agent.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
+            <div key={agent.id} className="glass-neon-card overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
               <div className="h-24 bg-gradient-to-r from-orange-500 to-amber-500 relative">
                 <button className="absolute top-3 right-3 p-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg backdrop-blur-sm transition-colors">
                   <MoreVertical className="w-4 h-4" />

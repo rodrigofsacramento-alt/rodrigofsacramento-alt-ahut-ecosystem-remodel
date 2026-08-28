@@ -633,7 +633,7 @@ export default function Atendimento() {
   }, [conversations, agents]);
 
   return (
-    <div className="flex h-[calc(100vh-80px)] w-full overflow-hidden bg-white border border-slate-200 rounded-3xl shadow-sm">
+    <div className="flex h-[calc(100vh-80px)] w-full overflow-hidden glass-neon-card rounded-3xl">
       
       {/* ── 1. SIDEBAR CONVERSAS ── */}
       <div className="w-80 border-r border-slate-200 flex flex-col shrink-0 bg-white">

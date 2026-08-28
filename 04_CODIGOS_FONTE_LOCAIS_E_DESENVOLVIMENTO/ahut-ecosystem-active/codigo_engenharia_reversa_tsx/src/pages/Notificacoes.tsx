@@ -279,28 +279,28 @@ export default function Notificacoes() {
 
       {/* ─── Stats Cards ─── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="glass-neon-card p-4">
           <div className="flex items-center gap-2 text-emerald-600 mb-1">
             <UserPlus className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Novos Leads</span>
           </div>
           <p className="text-2xl font-black text-slate-900">{leadCount}</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="glass-neon-card p-4">
           <div className="flex items-center gap-2 text-amber-600 mb-1">
             <PartyPopper className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Vendas</span>
           </div>
           <p className="text-2xl font-black text-slate-900">{saleCount}</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="glass-neon-card p-4">
           <div className="flex items-center gap-2 text-sky-600 mb-1">
             <BellRing className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Não lidas</span>
           </div>
           <p className="text-2xl font-black text-slate-900">{unreadCount}</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="glass-neon-card p-4">
           <div className="flex items-center gap-2 text-slate-600 mb-1">
             <Bell className="w-4 h-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Total</span>
@@ -340,7 +340,7 @@ export default function Notificacoes() {
           <div className="w-8 h-8 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-16 flex flex-col items-center text-center">
+        <div className="glass-neon-card p-16 flex flex-col items-center text-center">
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
             <Bell className="w-8 h-8 text-slate-300" />
           </div>

@@ -27,6 +27,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../contexts/LanguageContext';
+import QubitsLogo from './QubitsLogo';
 
 // ── Language Toggle ─────────────────────────────────
 function LanguageToggle() {
@@ -119,8 +120,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       "bg-black/60 backdrop-blur-xl border-r border-cyan-900/30"
     )}>
       <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center font-bold text-xl italic text-white">A</div>
-        {!collapsed && <span className="text-2xl font-bold tracking-tight text-white">ApeX<span className="text-cyan-400">fy</span></span>}
+        <QubitsLogo collapsed={collapsed} />
       </div>
 
       <div className="px-4 mb-6">

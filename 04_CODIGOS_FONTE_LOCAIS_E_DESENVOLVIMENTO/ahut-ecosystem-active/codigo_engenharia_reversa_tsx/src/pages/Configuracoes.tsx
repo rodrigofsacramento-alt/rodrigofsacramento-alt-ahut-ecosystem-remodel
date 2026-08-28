@@ -94,7 +94,7 @@ export function Configuracoes() {
           
           {/* TAB: PERFIL */}
           {activeTab === 'perfil' && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="glass-neon-card p-6 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center gap-3 mb-6">
                 <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Meu Perfil</h2>
@@ -170,7 +170,7 @@ export function Configuracoes() {
 
           {/* TAB: EMPRESA */}
           {activeTab === 'empresa' && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="glass-neon-card p-6 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center gap-3 mb-6">
                 <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Dados da Empresa</h2>
@@ -259,7 +259,7 @@ export function Configuracoes() {
 
           {/* TAB: NOTIFICACOES */}
           {activeTab === 'notificacoes' && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="glass-neon-card p-6 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center gap-3 mb-6">
                 <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Notificações</h2>
@@ -297,7 +297,7 @@ export function Configuracoes() {
 
           {/* TAB: SEGURANCA */}
           {activeTab === 'seguranca' && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="glass-neon-card p-6 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center gap-3 mb-6">
                 <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Segurança</h2>
@@ -365,7 +365,7 @@ export function Configuracoes() {
 
           {/* TAB: APARENCIA (Opcional, minimalista) */}
           {activeTab === 'aparencia' && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="glass-neon-card p-6 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center gap-3 mb-6">
                 <Palette className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Aparência</h2>
@@ -419,7 +419,7 @@ export function Configuracoes() {
 
           {/* TAB: INTEGRACOES */}
           {activeTab === 'integracoes' && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="glass-neon-card p-6 animate-in fade-in slide-in-from-bottom-2">
                <div className="flex items-center gap-3 mb-6">
                 <LinkIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Integrações</h2>
