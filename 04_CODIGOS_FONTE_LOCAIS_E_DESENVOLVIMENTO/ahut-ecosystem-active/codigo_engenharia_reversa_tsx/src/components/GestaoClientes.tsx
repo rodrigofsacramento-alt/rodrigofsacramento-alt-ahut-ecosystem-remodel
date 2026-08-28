@@ -61,7 +61,7 @@ export default function GestaoClientes() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por nome, email ou telefone..."
-            className="w-full bg-white border border-cyan-900/30 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-cyan-500/30 focus:border-orange-500 outline-none"
+            className="w-full bg-white/5 border border-cyan-900/30 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 outline-none text-white"
           />
         </div>
         <div className="flex gap-1 bg-white/5 rounded-xl p-1">
