@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="qGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00FFCC"/>
+      <stop offset="100%" stop-color="#00E5FF"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="url(#qGrad)" stroke-width="24" opacity="0.85"/>
+  <!-- Inner qubit dot -->
+  <circle cx="256" cy="256" r="60" fill="#00FFCC" filter="url(#glow)"/>
+  <!-- Orbital ring -->
+  <ellipse cx="256" cy="256" rx="140" ry="50" fill="none" stroke="#00FFCC" stroke-width="8" opacity="0.5" transform="rotate(-30 256 256)"/>
+  <!-- Orbital ring 2 -->
+  <ellipse cx="256" cy="256" rx="140" ry="50" fill="none" stroke="#00FFCC" stroke-width="8" opacity="0.3" transform="rotate(30 256 256)"/>
+  <!-- Small orbital dots -->
+  <circle cx="256" cy="256" r="3" fill="#00FFCC" opacity="0.8"/>
+</svg>
