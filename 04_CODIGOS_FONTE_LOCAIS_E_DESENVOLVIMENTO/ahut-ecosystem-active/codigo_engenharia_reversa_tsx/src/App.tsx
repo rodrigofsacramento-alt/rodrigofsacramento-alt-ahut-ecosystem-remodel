@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useReminders } from './hooks/useReminders';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { Sidebar, Header } from './components/Layout';
 import { AnimatePresence, motion } from 'framer-motion';
+import NeuralBackground from './components/NeuralBackground';
+import { useResponsive } from './hooks/useResponsive';
 import Dashboard from './components/Dashboard';
 import Leads from './components/Leads';
 import Atendimento from './pages/Atendimento';
@@ -40,17 +42,23 @@ const queryClient = new QueryClient({
 function AppLayout({ children, title, subtitle, dark }: { children: React.ReactNode; title: string; subtitle?: string; dark?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   useReminders();
+  const useDark = dark !== false;
+  const { isMobile } = useResponsive();
+
+  // Auto-collapse sidebar on mobile
+  useEffect(() => { if (isMobile) setCollapsed(true); }, [isMobile]);
 
   return (
-    <div className={`flex min-h-screen ${dark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`flex min-h-screen relative ${useDark ? 'bg-black text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+      {useDark && <NeuralBackground />}
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative" style={{ zIndex: 1 }}>
         <Header title={title} subtitle={subtitle} />
         <motion.main
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className={`p-6 flex-1 overflow-auto ${dark ? 'bg-slate-950' : ''}`}
+          className={`p-6 flex-1 overflow-auto ${useDark ? 'bg-transparent' : ''}`}
         >
           {children}
         </motion.main>

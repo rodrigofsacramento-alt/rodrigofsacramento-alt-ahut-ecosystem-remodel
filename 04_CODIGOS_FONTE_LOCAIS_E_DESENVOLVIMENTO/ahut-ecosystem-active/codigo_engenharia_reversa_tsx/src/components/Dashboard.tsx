@@ -104,7 +104,7 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {stats.map((stat) => (
-          <div key={stat.label} className={`p-4 rounded-2xl border ${stat.highlight ? 'bg-orange-500 text-white border-orange-400' : 'bg-white border-slate-200 text-slate-900'}`}>
+          <div key={stat.label} className={`p-4 rounded-2xl border ${stat.highlight ? 'bg-orange-500 text-white border-orange-400' : 'card-dark-stat text-slate-200'}`}>
             <div className="flex items-center justify-between mb-2">
               <div className={`p-2 rounded-lg ${stat.highlight ? 'bg-white/20' : 'bg-slate-100'}`}>
                 <stat.icon className={`w-4 h-4 ${stat.highlight ? 'text-white' : 'text-slate-600'}`} />
@@ -121,13 +121,13 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Performance Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200">
+        <div className="lg:col-span-2 card-dark p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Performance Mensal</h3>
-              <p className="text-sm text-slate-500">Evolução de leads e vendas</p>
+              <h3 className="text-lg font-bold text-white">Performance Mensal</h3>
+              <p className="text-sm text-slate-400">Evolução de leads e vendas</p>
             </div>
-            <div className="flex items-center gap-4 text-xs font-bold">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-orange-500" />
                 <span>Leads</span>
@@ -158,10 +158,10 @@ export default function Dashboard() {
         </div>
 
         {/* SLA Alerts */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200">
+        <div className="card-dark p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-slate-900">Alertas de SLA</h3>
+              <h3 className="text-lg font-bold text-white">Alertas de SLA</h3>
               <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">2</span>
             </div>
             <button className="text-orange-500 text-sm font-bold hover:underline">Gerenciar</button>
@@ -187,13 +187,13 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Sales Funnel */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200">
+        <div className="lg:col-span-2 card-dark p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Funil de Vendas</h3>
-              <p className="text-sm text-slate-500">Conversão por etapa</p>
+              <h3 className="text-lg font-bold text-white">Funil de Vendas</h3>
+              <p className="text-sm text-slate-400">Conversão por etapa</p>
             </div>
-            <select className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none">
+            <select className="card-dark border border-cyan-900/30 rounded-lg px-3 py-1.5 text-sm outline-none text-white">
               <option>Este mês</option>
               <option>Últimos 3 meses</option>
             </select>
@@ -238,43 +238,43 @@ export default function Dashboard() {
 
         {/* Quick Actions & Recent Activity */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Ações Rápidas</h3>
+          <div className="card-dark p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Ações Rápidas</h3>
             <div className="grid grid-cols-2 gap-3">
-              <button className="p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-orange-50 hover:border-orange-200 transition-all text-left group">
-                <div className="w-10 h-10 rounded-lg bg-orange-500 text-white flex items-center justify-center mb-3">
+              <button className="p-4 rounded-xl border border-cyan-900/30 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all text-left group">
+                <div className="w-10 h-10 rounded-lg bg-cyan-500 text-white flex items-center justify-center mb-3">
                   <Users className="w-5 h-5" />
                 </div>
-                <p className="text-sm font-bold text-slate-900">Novo Lead</p>
-                <p className="text-[10px] text-slate-500">Cadastrar le...</p>
+                <p className="text-sm font-bold text-white">Novo Lead</p>
+                <p className="text-[10px] text-slate-400">Cadastrar le...</p>
               </button>
-              <button className="p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-all text-left group">
-                <div className="w-10 h-10 rounded-lg bg-[#1E293B] text-white flex items-center justify-center mb-3">
-                  <Home className="w-5 h-5" />
-                </div>
-                <p className="text-sm font-bold text-slate-900">Novo Im...</p>
-                <p className="text-[10px] text-slate-500">Cadastrar i...</p>
-              </button>
-              <button className="p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 transition-all text-left group">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center mb-3">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <p className="text-sm font-bold text-slate-900">Agendar ...</p>
-                <p className="text-[10px] text-slate-500">Criar agend...</p>
-              </button>
-              <button className="p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-amber-50 hover:border-amber-200 transition-all text-left group">
-                <div className="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center mb-3">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <p className="text-sm font-bold text-slate-900">Nova Pro...</p>
-                <p className="text-[10px] text-slate-500">Gerar prop...</p>
-              </button>
-            </div>
-          </div>
+              <button className="p-4 rounded-xl border border-cyan-900/30 bg-white/5 hover:bg-sky-500/10 hover:border-sky-500/30 transition-all text-left group">
+                              <div className="w-10 h-10 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-3">
+                                <Calendar className="w-5 h-5" />
+                              </div>
+                              <p className="text-sm font-bold text-white">Agendar</p>
+                              <p className="text-[10px] text-slate-400">Nova visita...</p>
+                            </button>
+                            <button className="p-4 rounded-xl border border-cyan-900/30 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all text-left group">
+                              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <p className="text-sm font-bold text-white">Nova Proposta</p>
+                              <p className="text-[10px] text-slate-400">Criar propo...</p>
+                            </button>
+                            <button className="p-4 rounded-xl border border-cyan-900/30 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/30 transition-all text-left group">
+                              <div className="w-10 h-10 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center mb-3">
+                                <Home className="w-5 h-5" />
+                              </div>
+                              <p className="text-sm font-bold text-white">Novo Imóvel</p>
+                              <p className="text-[10px] text-slate-400">Cadastrar i...</p>
+                            </button>
+                        </div>
+                      </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-slate-200">
+          <div className="card-dark p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-900">Atividade Recente</h3>
+              <h3 className="text-lg font-bold text-white">Atividade Recente</h3>
               <button className="text-orange-500 text-xs font-bold hover:underline">Ver tudo</button>
             </div>
             <div className="space-y-4">

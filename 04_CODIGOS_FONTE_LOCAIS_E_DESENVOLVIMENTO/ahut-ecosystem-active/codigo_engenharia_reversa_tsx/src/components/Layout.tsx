@@ -58,7 +58,7 @@ function LanguageToggle() {
           <rect width="24" height="2" y="10" fill="#C60B1E"/>
         </svg>
       )}
-      <span className="text-xs font-semibold text-slate-500 group-hover:text-slate-700">
+      <span className="text-xs font-semibold text-slate-400 group-hover:text-cyan-400">
         {isPT ? 'PT' : 'ES'}
       </span>
     </button>
@@ -114,21 +114,22 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "bg-white border-r border-slate-200 text-slate-600 flex flex-col transition-all duration-300 h-screen sticky top-0",
-      collapsed ? "w-20" : "w-64"
+      "flex flex-col transition-all duration-300 h-screen sticky top-0 z-20",
+      collapsed ? "w-20" : "w-64",
+      "bg-black/60 backdrop-blur-xl border-r border-cyan-900/30"
     )}>
       <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-bold text-xl italic text-white">A</div>
-        {!collapsed && <span className="text-2xl font-bold tracking-tight text-slate-900">ApeX<span className="text-orange-500">fy</span></span>}
+        <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center font-bold text-xl italic text-white">A</div>
+        {!collapsed && <span className="text-2xl font-bold tracking-tight text-white">ApeX<span className="text-cyan-400">fy</span></span>}
       </div>
 
       <div className="px-4 mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
             placeholder={collapsed ? "" : t('atd.busca')}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-orange-500 outline-none text-slate-900"
+            className="w-full bg-white/5 border border-cyan-900/30 rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-cyan-500 outline-none text-white placeholder-slate-500"
           />
         </div>
       </div>
@@ -136,8 +137,8 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       {/* Language Toggle */}
       {!collapsed && (
         <div className="px-4 mb-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100">
-            <Globe className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-cyan-900/20">
+            <Globe className="w-4 h-4 text-cyan-400" />
             <LanguageToggle />
           </div>
         </div>
@@ -153,7 +154,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               to={item.path}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group relative",
-                isActive ? "bg-orange-500 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                isActive ? "bg-cyan-500/20 text-white border-l-2 border-cyan-400" : "text-slate-400 hover:bg-white/5 hover:text-white"
               )}
             >
               <Icon className="w-5 h-5 shrink-0" />
@@ -161,7 +162,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               {item.badge && !collapsed && (
                 <span className={cn(
                   "ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full",
-                  isActive ? "bg-white/20 text-white" : "bg-orange-100 text-orange-600"
+                  isActive ? "bg-cyan-500/30 text-cyan-300" : "bg-cyan-900/40 text-cyan-300"
                 )}>
                   {item.badge}
                 </span>
@@ -174,26 +175,26 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-200 space-y-1">
-        <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors">
+      <div className="p-4 border-t border-cyan-900/30 space-y-1">
+        <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
           <Settings className="w-5 h-5" />
           {!collapsed && <span className="text-sm font-medium">{t('header.configuracoes')}</span>}
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-white/5 hover:text-white rounded-lg transition-colors"
         >
           <ChevronLeft className={cn("w-5 h-5 transition-transform", collapsed && "rotate-180")} />
           {!collapsed && <span className="text-sm font-medium">{t('geral.cancelar')}</span>}
         </button>
       </div>
 
-      <div className="p-4 bg-slate-50 flex items-center gap-3 border-t border-slate-200">
-        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-sm text-orange-600">JM</div>
+      <div className="p-4 bg-white/5 flex items-center gap-3 border-t border-cyan-900/30">
+        <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center font-bold text-sm text-cyan-400">JM</div>
         {!collapsed && (
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-slate-900 truncate">João Martins</p>
-            <p className="text-xs text-slate-500 truncate">Gestor Comercial</p>
+            <p className="text-sm font-bold text-white truncate">João Martins</p>
+            <p className="text-xs text-slate-400 truncate">Gestor Comercial</p>
           </div>
         )}
       </div>
@@ -205,10 +206,10 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
   const { t, lang, toggleLang } = useLanguage();
   
   return (
-    <header className="flex items-center justify-between p-6 bg-white border-b border-slate-200 sticky top-0 z-10">
+    <header className="flex items-center justify-between p-6 bg-black/40 backdrop-blur-xl border-b border-cyan-900/20 sticky top-0 z-10">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-        {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-white">{title}</h1>
+        {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
       </div>
 
       <div className="flex items-center gap-4">
@@ -216,7 +217,7 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
         <button
           onClick={toggleLang}
           title={lang === 'pt' ? 'Español' : 'Português'}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-orange-300 transition-all group shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-cyan-900/30 hover:bg-white/10 hover:border-cyan-500/50 transition-all group shadow-sm"
         >
           {lang === 'pt' ? (
             <svg className="w-5 h-5 rounded-sm shrink-0" viewBox="0 0 24 24">
@@ -236,29 +237,29 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
               <rect width="24" height="2" y="10" fill="#C60B1E"/>
             </svg>
           )}
-          <span className="text-xs font-bold text-slate-600 group-hover:text-orange-600 transition-colors">
+          <span className="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors">
             {lang === 'pt' ? 'PT' : 'ES'}
           </span>
-          <span className="text-[10px] text-slate-400 group-hover:text-orange-400 transition-colors">
+          <span className="text-[10px] text-slate-500 group-hover:text-cyan-400 transition-colors">
             {lang === 'pt' ? '🇧🇷' : '🇪🇸'}
           </span>
         </button>
 
         <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
             placeholder={t('atd.busca')}
-            className="w-80 bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
+            className="w-80 bg-white/5 border border-cyan-900/30 rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-cyan-500 outline-none text-white placeholder-slate-500"
           />
         </div>
 
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
+        <button className="bg-cyan-500 hover:bg-cyan-400 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
           <Plus className="w-4 h-4" />
           {t('lead.novo')}
         </button>
 
-        <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+        <button className="relative p-2 text-slate-400 hover:bg-white/5 rounded-full transition-colors">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-orange-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white font-bold">5</span>
         </button>
