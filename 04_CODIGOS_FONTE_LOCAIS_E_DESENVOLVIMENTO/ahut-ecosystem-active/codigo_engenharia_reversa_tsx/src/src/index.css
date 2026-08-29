@@ -1,0 +1,185 @@
+body {
+  background-color: #06080e;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Identidade Visual QUBITS APEX: Ciano Neon / Menta Tecnológico ── */
+@layer base {
+  :root {
+    --color-accent: #00F5A0;
+    --color-accent-hover: #00D68B;
+    --color-accent-light: rgba(0, 245, 160, 0.12);
+    --color-glass: rgba(11, 16, 22, 0.60);
+    --color-glass-border: rgba(255, 255, 255, 0.08);
+    --shadow-glass: 0 12px 40px -8px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 28px rgba(0, 245, 160, 0.28);
+    --neon-cyan: #00F5A0;
+    --neon-cyan-bright: #00FFCC;
+    --cyber-dark: #05070a;
+  }
+}
+
+@layer components {
+  /* Dark Glass Card */
+  .card-dark {
+    background: rgba(9, 13, 20, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.45);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-dark:hover {
+    background: rgba(15, 22, 30, 0.72);
+    border-color: rgba(0, 245, 160, 0.22);
+    box-shadow: 0 18px 48px -10px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 245, 160, 0.08);
+    transform: translateY(-2px);
+  }
+
+  /* Stat Card */
+  .card-dark-stat {
+    background: rgba(9, 13, 20, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-dark-stat:hover {
+    background: rgba(15, 22, 30, 0.75);
+    border-color: rgba(0, 245, 160, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.55);
+  }
+
+  /* Highlight Card with Cyan-Mint Glow */
+  .card-dark-highlight {
+    background: linear-gradient(145deg, rgba(0, 245, 160, 0.14) 0%, rgba(11, 18, 24, 0.75) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 245, 160, 0.40);
+    border-radius: 18px;
+    box-shadow: 0 12px 36px rgba(0, 245, 160, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-dark-highlight:hover {
+    border-color: rgba(0, 245, 160, 0.65);
+    box-shadow: 0 16px 48px rgba(0, 245, 160, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Nav Pill Active */
+  .pill-nav-active {
+    background: linear-gradient(135deg, #00FFCC 0%, #00DF9A 100%);
+    color: #05070a;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(0, 245, 160, 0.40), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  }
+
+  /* Nav Pill Inactive */
+  .pill-nav-inactive {
+    background: rgba(255, 255, 255, 0.04);
+    color: #94A3B8;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.25s ease;
+  }
+  .pill-nav-inactive:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    border-color: rgba(0, 245, 160, 0.25);
+  }
+
+  /* Micro Chip Badges */
+  .badge-glow-cyan {
+    background: rgba(0, 245, 160, 0.12);
+    color: #00F5A0;
+    border: 1px solid rgba(0, 245, 160, 0.30);
+    box-shadow: 0 0 12px rgba(0, 245, 160, 0.18);
+  }
+  .badge-glow-emerald {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+  }
+  .badge-glow-rose {
+    background: rgba(244, 63, 94, 0.12);
+    color: #FB7185;
+    border: 1px solid rgba(244, 63, 94, 0.25);
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.15);
+  }
+
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, #E0FFF4 0%, #00FFCC 50%, #00DF9A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .text-gradient-white {
+    background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUpSmooth 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes fadeUpSmooth {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-ambient-glow {
+    animation: ambientGlow 8s ease-in-out infinite alternate;
+  }
+  @keyframes ambientGlow {
+    0% {
+      opacity: 0.15;
+      transform: scale(1) translate(0, 0);
+    }
+    50% {
+      opacity: 0.28;
+      transform: scale(1.12) translate(-20px, 15px);
+    }
+    100% {
+      opacity: 0.18;
+      transform: scale(1.05) translate(15px, -10px);
+    }
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(5, 7, 10, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 245, 160, 0.4);
+}
