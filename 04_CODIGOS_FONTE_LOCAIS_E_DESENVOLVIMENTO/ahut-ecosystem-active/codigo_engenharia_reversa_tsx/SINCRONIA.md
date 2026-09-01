@@ -9,12 +9,12 @@
 
 ## LOG DE SINCRONIA (adicionar sempre que fizer commit)
 
-### [2026-09-01] Hermes — Módulo Financeiro completo (backend + frontend)
-- **Feito:** Criei a estrutura financeira no Supabase PROD (tabelas: financial_transactions[20 col], financial_banks, financial_cards, financial_transfers, financial_categories + view financial_saldo). Seed de 9 categorias + 2 bancos no tenant Ahut. 
-- **Frontend:** módulo Financeiro completo (Dashboard, Lançamentos CRUD, Bancos, Cartões, Transferências, Categorias) — `src/pages/financeiro/`, `src/hooks/useFinancial.ts`, `src/types/financeiro.ts`.
-- **IMPORTANTE schema:** `financial_transactions` NÃO tem mais coluna `category` (era antiga). Usa `category_id` (FK → financial_categories). Colunas: name, type(income/expense), amount, category_id, bank_id, card_id, client_id, description, due_date, paid_date, is_realized, date, source, reference_id, reference_type, agent_id.
-- **Deploy:** DEV + PROD (index-BJRbxbqe.js). Corrigido erro "category column" (era chunk antigo).
-- **Para ti, Antigravity:** se mexer em transações financeiras, use `category_id` (NÃO `category`). Cuidado com `App.tsx`/`Layout.tsx` (rotas+menu — eu mexi neles p/ adicionar Financeiro).
+### [2026-09-01] Hermes — Módulo Financeiro completo (backend PROD + frontend)
+- **Feito:** estrutura financeira no Supabase PROD (financial_transactions[20 col], financial_banks, financial_cards, financial_transfers, financial_categories + view financial_saldo). Seed 9 categorias + 2 bancos (tenant Ahut).
+- **Frontend:** módulo Financeiro novo (Dashboard, Lançamentos, Bancos, Cartões, Transferências, Categorias). **Rotas agora em code-split (React.lazy + Suspense)** — padrão PROD, gera chunks separados por página (DashboardFinanceiro-*.js, Lancamentos-*.js, etc).
+- **schema:** financial_transactions usa `category_id` (FK→financial_categories), NÃO tem coluna `category`. Colunas: name, type(income/expense), amount, category_id, bank_id, card_id, client_id, description, due_date, paid_date, is_realized, date, source, reference_id, reference_type, agent_id.
+- **⚠️ ATENÇÃO PROD:** o PROD ativo (`detail-ecosystem`) usa code-split legítimo (index-C9-68P_N.js + CSS rUI5cL83 + polyfill). **NUNCA subir o bundle DEV (index-CU2gxHM8/1.4MB) no PROD.** O financeiro deve entrar no PROD APÓS validação e de forma code-split, sem as telas de dev (Editor/Imagens).
+- **Para ti, Antigravity:** se mexer em transações financeiras use `category_id` (NÃO `category`). Cuidado com `App.tsx`/`Layout.tsx`. Rotas financeiras lazy em App.tsx.
 
 ### [PENDENTE] — Próximo
 - Integração de comissões de agentes → despesas automáticas (plano em /opt/data/PLANO_COMISSOES_CUSTO.md).

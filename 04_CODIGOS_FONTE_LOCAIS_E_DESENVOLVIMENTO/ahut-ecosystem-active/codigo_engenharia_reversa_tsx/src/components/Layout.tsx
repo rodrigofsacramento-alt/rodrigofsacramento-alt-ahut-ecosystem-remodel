@@ -20,7 +20,8 @@ import {
   Contact,
   GraduationCap,
   ClipboardList,
-  Globe
+  Globe,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -88,6 +89,7 @@ const navItems: NavItem[] = [
   { id: 'vendas', labelKey: 'nav.vendas', icon: DollarSign, path: '/vendas' },
   { id: 'financeiro', labelKey: 'nav.financeiro', icon: DollarSign, path: '/financeiro' },
   { id: 'corretores', labelKey: 'nav.corretores', icon: UserCircle, path: '/corretores' },
+  { id: 'editor', labelKey: 'Editor de Imagens', icon: ImageIcon, path: '/editor' },
   { id: 'tecnologia', labelKey: 'nav.tecnologia', icon: Monitor, path: '/tecnologia' },
   { id: 'notificacoes', labelKey: 'nav.notificacoes', icon: Bell, path: '/notificacoes', badge: 1 },
 ];
@@ -137,7 +139,8 @@ export function Sidebar({ collapsed, setCollapsed, onOpenWhatsApp }: SidebarProp
       <nav className="flex-1 py-2 flex flex-col gap-1 overflow-y-auto px-3">
         {filteredNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive =
+            location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           return (
             <Link
               key={item.id}
