@@ -15,6 +15,9 @@ import { pino } from 'pino';
 import { randomUUID } from 'node:crypto';
 import { rm, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
+import * as fsNative from 'node:fs';
+import ffmpeg from 'fluent-ffmpeg';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -332,11 +335,40 @@ async function findAuthUserByEmail(email: string) {
   return null;
 }
 
+// Converte buffer de qualquer formato de áudio para Ogg Opus via FFmpeg (obrigatório para WhatsApp + compatibilidade web)
+async function convertAudioBufferToOgg(inputBuffer: Buffer): Promise<Buffer> {
+  const tempInput = path.join(tmpdir(), `recv_in_${Date.now()}_${randomUUID().substring(0,8)}.tmp`);
+  const tempOutput = path.join(tmpdir(), `recv_out_${Date.now()}_${randomUUID().substring(0,8)}.ogg`);
+  fsNative.writeFileSync(tempInput, inputBuffer);
+  return new Promise<Buffer>((resolve, reject) => {
+    ffmpeg(tempInput)
+      .toFormat('ogg')
+      .audioCodec('libopus')
+      .audioChannels(1)
+      .audioFrequency(48000)
+      .outputOptions(['-b:a 32k', '-application voip', '-vbr on'])
+      .on('end', () => {
+        try {
+          const out = fsNative.readFileSync(tempOutput);
+          try { fsNative.unlinkSync(tempInput); } catch (_) {}
+          try { fsNative.unlinkSync(tempOutput); } catch (_) {}
+          resolve(out);
+        } catch (e) { reject(e); }
+      })
+      .on('error', (err: Error) => {
+        try { fsNative.unlinkSync(tempInput); } catch (_) {}
+        try { fsNative.unlinkSync(tempOutput); } catch (_) {}
+        reject(err);
+      })
+      .save(tempOutput);
+  });
+}
+
 // Helper to download media from Baileys and upload to Supabase Storage
 async function downloadAndUploadMedia(sock: WASocket, msg: any, messageType: string) {
   try {
     logger.info({ messageId: msg.key.id, type: messageType }, 'Baixando mídia do WhatsApp...');
-    const buffer = await downloadMediaMessage(
+    let buffer = await downloadMediaMessage(
       msg,
       'buffer',
       {},
@@ -344,7 +376,7 @@ async function downloadAndUploadMedia(sock: WASocket, msg: any, messageType: str
         logger: pino({ level: 'warn' }),
         reuploadRequest: sock.updateMediaMessage
       }
-    );
+    ) as Buffer;
 
     if (!buffer) {
       logger.error('Não foi possível obter o buffer do download da mídia');
@@ -363,8 +395,18 @@ async function downloadAndUploadMedia(sock: WASocket, msg: any, messageType: str
       ext = 'mp4';
       contentType = 'video/mp4';
     } else if (messageType === 'audio') {
+      // ⚠️ OBRIGATÓRIO: converter WebM → Ogg Opus via FFmpeg.
+      // O Baileys entrega WebM bruto. Salvar como .ogg sem converter quebra
+      // o player web (Safari/iOS) e o WhatsApp do cliente.
+      try {
+        logger.info({ messageId: msg.key.id }, 'Convertendo áudio recebido: WebM → Ogg Opus via FFmpeg...');
+        buffer = await convertAudioBufferToOgg(buffer);
+        logger.info({ messageId: msg.key.id, size: buffer.length }, 'Áudio convertido com sucesso para Ogg Opus.');
+      } catch (convErr: any) {
+        logger.error({ err: convErr?.message, messageId: msg.key.id }, 'FFmpeg falhou na conversão de áudio recebido — usando buffer raw como fallback.');
+      }
       ext = 'ogg';
-      contentType = 'audio/ogg';
+      contentType = 'audio/ogg; codecs=opus';
     } else if (messageType === 'document') {
       const doc = message?.documentMessage;
       ext = doc?.fileName?.split('.').pop() || 'bin';

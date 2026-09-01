@@ -21,6 +21,11 @@ Bem-vindo à central de orquestração e monitoramento visual do **Squad Ágil d
 
 ---
 
+## 📘 Manual Mestre de Transição Técnica (Handover)
+* **[Guia Mestre de Backend, Operações & Áudio (RUNBOOK)](file:///Users/christianeracanelli/Desktop/Ahut%20Ecosystem/04_CODIGOS_FONTE_LOCAIS_E_DESENVOLVIMENTO/00_SQUAD_AGENTES_IA/BACKEND_MASTER_HANDOVER_RUNBOOK.md)** — Manual operacional completo para manutenção autônoma de backend, banco de dados e integração WhatsApp.
+
+---
+
 ## 🏢 Nicho e Diretrizes do Ecossistema
 * **Produto:** CRM Imobiliário de Alto Padrão (Estate.ia / Ahut Ecosystem).
 * **Foco:** Corretores, VGV, Lotes, Lançamentos, Comissões, Captação, WhatsApp Broker.
