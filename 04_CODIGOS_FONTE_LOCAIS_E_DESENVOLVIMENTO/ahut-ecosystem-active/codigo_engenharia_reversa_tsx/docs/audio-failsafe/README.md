@@ -1,32 +1,33 @@
-# 🎧 Áudio Fail-Safe — Atualização (validação 01/09/2026)
+# 🎧 Atualização de Áudio — Remodelação Dinâmica (02/09/2026)
 
-## O que foi implementado
-Fluxo de contingência de áudio no WhatsApp validado de ponta a ponta.
+## Problema resolvido
+Quando um lead reportava áudio "indisponível"/"sem áudio" no celular (mas o Web tocava),
+a causa raiz era o **modo PTT (`ptt:true` — "voice message")**: o celular do destinatário
+não decodificava o voice-note, exibindo "áudio indisponível".
 
-## Arquitetura (quem resolve é o JARVIS, não o worker)
-1. Botão "⚠️ Falhou Áudio?" (frontend) → INSERT em `audit_logs` (`AUDIO_FAIL_REPORTED`)
-   - metadata: `audioUrl`, `phone`, `conversationId`
-2. Worker do broker (`audio-recovery.ts`) escuta Realtime em `audit_logs` e **SÓ SINALIZA**:
-   - notifica Hermes (CANAL_LIVE) + Rodrigo (Telegram) — **NÃO reenvia sozinho**
-3. JARVIS (orquestrador) resolve:
-   - audita o áudio (ffprobe: opus/48kHz mono)
-   - reenvia para o **destinatário real** da conversa (produção) via `preparar_reenvio.py`
-   - verifica o envio + registra `AUDIO_FAIL_RESOLVED`
+**Evidência (caso Ângel Cardozo, 02/09):** o envio COM `ptt:true` falhava no celular;
+reenviar SEM `ptt`/`waveform` (como "Audio" normal) → tocou e o lead confirmou.
 
-## Requisitos críticos (aprendidos na validação)
-- `audit_logs` DEVE estar na publicação `supabase_realtime` (senão o worker não recebe o INSERT).
-- Formato obrigatório de content para virar PTT (não texto):
-  `[Audio] <nome>.ogg\n<audioUrl>` — URL em LINHA SEPARADA (`\n`).
-- Sessão WhatsApp `connected` é pré-requisito para o envio.
-- Sempre auditar/diagnosticar o áudio ANTES de reenviar.
-- Produção: destinatário = cliente real da conversa. (Fase de testes usou Rodrigo 5511988192658.)
+## Correção implementada (dinâmica p/ QUALQUER lead)
+- **Envio NORMAL de áudio** → mantido com `ptt:true` (inalterado, igual antes).
+- **Somente quando o atendente acionar o botão "⚠️ Falhou Áudio?"** → dispara a **REMODELAÇÃO**:
+  1. Worker `audio-recovery.ts` (Realtime em `audit_logs`) recebe `AUDIO_FAIL_REPORTED`
+  2. Resolve o **lead real** dinamicamente (conversation_id → `whatsapp_contacts` → remote_jid/telefone)
+  3. Baixa o áudio original do storage e re-upla com o marcador **`_no_ptt_`**
+  4. `session-manager.ts` detecta o marcador `_no_ptt_`/`_teste_` e envia **SEM `ptt` e SEM `waveform`**
+  5. Registra `AUDIO_FAIL_RESOLVED` no audit_logs
 
-## Arquivos
-- `audio-recovery.ts` — worker (sinaliza incidente)
-- `preparar_reenvio.py` — utilitário do JARVIS p/ reenvio (resolve destino real)
-- `audio_incidentes_pendentes.sh` — detector p/ cron acionar o JARVIS
-- `ORGANOGRAMA_SQUAD_QUBITS.md` — organograma do squad (AJAX = WhatsApp)
+## Arquivos alterados
+- `docs/audio-failsafe/audio-recovery.ts` — worker (remodelação dinâmica)
+- `docs/audio-failsafe/session-manager.ts` — envio sem ptt quando marcador `_no_ptt_`
+- `docs/audio-failsafe/README.md` — este doc
 
-## Infra
-- Broker PROD: `/root/crmahut/backend-broker` (PM2 `whatsapp-broker`, :3000)
-- Supabase PROD: `ptochsyoyatsydfysacc`; DEV: `xmsulduzvufdzkfktovk`
+## Comportamento
+| Cenário | Envio |
+|---|---|
+| Áudio normal (sem botão de erro) | `ptt:true` (voice message, como antes) |
+| Botão "Falhou Áudio?" acionado | Reenvio **sem ptt/waveform** ("Audio" normal) → destrava celular |
+
+## Rollback
+Backup: `/root/crmahut/backend-broker.BACKUP_20260902_135950.tar.gz`
+Script: `/opt/data/scripts/rollback_broker.sh`
