@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useReminders } from './hooks/useReminders';
 import AuthProvider from './contexts/AuthProvider';
+import FinancialFiltersProvider from './contexts/FinancialFiltersContext';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -91,6 +92,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
+          <FinancialFiltersProvider>
           <Router>
           <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[#06080e] text-slate-400 text-sm">Carregando...</div>}>
           <Routes>
@@ -312,6 +314,7 @@ export default function App() {
           </Routes>
           </React.Suspense>
         </Router>
+        </FinancialFiltersProvider>
 
         {/* WhatsApp Connection Modal - global */}
         <WhatsAppConnectionModal 
