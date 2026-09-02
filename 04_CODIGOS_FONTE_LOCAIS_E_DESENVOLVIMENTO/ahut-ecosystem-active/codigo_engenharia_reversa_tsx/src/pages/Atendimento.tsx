@@ -147,6 +147,12 @@ type PeriodoFiltro = 'hoje' | 'semana' | 'mes' | 'todos';
 
 const DEMO_MODE = false; // Desativado para usar dados reais do Supabase
 
+// ── PROTOCOLO ÁUDIO FAIL-SAFE (Ada) ──────────────────
+// Webhooks configuráveis. Preencha com as URLs reais do backend.
+// Vazio = desativa a chamada HTTP e apenas loga o payload no console.
+const AUDIO_FAIL_WEBHOOK = '';      // → notifica falha de áudio
+const AUDIO_RESOLVED_WEBHOOK = '';  // → notifica resolução de falha de áudio
+
 const demoConversations: Conversation[] = [];
 
 const demoMessages: Message[] = [];
@@ -191,6 +197,7 @@ export default function Atendimento() {
   const [messageInput, setMessageInput] = useState('');
   const [activeChatId, setActiveChatId] = useState<string | null>(conversationParam || null);
   const [replyToMessage, setReplyToMessage] = useState<string | null>(null);
+  const [showAudioFailHelp, setShowAudioFailHelp] = useState(false); // popup imortal de resolução (Áudio Fail-Safe)
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -496,6 +503,42 @@ export default function Atendimento() {
     }
   };
 
+  // ── PROTOCOLO ÁUDIO FAIL-SAFE (Ada) ──
+  const fireWebhook = async (url: string, payload: Record<string, unknown>) => {
+    if (!url) {
+      console.warn('[Audio Fail-Safe] Webhook não configurado. Payload:', payload);
+      return;
+    }
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error('[Audio Fail-Safe] Erro ao chamar webhook:', err);
+    }
+  };
+
+  const handleAudioFail = async () => {
+    if (!activeChat) return;
+    await fireWebhook(AUDIO_FAIL_WEBHOOK, {
+      leadName: activeChat.client?.full_name || activeChat.client?.name || 'Desconhecido',
+      phone: activeChat.client?.phone || '',
+      conversationId: activeChat.id,
+    });
+    setShowAudioFailHelp(true); // popup imortal — só fecha ao clicar em [Sim]
+  };
+
+  const handleAudioResolved = async () => {
+    if (!activeChat) return;
+    await fireWebhook(AUDIO_RESOLVED_WEBHOOK, {
+      conversationId: activeChat.id,
+      resolvedAt: new Date().toISOString(),
+    });
+    setShowAudioFailHelp(false);
+  };
+
   const handleAccept = async () => {
     if (!activeChatId || !user?.id) return;
     try {
@@ -732,14 +775,15 @@ export default function Atendimento() {
             ))}
           </div>
 
-          {/* Filtro corretor */}
-          {agents.length > 0 && (
+          {/* Filtro de atendente — VISÍVEL SOMENTE PARA ADMINS (segmentação de conversas por colaborador) */}
+          {isAdmin && agents.length > 0 && (
             <select
               value={filtroCorretor}
               onChange={(e) => setFiltroCorretor(e.target.value)}
               className="w-full text-xs p-2 border border-cyan-900/30 rounded-lg outline-none"
+              title="Ver conversas de um atendente específico"
             >
-              <option value="">Todos corretores</option>
+              <option value="">Todos os atendentes</option>
               {agents.map((a: any) => (
                 <option key={a.id} value={a.id}>{a.full_name}{a.email ? ` — ${a.email}` : ''}</option>
               ))}
@@ -970,6 +1014,17 @@ export default function Atendimento() {
                             <source src={mediaUrl} type="audio/mpeg" />
                             <source src={mediaUrl} type="audio/mp4" />
                           </audio>
+                          {/* Gatilho contextual: reportar falha do áudio enviado */}
+                          {isAgentSender && (
+                            <button
+                              type="button"
+                              onClick={handleAudioFail}
+                              title="Este áudio não reproduziu? Reportar falha"
+                              className="mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wide border border-red-500/20 transition-colors"
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5" /> Falhou Áudio
+                            </button>
+                          )}
                         </div>
                       ) : isImageMessage && mediaUrl ? (
                         /* ── IMAGE ── */
@@ -1093,6 +1148,19 @@ export default function Atendimento() {
                     </div>
                   )}
                 </div>
+
+                {/* Gatilho Áudio Fail-Safe (Ada): discreto na barra de ações */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={handleAudioFail}
+                    disabled={!activeChat}
+                    title="Áudio não reproduziu? Reportar falha nesta conversa"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm border border-red-500/20 disabled:opacity-40"
+                  >
+                    <AlertTriangle className="w-4 h-4" /> Falhou Áudio
+                  </button>
+                </div>
               </div>
 
               <form onSubmit={handleSendMessage} className="p-4 flex items-end gap-3 w-full">
@@ -1109,23 +1177,44 @@ export default function Atendimento() {
                     e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.metaKey && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                    // Ctrl+Space (Mac / Win / Linux) = quebra linha
-                    if (e.key === ' ' && e.ctrlKey) {
+                    const isMac = e.metaKey;
+                    // Helpers para inserir quebra de linha na posição do cursor
+                    const insertNewline = () => {
                       e.preventDefault();
                       const target = e.target as HTMLTextAreaElement;
                       const start = target.selectionStart;
                       const val = target.value;
                       const newVal = val.slice(0, start) + '\n' + val.slice(target.selectionEnd);
                       setMessageInput(newVal);
-                      // Reajusta altura após inserir a quebra
                       requestAnimationFrame(() => {
                         target.style.height = 'auto';
                         target.style.height = Math.min(target.scrollHeight, 200) + 'px';
                       });
+                    };
+
+                    if (e.key === 'Enter') {
+                      if (isMac && !e.shiftKey && !e.ctrlKey) {
+                        // ⌘ + Enter = quebra linha (Mac)
+                        insertNewline();
+                        return;
+                      }
+                      if (e.ctrlKey && !e.shiftKey) {
+                        // Ctrl + Enter = quebra linha (Win/Linux)
+                        insertNewline();
+                        return;
+                      }
+                      // Enter SEM modificador = envia
+                      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                        return;
+                      }
+                      // Shift + Enter = quebra linha nativa do textarea (Mac/Win/Linux) — não intercepta
+                      return;
+                    }
+                    // Ctrl+Espaço (Mac / Win / Linux) = quebra linha
+                    if (e.key === ' ' && e.ctrlKey) {
+                      insertNewline();
                     }
                   }}
                   rows={1}
@@ -1369,6 +1458,44 @@ export default function Atendimento() {
         isOpen={whatsappModalOpen} 
         onClose={() => setWhatsappModalOpen(false)} 
       />
+
+      {/* ── PROTOCOLO ÁUDIO FAIL-SAFE (Ada): POPUP IMORTAL DE RESOLUÇÃO ── */}
+      {/* Não fecha com click-fora nem Escape. Só fecha ao clicar em [Sim]. */}
+      {showAudioFailHelp && (
+        <div
+          className="fixed bottom-6 right-6 z-[100] w-72 rounded-2xl border border-cyan-900/30 bg-[#0c0f18]/95 backdrop-blur-md shadow-2xl p-4 space-y-3"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          role="alertdialog"
+          aria-modal="true"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-bold text-white">Falha de áudio</h4>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                O áudio de{' '}
+                <span className="text-emerald-400 font-semibold truncate">
+                  {activeChat?.client?.full_name || activeChat?.client?.name || 'lead'}
+                </span>{' '}
+                não foi reproduzido.
+              </p>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-slate-200 mb-2">Áudio solucionado?</p>
+            <button
+              onClick={handleAudioResolved}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md"
+            >
+              <Check className="w-4 h-4" /> Sim, resolvido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

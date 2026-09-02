@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useReminders } from './hooks/useReminders';
 import AuthProvider from './contexts/AuthProvider';
+import FinancialFiltersProvider from './contexts/FinancialFiltersContext';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -23,13 +24,19 @@ import Marketing from './components/Marketing';
 import Treinamentos from './components/Treinamentos';
 import TreinamentoAula from './components/TreinamentoAula';
 import Gestao from './components/Gestao';
-import Finance from './components/Finance';
+const FinancialDashboard = React.lazy(() => import('./pages/financeiro/DashboardFinanceiro'));
+const FinancialLancamentos = React.lazy(() => import('./pages/financeiro/Lancamentos'));
+const FinancialBancos = React.lazy(() => import('./pages/financeiro/Bancos'));
+const FinancialCartoes = React.lazy(() => import('./pages/financeiro/Cartoes'));
+const FinancialTransferencias = React.lazy(() => import('./pages/financeiro/Transferencias'));
+const FinancialCategorias = React.lazy(() => import('./pages/financeiro/Categorias'));
 import Tecnologia from './pages/Tecnologia';
 import Notificacoes from './pages/Notificacoes';
 import Vendas from './pages/Vendas';
 import Login from './pages/Login';
 import Corretores from './pages/Corretores';
 import { Configuracoes } from './pages/Configuracoes';
+import ImageEditor from './components/ImageEditor';
 import WhatsAppConnectionModal from './components/WhatsAppConnectionModal';
 
 const queryClient = new QueryClient({
@@ -85,7 +92,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
+          <FinancialFiltersProvider>
           <Router>
+          <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[#06080e] text-slate-400 text-sm">Carregando...</div>}>
           <Routes>
             {/* Auth Route - public */}
             <Route path="/login" element={<Login />} />
@@ -206,8 +215,48 @@ export default function App() {
             <Route
               path="/financeiro"
               element={
-                <ProtectedAppLayout title="Financeiro" subtitle="Fluxo de caixa, recebíveis e comissões." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
-                  <Finance />
+                <ProtectedAppLayout title="Financeiro" subtitle="Dashboard financeiro — saldo, receitas, despesas e lucro." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <FinancialDashboard />
+                </ProtectedAppLayout>
+              }
+            />
+            <Route
+              path="/financeiro/lancamentos"
+              element={
+                <ProtectedAppLayout title="Lançamentos" subtitle="Receitas e despesas do fluxo de caixa." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <FinancialLancamentos />
+                </ProtectedAppLayout>
+              }
+            />
+            <Route
+              path="/financeiro/bancos"
+              element={
+                <ProtectedAppLayout title="Bancos & Contas" subtitle="Contas bancárias e saldos." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <FinancialBancos />
+                </ProtectedAppLayout>
+              }
+            />
+            <Route
+              path="/financeiro/cartoes"
+              element={
+                <ProtectedAppLayout title="Cartões" subtitle="Cartões de crédito, limites e vencimentos." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <FinancialCartoes />
+                </ProtectedAppLayout>
+              }
+            />
+            <Route
+              path="/financeiro/transferencias"
+              element={
+                <ProtectedAppLayout title="Transferências" subtitle="Movimentações entre contas bancárias." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <FinancialTransferencias />
+                </ProtectedAppLayout>
+              }
+            />
+            <Route
+              path="/financeiro/categorias"
+              element={
+                <ProtectedAppLayout title="Categorias" subtitle="Organize e classifique os lançamentos." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <FinancialCategorias />
                 </ProtectedAppLayout>
               }
             />
@@ -251,11 +300,21 @@ export default function App() {
                 </ProtectedAppLayout>
               }
             />
+            <Route
+              path="/editor"
+              element={
+                <ProtectedAppLayout title="Editor de Imagens" subtitle="Crie, edite e gerencie imagens para seus materiais." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <ImageEditor />
+                </ProtectedAppLayout>
+              }
+            />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </React.Suspense>
         </Router>
+        </FinancialFiltersProvider>
 
         {/* WhatsApp Connection Modal - global */}
         <WhatsAppConnectionModal 
