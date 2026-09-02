@@ -11,6 +11,8 @@ import {
   useSetTransactionRealized,
 } from '../../hooks/useFinancial';
 import type { TransactionFilters, FinancialTransaction } from '../../types/financeiro';
+import FinancialFilters from './components/FinancialFilters';
+import { useFinancialFilters } from '../../contexts/FinancialFiltersContext';
 import { formatCurrency, cn } from '../../lib/utils';
 import {
   Card,
@@ -74,12 +76,8 @@ export default function Lancamentos() {
   const deleteTx = useDeleteTransaction();
   const toggleRealized = useSetTransactionRealized();
 
-  const [filters, setFilters] = useState<TransactionFilters>({
-    type: 'all',
-    category_id: '',
-    status: 'all',
-    search: '',
-  });
+  // F1 — filtros compartilhados via FinancialFiltersContext (global, persistido)
+  const { filters, setFilters } = useFinancialFilters();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -185,35 +183,13 @@ export default function Lancamentos() {
     <div className="space-y-6">
       <FinNav />
 
-      {/* Filtros */}
+      {/* Filtros (F1 — barra reutilizável estilo Notion) */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              placeholder="Buscar nome, descrição..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-1 focus:ring-[#00FFCC]/50"
-            />
-          </div>
-          <SelectInput value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}>
-            <option value="all" className="bg-[#0a0e15]">Todos os tipos</option>
-            <option value="income" className="bg-[#0a0e15]">Receitas</option>
-            <option value="expense" className="bg-[#0a0e15]">Despesas</option>
-          </SelectInput>
-          <SelectInput value={filters.category_id} onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}>
-            <option value="" className="bg-[#0a0e15]">Todas as categorias</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id} className="bg-[#0a0e15]">{c.name}</option>
-            ))}
-          </SelectInput>
-          <SelectInput value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}>
-            <option value="all" className="bg-[#0a0e15]">Realizado / Pendente</option>
-            <option value="realizado" className="bg-[#0a0e15]">Realizado</option>
-            <option value="pendente" className="bg-[#0a0e15]">Pendente</option>
-          </SelectInput>
-        </div>
+        <FinancialFilters
+          value={filters}
+          onChange={(next) => setFilters(next)}
+          className="border-0 p-0 bg-transparent"
+        />
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-slate-400">
             {filteredCount} lançamento{filteredCount === 1 ? '' : 's'} · saldo do filtro{' '}
@@ -221,12 +197,6 @@ export default function Lancamentos() {
               {formatCurrency(totalFiltered)}
             </span>
           </p>
-          <button
-            onClick={() => setFilters({ type: 'all', category_id: '', status: 'all', search: '' })}
-            className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
-          >
-            Limpar filtros
-          </button>
         </div>
       </Card>
 

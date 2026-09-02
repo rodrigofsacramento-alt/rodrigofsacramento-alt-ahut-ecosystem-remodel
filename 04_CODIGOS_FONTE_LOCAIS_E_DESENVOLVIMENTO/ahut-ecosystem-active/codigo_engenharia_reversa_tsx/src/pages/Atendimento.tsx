@@ -775,14 +775,15 @@ export default function Atendimento() {
             ))}
           </div>
 
-          {/* Filtro corretor */}
-          {agents.length > 0 && (
+          {/* Filtro de atendente — VISÍVEL SOMENTE PARA ADMINS (segmentação de conversas por colaborador) */}
+          {isAdmin && agents.length > 0 && (
             <select
               value={filtroCorretor}
               onChange={(e) => setFiltroCorretor(e.target.value)}
               className="w-full text-xs p-2 border border-cyan-900/30 rounded-lg outline-none"
+              title="Ver conversas de um atendente específico"
             >
-              <option value="">Todos corretores</option>
+              <option value="">Todos os atendentes</option>
               {agents.map((a: any) => (
                 <option key={a.id} value={a.id}>{a.full_name}{a.email ? ` — ${a.email}` : ''}</option>
               ))}
