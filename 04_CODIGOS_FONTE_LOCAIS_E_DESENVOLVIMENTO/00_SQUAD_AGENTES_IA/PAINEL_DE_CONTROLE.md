@@ -1,10 +1,17 @@
 # 📊 Painel de Controle Consolidado do Squad IA
 
-**Última Atualização:** 26/08/2026 (Ciclo 4 — Correção de Áudios + Fluxo Pós-Entrega)  
-**Ambiente Ativo:** Produção (`ahut-ecosystem.apexfyhub.com.br`) | Repo: `ahut-ecosystem-active`  
+**Última Atualização:** 03/09/2026 (Ciclo 5 — Zombie dupla-montagem + push código)  
+**Ambiente Ativo:** Produção (`ahut-ecosystem.apexfyhub.com.br`) | Repo: `rodrigofsacramento-alt-...-remodel` (branch `remodel`, docroot `/ahut/`)  
 **Dev Subdomínio:** `https://dev-ahut-ecosystem.apexfyhub.com.br` ✅ Funcionando (SPA routing fix)  
 
-## ✅ PROGRESSO CICLO 4 — CORREÇÃO DE ÁUDIOS + FLUXO PÓS-ENTREGA (26/08)
+## ✅ PROGRESSO CICLO 5 — ZOMBIE DUPLA-MONTAGEM DO LOGIN (03/09) — RESOLVIDO
+- ✅ **Push GitHub** — commits `b69dfaa` (filtro atendentes) / `1722d54` (filtro admin-only) confirmados no remote `origin/remodel`. Filtro de atendentes 100% funcional no PROD (sha `55cd3037`, `Atendimento-live-v14.js` = mesmo conteúdo de `v12` versionado).
+- ✅ **Causa raiz zombie (provada via Playwright, não assumida):** módulo ES do entry `index-C9-68P_N.js` **executa 2×** (carregado com 2 URLs: `?v=...` vs sem) → **2 `createRoot` no mesmo `#root`** → app inteira monta 2× (2 forms, 2 toaster, 2 buttons). NÃO é dupla invocação React nem o monkey-patch `insertBefore` (benigno, existe em todo commit).
+- ✅ **Fix aplicado:** guard de idempotência **por MONTAGEM** (não por render) no entry: `(!window.__APP_MOUNTED&&(window.__APP_MOUNTED=1))&&br(...).render(au)`.
+- ✅ **Deploy nos 4 destinos oficiais** (VPS html, VPS crm, Hostinger `/ahut/`, legacy) — verificado sha `26d262d834d9`. Backups `.pre_dupfix` preservados.
+- ✅ **PROD validado ao vivo:** `forms:1, emails:1, pws:1, root_children:4, body_white:false, PAGE_ERRORS:nenhum` — **login 1 form, tema claro Estate.ia mantido, sem tela branca, sem duplicata.**
+- ✅ **Commit + push** `cf6c7d6` no GitHub `origin/remodel` (bundle patched + backups versionados).
+- 🔄 **Próximo (ordem usuário, 2º erro):** `Cannot destructure property 'error' of '(intermediate value)' as it is undefined` — fix null-safe `_rr&&_rr.error` no fluxo de submit.
 - ✅ **BUG-UI-001** — Inversão Visual Grupos (isAgentSender) + Legenda lead mostrava nome do grupo: corrigido. 10 perfis atualizados no DB. Backend patched. **status: executado**
 - ✅ **TCK-2026-093** — Hotfixes produção: áudio, textarea, isAgentSender (solicitado 24/08, entregue 26/08)
 - ✅ **TCK-2026-092** — Correção de áudios WhatsApp: pipeline WebM→OGG, retry 2x, timeout 60s, `.single()` fix
