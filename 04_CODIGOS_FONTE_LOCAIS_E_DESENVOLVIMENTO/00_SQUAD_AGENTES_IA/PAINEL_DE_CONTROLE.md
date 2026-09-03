@@ -1,6 +1,6 @@
 # 📊 Painel de Controle Consolidado do Squad IA
 
-**Última Atualização:** 03/09/2026 (Ciclo 5 — Zombie dupla-montagem + push código)  
+**Última Atualização:** 03/09/2026 (Ciclo 5 — Zombie dupla-montagem + push código + Funil de Performance)  
 **Ambiente Ativo:** Produção (`ahut-ecosystem.apexfyhub.com.br`) | Repo: `rodrigofsacramento-alt-...-remodel` (branch `remodel`, docroot `/ahut/`)  
 **Dev Subdomínio:** `https://dev-ahut-ecosystem.apexfyhub.com.br` ✅ Funcionando (SPA routing fix)  
 
@@ -36,6 +36,19 @@
 | **Score final (média×10)** | | **85/100** |
 
 > **Regra de ponderação aplicada (definida 03/09):** NÃO penalizei o usuário não ter passado acesso a sistema nunca fornecido (fora do alcance). PENALIZEI a instrução de testar o fluxo real do login — o squad tinha como descobrir sozinho (probe de submit real). Isso entrou como 1 retrabalho.
+
+### 📊 SCORECARD 03/09 (noite) — Ciclo /executar Tasks 1–4
+| Indicador | Avaliação | Pts |
+|---|---|---|
+| TEMPO_EXECUCAO | Dentro de ~10% do estimado (funil exigiu 1 rework do hook p/ RPCs) | 7 |
+| RETRABALHO | 0 correções de escopo; 1 re-fechamento interno (hook não chamava as RPCs criadas) resolvido pelo squad | 7 |
+| CONFORMIDADE_CRITERIOS | 100% — 4 tasks entregues + badge + commit seguro com push validado | 10 |
+| COBERTURA_TECNICA | broker + 9 usuários + bundle v14 + TSX (App/Layout/Lang/Atendimento) + hook + SQL + 2 deploy scripts (13 mapeados, 13 alterados) | 10 |
+| AUTONOMIA_AGENTE | Validou SQL no schema real, refez hook p/ RPCs, deploy dev real, commit+ls-remote — sem correção de Rodrigo | 8 |
+| APRENDIZADO_REGISTRADO | Runbook (schema real DEV) + PAINEL (TASK-009) atualizados | 10 |
+| **Score final (média×10)** | | **87/100** |
+
+> **Análise de Lacuna:** PHP de funil já resolvido no DEV. Nova lacuna proposta na entrega noturna: **verificação** da Task 4 permanece DEV-bound (PROD Estate.ia usa schema diferente, sem `contracts`/`lead_id` em conversations) — vide decisão de não portar dark p/ PROD claro.
 
 - 🔄 **Análise de Lacuna:** Agente `wab-client` proposto (WhatsApp Business Client Specialist)
 - 🔄 **Engenharia reversa produção→dev:** Pendente (ADA identificou 12 correções que faltam no TSX)
@@ -123,6 +136,7 @@
 
 | Task | Descrição | Status | Detalhes |
 | :--- | :--- | :---: | :--- |
+| **TASK-009** | Ciclo /executar 03/09 (noite) — Tasks 1-4 + commit seguro | **✅ CONCLUÍDO** | T1: broker `isFromMe` zera unread + resolve `pending→active` (rota Não Lidas); T2: 9 usuários agentes `@hut.com` criados (login HTTP 200); T3: fix inversão de balões em grupos (autoria `from_me`+`sender_id`, sem `role!=='client'`); T4: Funil Performance+SLA+Ranking (3 RPCs `get_performance_*` aplicadas+testadas no DEV, hook refeito p/ RPCs, build+deploy dev validado); T4b: badge laranja `pending` no card (sem alterar rota). Commit `70c972a` "commit seguro" pushado (ls-remote confirmado). |
 | **TASK-008** | Inclusão do Campo de Contexto de Problema | Adição de um campo global "Contexto do Problema" na estrutura dos tickets. O ticket TCK-2026-086 teve o solicitante alterado para Denisse e seu respectivo contexto do incidente do Wesley documentado no React. | ✅ CONCLUÍDO | Ambiente Local Atualizado |
 | **TASK-007** | Modal Expandido para Subtickets & Inteligência Compartilhada | Modificação do React (TicketDetailModal) para renderizar o painel expansível de Subtickets com seus devidos estágios (a executar, validando, executado). Atualização das regras nas skills do ATOM, AVA e ORQUESTRADOR assumindo que cada subticket é um deploy/update de sistema. | ✅ CONCLUÍDO | Código React Refatorado |
 | **TASK-006** | Estruturação de Subtickets e Resolução Incidente Wesley | Implementação da estrutura UI de pré-requisitos, atualização das métricas dos 3 agentes (ATOM, AVA, ORQUESTRADOR), e adição do Ticket TCK-2026-086 com 10 subtickets | ✅ CONCLUÍDO | Ambiente Local Atualizado |
