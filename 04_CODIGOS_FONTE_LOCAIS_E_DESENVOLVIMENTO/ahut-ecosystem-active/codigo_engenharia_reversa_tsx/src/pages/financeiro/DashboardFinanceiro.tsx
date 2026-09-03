@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Wallet,
+  CalendarDays,
   TrendingUp,
   TrendingDown,
   PiggyBank,
@@ -93,6 +94,703 @@ function ShortcutCard({
       <p className="text-sm font-bold text-white mt-4">{title}</p>
       <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
     </Link>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Visualização A — Fluxo de Caixa
+ * Receitas (income) e despesas (expense) realizadas no período filtrado,
+ * com presets de período e date-range picker customizado.
+ * ────────────────────────────────────────────────────────────────────────── */
+const PERIOD_PRESETS = [
+  { key: '7d', label: 'Últimos 7 dias' },
+  { key: 'month', label: 'Este Mês' },
+  { key: 'quarter', label: 'Trimestre' },
+] as const;
+type PeriodKey = (typeof PERIOD_PRESETS)[number]['key'] | 'custom';
+
+const dateInputCls =
+  'bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white color-scheme:dark outline-none focus:ring-1 focus:ring-[#00FFCC]/50 focus:border-[#00F5A0]/40 transition-all';
+
+function iso(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function FlowStatCard({
+  label,
+  value,
+  hint,
+  icon,
+  tone,
+  loading,
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  icon: React.ReactNode;
+  tone: 'in' | 'out' | 'balance';
+  loading?: boolean;
+}) {
+  const valueColor =
+    tone === 'in'
+      ? 'text-[#00FFCC]'
+      : tone === 'out'
+      ? 'text-rose-400'
+      : value >= 0
+      ? 'text-[#00FFCC]'
+      : 'text-rose-400';
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-xl p-5">
+      <div className="relative flex items-start justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{label}</p>
+          <p className={cn('text-2xl font-bold mt-2 truncate', valueColor)}>
+            {loading ? '...' : formatCurrency(value)}
+          </p>
+          {hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>}
+        </div>
+        <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FluxoDeCaixa({ transactions, loading }: { transactions: Array<any>; loading?: boolean }) {
+  const [period, setPeriod] = useState<PeriodKey>('month');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+
+  const selectPreset = (p: PeriodKey) => {
+    if (p === 'custom') {
+      const now = new Date();
+      let from = new Date(now);
+      if (period === '7d') {
+        from.setDate(now.getDate() - 6);
+      } else if (period === 'quarter') {
+        from = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3), 1);
+      } else {
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      setStart(iso(from));
+      setEnd(iso(now));
+    }
+    setPeriod(p);
+  };
+
+  const { range, rangeLabel } = useMemo(() => {
+    const now = new Date();
+    let from: Date;
+    if (period === 'custom') {
+      from = start ? new Date(`${start}T00:00:00`) : new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (period === '7d') {
+      from = new Date(now);
+      from.setDate(now.getDate() - 6);
+      from.setHours(0, 0, 0, 0);
+    } else if (period === 'quarter') {
+      from = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3), 1);
+    } else {
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    const to = period === 'custom' && end ? new Date(`${end}T23:59:59`) : now;
+    return {
+      range: { from, to },
+      rangeLabel: `${formatDateBR(iso(from))} → ${formatDateBR(iso(to))}`,
+    };
+  }, [period, start, end]);
+
+  const { entradas, saidas, saldo, count } = useMemo(() => {
+    let entradas = 0;
+    let saidas = 0;
+    let count = 0;
+    for (const t of transactions) {
+      if (!t.is_realized) continue;
+      const dStr = t.date || t.paid_date || t.due_date;
+      if (!dStr) continue;
+      const d = new Date(dStr + (dStr.length === 10 ? 'T12:00:00' : ''));
+      if (isNaN(d.getTime())) continue;
+      if (d < range.from || d > range.to) continue;
+      count++;
+      if (t.type === 'income') entradas += t.amount;
+      else saidas += t.amount;
+    }
+    return { entradas, saidas, saldo: entradas - saidas, count };
+  }, [transactions, range]);
+
+  return (
+    <Card>
+      <CardHeader
+        title="Fluxo de Caixa"
+        subtitle={`${rangeLabel} · ${count} lançamento${count === 1 ? '' : 's'} realizados no período`}
+      />
+      <div className="p-5 space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-end gap-3 justify-between">
+          <div className="flex flex-wrap gap-2">
+            {PERIOD_PRESETS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => selectPreset(p.key)}
+                className={cn(
+                  'px-3.5 py-2 rounded-lg text-xs font-bold border transition-all',
+                  period === p.key
+                    ? 'bg-[#00FFCC]/10 text-[#00FFCC] border-[#00FFCC]/40'
+                    : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/[0.08] hover:text-white'
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+            <button
+              onClick={() => selectPreset('custom')}
+              className={cn(
+                'px-3.5 py-2 rounded-lg text-xs font-bold border transition-all',
+                period === 'custom'
+                  ? 'bg-[#00FFCC]/10 text-[#00FFCC] border-[#00FFCC]/40'
+                  : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/[0.08] hover:text-white'
+              )}
+            >
+              Personalizado
+            </button>
+          </div>
+          {period === 'custom' && (
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className={dateInputCls}
+              />
+              <span className="text-sm text-slate-500">até</span>
+              <input
+                type="date"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className={dateInputCls}
+              />
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <FlowStatCard
+            label="Entradas"
+            value={entradas}
+            hint="Receitas realizadas"
+            icon={<ArrowDownToLine className="w-5 h-5 text-[#00FFCC]" />}
+            tone="in"
+            loading={loading}
+          />
+          <FlowStatCard
+            label="Saídas"
+            value={saidas}
+            hint="Despesas realizadas"
+            icon={<ArrowUpFromLine className="w-5 h-5 text-rose-400" />}
+            tone="out"
+            loading={loading}
+          />
+          <FlowStatCard
+            label="Saldo do Período"
+            value={saldo}
+            hint="Entradas − saídas"
+            icon={<PiggyBank className="w-5 h-5 text-[#00FFCC]" />}
+            tone="balance"
+            loading={loading}
+          />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Visualização C — Saldo por Categoria
+ * Consolida os totais acumulados de receitas (income → verde) e despesas
+ * (expense → vermelho) agrupados por categoria, ordenados por maior volume.
+ * ────────────────────────────────────────────────────────────────────────── */
+function SaldoPorCategoria({ transactions, loading }: { transactions: Array<any>; loading?: boolean }) {
+  const rows = useMemo(() => {
+    const map = new Map<string, { key: string; name: string; tipo: 'income' | 'expense'; valor: number }>();
+
+    for (const t of transactions) {
+      const name = t.category_name || t.category_id || 'Sem categoria';
+      const key = t.category_id || t.category_name || 'uncategorized';
+      const tipo: 'income' | 'expense' = t.type === 'income' ? 'income' : 'expense';
+
+      const found = map.get(key);
+      if (found) {
+        if (found.tipo === tipo) {
+          found.valor += t.amount;
+        }
+      } else {
+        map.set(key, { key, name, tipo, valor: t.amount });
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => b.valor - a.valor);
+  }, [transactions]);
+
+  const totalGeral = rows.reduce((s, r) => s + r.valor, 0);
+
+  return (
+    <Card>
+      <CardHeader
+        title="Saldo por Categoria"
+        subtitle="Totais acumulados por categoria de receita e despesa"
+      />
+      {loading ? (
+        <Spinner label="Carregando categorias..." />
+      ) : rows.length === 0 ? (
+        <EmptyState message="Nenhuma transação cadastrada para consolidar por categoria." />
+      ) : (
+        <div className="p-5">
+          <ul className="space-y-2.5">
+            {rows.map((r) => (
+              <li
+                key={r.key}
+                className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 border backdrop-blur-xl transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold capitalize',
+                      r.tipo === 'income'
+                        ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                        : 'bg-red-500/10 text-red-400 border-red-500/20'
+                    )}
+                  >
+                    {r.name}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {r.tipo === 'income' ? 'Entrada' : 'Despesa'}
+                  </span>
+                </div>
+                <span
+                  className={cn(
+                    'text-sm font-bold tabular-nums whitespace-nowrap',
+                    r.tipo === 'income' ? 'text-green-400' : 'text-red-400'
+                  )}
+                >
+                  {r.tipo === 'income' ? '+' : '-'} {formatCurrency(r.valor)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-white/[0.03] border border-white/[0.07] px-4 py-3">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+              Total consolidado · {rows.length} categoria{rows.length === 1 ? '' : 's'}
+            </span>
+            <span className="text-sm font-bold text-white tabular-nums">
+              {formatCurrency(totalGeral)}
+            </span>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Visualização D — DFC (Demonstração do Fluxo de Caixa)
+ * Documento contábil executivo em hierarquia: Atividades Operacionais,
+ * de Investimento e de Financiamento, com categorias agregadas das
+ * transações reais no período e subtotais em destaque.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+type GrupoDFC = 'operacional' | 'investimento' | 'financiamento';
+
+// Palavras-chave (sem acento) que classificam uma categoria em cada seção.
+const KEY_INVESTIMENTO = [
+  'investimento', 'ativo', 'equipamento', 'maquina', 'mobiliario', 'veiculo',
+  'software', 'aquisicao', 'obra', 'imovel', 'patrimonio', 'maquinas',
+];
+const KEY_FINANCIAMENTO = [
+  'financiamento', 'emprestimo', 'capital', 'socio', 'integralizacao',
+  'divida', 'juros', 'credito', 'debito de capital',
+];
+
+// Espaços fixos das despesas operacionais na hierarquia executiva.
+const OPERACIONAIS_DESPESA: { chave: string | null; label: string }[] = [
+  { chave: 'custo fixo', label: 'Custo Fixo' },
+  { chave: 'custo variavel', label: 'Custo Variável' },
+  { chave: 'comissao', label: 'Comissões' },
+  { chave: 'imposto', label: 'Impostos' },
+  { chave: 'operacao financeira', label: 'Operação Financeira' },
+  { chave: null, label: 'Outros' },
+];
+
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function grupoDaCategoria(categoryName?: string | null): GrupoDFC {
+  const c = norm(categoryName || '');
+  if (!c) return 'operacional';
+  if (KEY_INVESTIMENTO.some((k) => c.includes(norm(k)))) return 'investimento';
+  if (KEY_FINANCIAMENTO.some((k) => c.includes(norm(k)))) return 'financiamento';
+  return 'operacional';
+}
+
+function slotDespesaOperacional(categoryName?: string | null): string {
+  const c = norm(categoryName || '');
+  for (const s of OPERACIONAIS_DESPESA) {
+    if (s.chave === null) continue;
+    if (c.includes(s.chave)) return s.label;
+  }
+  return OPERACIONAIS_DESPESA[OPERACIONAIS_DESPESA.length - 1].label;
+}
+
+function ContabilRow({
+  label,
+  value,
+  indent = 0,
+  kind = 'line',
+  minus = false,
+}: {
+  label: React.ReactNode;
+  value: number;
+  indent?: number;
+  kind?: 'line' | 'subtotal' | 'total';
+  minus?: boolean;
+}) {
+  const isNeg = value < 0;
+  const valueCls =
+    kind === 'total'
+      ? isNeg
+        ? 'text-rose-400'
+        : 'text-white'
+      : kind === 'subtotal'
+      ? isNeg
+        ? 'text-rose-400'
+        : 'text-[#00FFCC]'
+      : minus
+      ? 'text-slate-300'
+      : 'text-slate-200';
+  const labelCls =
+    kind === 'total'
+      ? 'text-white'
+      : kind === 'subtotal'
+      ? 'text-[#00FFCC]'
+      : minus
+      ? 'text-slate-500'
+      : indent > 0
+      ? 'text-slate-400'
+      : 'text-slate-300';
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between gap-3 py-[7px]',
+        kind === 'total' && 'border-t border-white/30 mt-1',
+        kind === 'subtotal' && 'border-t border-white/10'
+      )}
+    >
+      <span
+        className={cn(
+          'flex items-center gap-2 text-[13px] font-semibold tracking-wide',
+          indent > 0 && 'pl-5',
+          kind === 'subtotal' && 'uppercase text-[11px] tracking-widest',
+          kind === 'total' && 'uppercase text-xs tracking-widest',
+          labelCls
+        )}
+      >
+        {minus && <span className="text-slate-600">−</span>}
+        {label}
+      </span>
+      <span className={cn('ml-auto whitespace-nowrap tabular-nums text-sm font-bold', valueCls)}>
+        {minus && kind === 'line' ? '− ' : ''}
+        {formatCurrency(Math.abs(value))}
+      </span>
+    </div>
+  );
+}
+
+// Visualização B — Balanço Mensal (Previsto × Realizado)
+function BalancoMensal({ transactions, loading }: { transactions: Array<any>; loading?: boolean }) {
+  const now = new Date();
+  const monthKey = iso(now).substring(0, 7); // yyyy-mm
+
+  const monthTx = useMemo(
+    () =>
+      (transactions || []).filter((t) => {
+        const d = t.date || t.paid_date || t.due_date;
+        return d && String(d).substring(0, 7) === monthKey;
+      }),
+    [transactions, monthKey]
+  );
+
+  const entradas = monthTx.filter((t) => t.type === 'income');
+  const saidas = monthTx.filter((t) => t.type === 'expense');
+
+  const realized = (arr: Array<any>) => arr.filter((t) => t.is_realized).reduce((s, t) => s + Number(t.amount || 0), 0);
+  const pending = (arr: Array<any>) => arr.filter((t) => !t.is_realized).reduce((s, t) => s + Number(t.amount || 0), 0);
+
+  const entradasReal = realized(entradas);
+  const entradasPrev = pending(entradas);
+  const saidasReal = realized(saidas);
+  const saidasPrev = pending(saidas);
+
+  const row = (label: string, realized: number, pending: number, tone: 'in' | 'out') => (
+    <div className="flex items-center justify-between gap-3 py-2.5 border-b border-white/[0.05] last:border-0">
+      <span className="text-sm font-semibold text-slate-300">{label}</span>
+      <div className="flex items-center gap-5 text-right">
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-slate-500">Previsto</p>
+          <p className={cn('text-sm font-bold', tone === 'in' ? 'text-amber-400' : 'text-amber-400')}>{formatCurrency(pending)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-slate-500">Realizado</p>
+          <p className={cn('text-sm font-bold', tone === 'in' ? 'text-[#00FFCC]' : 'text-rose-400')}>{formatCurrency(realized)}</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <Card>
+      <CardHeader
+        title="Balanço Mensal"
+        subtitle={new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+      />
+      <div className="p-5">
+        {loading && transactions.length === 0 ? (
+          <Spinner />
+        ) : monthTx.length === 0 ? (
+          <EmptyState message="Nenhum lançamento neste mês." icon={<CalendarDays className="w-10 h-10" />} />
+        ) : (
+          <>
+            {row('Entradas (receitas)', entradasReal, entradasPrev, 'in')}
+            {row('Saídas (despesas)', saidasReal, saidasPrev, 'out')}
+            <div className="flex items-center justify-between gap-3 pt-4">
+              <span className="text-sm font-bold text-white">Saldo do mês</span>
+              <span className={cn('text-lg font-bold', entradasReal + entradasPrev - saidasReal - saidasPrev >= 0 ? 'text-[#00FFCC]' : 'text-rose-400')}>
+                {formatCurrency(entradasReal + entradasPrev - saidasReal - saidasPrev)}
+              </span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wide text-amber-400 font-bold">Previsto (pendente)</p>
+                <p className="text-sm font-bold text-white">{formatCurrency(entradasPrev + saidasPrev)}</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.03] border border-white/[0.07] px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wide text-slate-400 font-bold">Realizado (liquidado)</p>
+                <p className="text-sm font-bold text-white">{formatCurrency(entradasReal + saidasReal)}</p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function DFC({ transactions, loading }: { transactions: Array<any>; loading?: boolean }) {
+  const [period, setPeriod] = useState<PeriodKey>('month');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+
+  const selectPreset = (p: PeriodKey) => {
+    if (p === 'custom') {
+      const now = new Date();
+      let from = new Date(now);
+      if (period === '7d') {
+        from.setDate(now.getDate() - 6);
+      } else if (period === 'quarter') {
+        from = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3), 1);
+      } else {
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      setStart(iso(from));
+      setEnd(iso(now));
+    }
+    setPeriod(p);
+  };
+
+  const { range, rangeLabel } = useMemo(() => {
+    const now = new Date();
+    let from: Date;
+    if (period === 'custom') {
+      from = start ? new Date(`${start}T00:00:00`) : new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (period === '7d') {
+      from = new Date(now);
+      from.setDate(now.getDate() - 6);
+      from.setHours(0, 0, 0, 0);
+    } else if (period === 'quarter') {
+      from = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3), 1);
+    } else {
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    const to = period === 'custom' && end ? new Date(`${end}T23:59:59`) : now;
+    return {
+      range: { from, to },
+      rangeLabel: `${formatDateBR(iso(from))} → ${formatDateBR(iso(to))}`,
+    };
+  }, [period, start, end]);
+
+  const dados = useMemo(() => {
+    const realizadas = transactions.filter((t) => {
+      if (!t.is_realized) return false;
+      const dStr = t.date || t.paid_date || t.due_date;
+      if (!dStr) return false;
+      const d = new Date(dStr + (dStr.length === 10 ? 'T12:00:00' : ''));
+      if (isNaN(d.getTime())) return false;
+      return d >= range.from && d <= range.to;
+    });
+
+    const soma = (arr: any[]) => arr.reduce((s, x) => s + x.amount, 0);
+
+    const op = realizadas.filter((t) => grupoDaCategoria(t.category_name) === 'operacional');
+    const inv = realizadas.filter((t) => grupoDaCategoria(t.category_name) === 'investimento');
+    const fin = realizadas.filter((t) => grupoDaCategoria(t.category_name) === 'financiamento');
+
+    const opRec = op.filter((t) => t.type === 'income');
+    const opDesp = op.filter((t) => t.type !== 'income');
+    const receitasOperacionais = soma(opRec);
+    const despesasOperacionaisTotal = soma(opDesp);
+
+    // Receitas operacionais agregadas por categoria (todas "Entrada")
+    const receitasPorCat = new Map<string, number>();
+    for (const t of opRec) {
+      const k = t.category_name || 'Entrada';
+      receitasPorCat.set(k, (receitasPorCat.get(k) || 0) + t.amount);
+    }
+    if (receitasPorCat.size === 0) receitasPorCat.set('Entrada', 0);
+
+    // Despesas operacionais na hierarquia fixa executiva
+    const despesasOperacionais = OPERACIONAIS_DESPESA.map((slot) => ({
+      label: slot.label,
+      value: opDesp
+        .filter((t) => slotDespesaOperacional(t.category_name) === slot.label)
+        .reduce((s, t) => s + t.amount, 0),
+    }));
+
+    // Categorias avulsas (investimento / financiamento)
+    const categoriasSecao = (arr: any[]) => {
+      const map = new Map<string, number>();
+      for (const t of arr) {
+        const k = t.category_name || 'Sem categoria';
+        const sinal = t.type === 'income' ? 1 : -1;
+        map.set(k, (map.get(k) || 0) + sinal * t.amount);
+      }
+      return [...map.entries()]
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+    };
+    const linhasInvestimento = categoriasSecao(inv);
+    const linhasFinanciamento = categoriasSecao(fin);
+
+    const subtotalOp = receitasOperacionais - despesasOperacionaisTotal;
+    const subtotalInv = soma(inv.filter((t) => t.type === 'income')) - soma(inv.filter((t) => t.type !== 'income'));
+    const subtotalFin = soma(fin.filter((t) => t.type === 'income')) - soma(fin.filter((t) => t.type !== 'income'));
+
+    return {
+      rangeLabel,
+      count: realizadas.length,
+      receitasPorCat: [...receitasPorCat.entries()].map(([label, value]) => ({ label, value })),
+      despesasOperacionais,
+      subtotalOp,
+      subtotalInv,
+      subtotalFin,
+      totalGeral: subtotalOp + subtotalInv + subtotalFin,
+      linhasInvestimento,
+      linhasFinanciamento,
+    };
+  }, [transactions, range, rangeLabel]);
+
+  return (
+    <Card>
+      <CardHeader
+        title="Demonstração do Fluxo de Caixa"
+        subtitle={`${dados.rangeLabel} · ${dados.count} lançamento${dados.count === 1 ? '' : 's'} realizado${dados.count === 1 ? '' : 's'} no período`}
+        action={loading ? <Spinner /> : undefined}
+      />
+      <div className="p-5 space-y-4">
+        {/* Seletor de período */}
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
+          <div className="flex flex-wrap gap-2">
+            {PERIOD_PRESETS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => selectPreset(p.key)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all',
+                  period === p.key
+                    ? 'bg-[#00FFCC]/10 text-[#00FFCC] border-[#00FFCC]/40'
+                    : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/[0.08] hover:text-white'
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+            <button
+              onClick={() => selectPreset('custom')}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all',
+                period === 'custom'
+                  ? 'bg-[#00FFCC]/10 text-[#00FFCC] border-[#00FFCC]/40'
+                  : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/[0.08] hover:text-white'
+              )}
+            >
+              Personalizado
+            </button>
+          </div>
+          {period === 'custom' && (
+            <div className="flex items-center gap-2">
+              <input type="date" value={start} onChange={(e) => setStart(e.target.value)} className={dateInputCls} />
+              <span className="text-xs text-slate-500">até</span>
+              <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className={dateInputCls} />
+            </div>
+          )}
+        </div>
+
+        {/* Documento contábil */}
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-4 max-w-2xl">
+          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <span className="text-xs font-bold text-white uppercase tracking-widest">DFC</span>
+            <span className="text-[11px] text-slate-500">Demonstração do Fluxo de Caixa</span>
+          </div>
+
+          {/* ATIVIDADES OPERACIONAIS */}
+          <ContabilRow label='· Atividades Operacionais' value={0} minus={false} kind="total" />
+          {dados.receitasPorCat.map((r) => (
+            <ContabilRow key={r.label} label={r.label} value={r.value} indent={1} />
+          ))}
+          {dados.despesasOperacionais.map((d) =>
+            d.value === 0 ? null : (
+              <ContabilRow key={d.label} label={d.label} value={d.value} indent={1} minus />
+            )
+          )}
+          <ContabilRow label="Subtotal Operacional" value={dados.subtotalOp} kind="subtotal" />
+
+          {/* ATIVIDADES DE INVESTIMENTO */}
+          <ContabilRow label="· Atividades de Investimento" value={0} kind="total" />
+          {dados.linhasInvestimento.length === 0 ? (
+            <ContabilRow label="Sem movimentações no período" value={0} indent={1} />
+          ) : (
+            dados.linhasInvestimento.map((r) => (
+              <ContabilRow key={r.label} label={r.label} value={r.value} indent={1} minus={r.value < 0} />
+            ))
+          )}
+          <ContabilRow label="Subtotal Investimento" value={dados.subtotalInv} kind="subtotal" />
+
+          {/* ATIVIDADES DE FINANCIAMENTO */}
+          <ContabilRow label="· Atividades de Financiamento" value={0} kind="total" />
+          {dados.linhasFinanciamento.length === 0 ? (
+            <ContabilRow label="Sem movimentações no período" value={0} indent={1} />
+          ) : (
+            dados.linhasFinanciamento.map((r) => (
+              <ContabilRow key={r.label} label={r.label} value={r.value} indent={1} minus={r.value < 0} />
+            ))
+          )}
+          <ContabilRow label="Subtotal Financiamento" value={dados.subtotalFin} kind="subtotal" />
+
+          {/* VARIAÇÃO DO CAIXA */}
+          <ContabilRow label="Variação do Caixa no Período" value={dados.totalGeral} kind="total" />
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -209,6 +907,18 @@ export default function DashboardFinanceiro() {
           loading={txLoading}
         />
       </div>
+
+      {/* Visualização A — Fluxo de Caixa */}
+      <FluxoDeCaixa transactions={transactions} loading={txLoading} />
+
+      {/* Visualização B — Balanço Mensal (Previsto × Realizado) */}
+      <BalancoMensal transactions={transactions} loading={txLoading} />
+
+      {/* Visualização C — Saldo por Categoria */}
+      <SaldoPorCategoria transactions={transactions} loading={txLoading} />
+
+      {/* Visualização D — DFC (Demonstração do Fluxo de Caixa) */}
+      <DFC transactions={transactions} loading={txLoading} />
 
       {/* Gráfico + atalhos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

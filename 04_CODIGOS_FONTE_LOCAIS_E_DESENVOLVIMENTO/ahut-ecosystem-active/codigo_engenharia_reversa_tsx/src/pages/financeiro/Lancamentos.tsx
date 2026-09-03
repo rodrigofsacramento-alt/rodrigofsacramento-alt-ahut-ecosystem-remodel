@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, LayoutList, TrendingUp, TrendingDown, CheckCircle2 } from 'lucide-react';
 import {
   useFinancialTransactions,
@@ -11,6 +11,7 @@ import {
   useSetTransactionRealized,
 } from '../../hooks/useFinancial';
 import type { TransactionFilters, FinancialTransaction } from '../../types/financeiro';
+import { supabase } from '../../lib/supabase';
 import FinancialFilters from './components/FinancialFilters';
 import { useFinancialFilters } from '../../contexts/FinancialFiltersContext';
 import { formatCurrency, cn } from '../../lib/utils';
@@ -84,6 +85,16 @@ export default function Lancamentos() {
   const [formError, setFormError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<FinancialTransaction | null>(null);
 
+  const [leads, setLeads] = useState<{ id: string; name: string; phone: string | null }[]>([]);
+  useEffect(() => {
+    supabase
+      .from('leads')
+      .select('id, name, phone')
+      .then(({ data, error }) => {
+        if (!error && data) setLeads(data);
+      });
+  }, []);
+
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
       if (filters.type !== 'all' && t.type !== filters.type) return false;
@@ -138,10 +149,15 @@ export default function Lancamentos() {
       setFormError('Informe um valor válido.');
       return;
     }
+    // category (grupo) é NOT NULL no banco — deriva da categoria selecionada ou do tipo
+    const categoryId = form.category_id;
+    const categoryGroup = categories.find((c) => c.id === categoryId)?.category
+      || (form.type === 'income' ? 'Entrada' : 'Custo Fixo');
     const payload = {
       name: form.name.trim(),
       type: form.type,
       amount,
+      category: categoryGroup,
       category_id: form.category_id || null,
       bank_id: form.bank_id || null,
       card_id: form.card_id || null,
@@ -331,7 +347,12 @@ export default function Lancamentos() {
                 <option key={c.id} value={c.id} className="bg-[#0a0e15]">{c.name}</option>
               ))}
             </SelectInput>
-            <TextInput label="Cliente (ID, opcional)" value={form.client_id} onChange={(e) => set({ client_id: e.target.value })} placeholder="uuid do cliente" />
+            <SelectInput label="Cliente (ID, opcional)" value={form.client_id} onChange={(e) => set({ client_id: e.target.value })}>
+              <option value="" className="bg-[#0a0e15]">Selecionar...</option>
+              {leads.map((lead) => (
+                <option key={lead.id} value={lead.id} className="bg-[#0a0e15]">{lead.name}</option>
+              ))}
+            </SelectInput>
           </FormGrid>
           <FormGrid>
             <TextInput label="Data" type="date" value={form.date} onChange={(e) => set({ date: e.target.value })} />
