@@ -22,7 +22,21 @@
 - ✅ **GUIA_COMANDANTE.md** — Comandos `/executar`, `/performance`, `/criaragente`
 - ✅ **Fluxo Pós-Entrega** — SKILL.md do Jarvis atualizado com performance + lacuna + ASIMOV
 - ✅ **Áudio funcionando** — Testado e validado na produção
-- ✅ **Score de Performance:** 58/100 (retrabalho e autonomia puxaram nota)
+- ✅ **Score de Performance (03/09, relatório do dia):** **85/100** — aplicado o novo critério de RETRABALHO (03/09).
+
+### 📊 SCORECARD 03/09 — atividades do dia (novo critério de Retrabalho)
+| Indicador | Avaliação do dia | Pts |
+|---|---|---|
+| TEMPO_EXECUCAO | Fix do ciclo puxou +1 iteração (detour do singleton no login) | 7 |
+| **RETRABALHO** | **1** → correção do Comandante: validar o **fluxo REAL** (submit/login), não só render — o squad podia ter testado sozinho | **7** |
+| CONFORMIDADE_CRITERIOS | 100% — zombie morto, login autentica de verdade, destructuring ok, filtro atendentes intacto | 10 |
+| COBERTURA_TECNICA | index.html + entry bundle + Login + 4 destinos + runbook (5 mapeados, 5 alterados) | 10 |
+| AUTONOMIA_AGENTE | Descobriu causa raiz (módulo dupla) via prova real; mas precisou de 1 correção QA de fluxo | 7 |
+| APRENDIZADO_REGISTRADO | Runbook + PAINEL atualizados com a causa raiz definitiva | 10 |
+| **Score final (média×10)** | | **85/100** |
+
+> **Regra de ponderação aplicada (definida 03/09):** NÃO penalizei o usuário não ter passado acesso a sistema nunca fornecido (fora do alcance). PENALIZEI a instrução de testar o fluxo real do login — o squad tinha como descobrir sozinho (probe de submit real). Isso entrou como 1 retrabalho.
+
 - 🔄 **Análise de Lacuna:** Agente `wab-client` proposto (WhatsApp Business Client Specialist)
 - 🔄 **Engenharia reversa produção→dev:** Pendente (ADA identificou 12 correções que faltam no TSX)
 - ✅ **Commit + Push no GitHub remodel** — 10 commits enviados (58c5415): cartões navegam, TreinamentoAula, 🚀 Skill ATLAS deploy dev, Gestão persistência, Neurovendas, Chamados/Tecnologia, refatoramento, RPCs Atendimento, Corretores/Agenda. [58c5415]
