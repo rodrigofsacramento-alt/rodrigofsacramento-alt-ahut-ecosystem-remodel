@@ -844,6 +844,14 @@ export default function Atendimento() {
                         {chat.unread_count}
                       </span>
                     )}
+                    {chat.status === 'pending' && (
+                      <span
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white text-[11px] font-bold shadow-sm"
+                        title="Aguardando atendimento"
+                      >
+                        !
+                      </span>
+                    )}
                   </div>
                 </div>
               </button>

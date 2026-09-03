@@ -36,6 +36,7 @@ import Notificacoes from './pages/Notificacoes';
 import Vendas from './pages/Vendas';
 import Login from './pages/Login';
 import Corretores from './pages/Corretores';
+const PerformanceFunil = React.lazy(() => import('./pages/PerformanceFunil'));
 import { Configuracoes } from './pages/Configuracoes';
 import ImageEditor from './components/ImageEditor';
 import WhatsAppConnectionModal from './components/WhatsAppConnectionModal';
@@ -299,6 +300,14 @@ export default function App() {
               element={
                 <ProtectedAppLayout title="Corretores & Equipe" subtitle="Gestão de usuários, metas e performance." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
                   <Corretores />
+                </ProtectedAppLayout>
+              }
+            />
+            <Route
+              path="/performance"
+              element={
+                <ProtectedAppLayout title="Performance & Funil" subtitle="Funil de conversão, SLA de atendimento e ranking de corretores em tempo real." onOpenWhatsApp={() => setWhatsappModalOpen(true)}>
+                  <PerformanceFunil />
                 </ProtectedAppLayout>
               }
             />

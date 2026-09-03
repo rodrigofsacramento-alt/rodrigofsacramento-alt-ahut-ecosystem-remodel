@@ -21,7 +21,8 @@ import {
   GraduationCap,
   ClipboardList,
   Globe,
-  Image as ImageIcon
+  Image as ImageIcon,
+  BarChart3 as FunnelIcon
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -89,6 +90,7 @@ const navItems: NavItem[] = [
   { id: 'vendas', labelKey: 'nav.vendas', icon: DollarSign, path: '/vendas' },
   { id: 'financeiro', labelKey: 'nav.financeiro', icon: DollarSign, path: '/financeiro' },
   { id: 'corretores', labelKey: 'nav.corretores', icon: UserCircle, path: '/corretores' },
+  { id: 'performance', labelKey: 'nav.performance', icon: FunnelIcon, path: '/performance' },
   { id: 'editor', labelKey: 'Editor de Imagens', icon: ImageIcon, path: '/editor' },
   { id: 'tecnologia', labelKey: 'nav.tecnologia', icon: Monitor, path: '/tecnologia' },
   { id: 'notificacoes', labelKey: 'nav.notificacoes', icon: Bell, path: '/notificacoes', badge: 1 },
