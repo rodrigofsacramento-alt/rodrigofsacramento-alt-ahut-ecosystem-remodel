@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -39,13 +39,12 @@ export default function Login() {
       return;
     }
 
-    if (profile.role === 'client') {
-      navigate('/area-cliente');
-    } else if (profile.role === 'agent') {
-      navigate('/corretor-dashboard');
-    } else {
-      navigate('/');
-    }
+    // DEV/QUBITS: rotas /area-cliente e /corretor-dashboard nao existem neste bundle.
+    // Antes, o login redirecionava para elas e caia no fallback <Navigate to="/">,
+    // causando "tela antiga presa/errada" apos logar. Correcao: admin/manager vao
+    // para "/" (dashboard). client/agent tambem vao para "/" (unica rota logada real),
+    // eliminando qualquer bounce/loop de tela errada.
+    navigate('/');
   };
 
   useEffect(() => {
@@ -120,6 +119,18 @@ export default function Login() {
       setIsGoogleLoading(false);
     }
   };
+
+  // UNMOUNT REAL garantido (React Router, nao CSS).
+  // Assim que o token Supabase for validado (session presente e loading encerrado),
+  // a rota /login e TROCADA declarativamente para "/" de forma imediata e a prova
+  // de race-condition. Nao depende da chain async de getUser()/profile que rodava
+  // dentro de handleRedirectByRole() - essa chain podia atrasar/falhar/prender o
+  // componente, deixando a tela de login "zombie" montada no topo do DOM enquanto
+  // o Dashboard logado renderizava embaixo. <Navigate replace> forca o unmount real
+  // da tela de login (o elemento do /login sai da arvore de rotas).
+  if (session && !authLoading) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <>

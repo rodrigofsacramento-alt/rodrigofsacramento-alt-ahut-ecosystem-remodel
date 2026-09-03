@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import NeuralBackground from './components/NeuralBackground';
 import { useResponsive } from './hooks/useResponsive';
 import ProtectedRoute from './components/ProtectedRoute';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 import Dashboard from './components/Dashboard';
 import Leads from './components/Leads';
 import Atendimento from './pages/Atendimento';
@@ -94,6 +95,7 @@ export default function App() {
         <LanguageProvider>
           <FinancialFiltersProvider>
           <Router>
+          <RouteErrorBoundary>
           <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[#06080e] text-slate-400 text-sm">Carregando...</div>}>
           <Routes>
             {/* Auth Route - public */}
@@ -313,6 +315,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </React.Suspense>
+          </RouteErrorBoundary>
         </Router>
         </FinancialFiltersProvider>
 
