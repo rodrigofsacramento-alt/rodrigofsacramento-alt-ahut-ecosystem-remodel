@@ -16,8 +16,8 @@ import {
 } from 'lucide-react';
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -426,16 +426,34 @@ function norm(s: string): string {
     .trim();
 }
 
-function grupoDaCategoria(categoryName?: string | null): GrupoDFC {
-  const c = norm(categoryName || '');
+function grupoDaCategoria(opts?: { group?: string | null; name?: string | null }): GrupoDFC {
+  // 1) Classificação canônica pelo GRUPO (financial_categories.category) — fonte da verdade
+  const g = (opts?.group || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  if (g) {
+    if (g.includes('investimento')) return 'investimento';
+    if (g.includes('retirada') || g.includes('aporte')) return 'financiamento';
+    return 'operacional';
+  }
+  // 2) Fallback: keyword-matching no NOME (categorias antigas cujo name era o slug do grupo)
+  const c = norm(opts?.name || '');
   if (!c) return 'operacional';
   if (KEY_INVESTIMENTO.some((k) => c.includes(norm(k)))) return 'investimento';
   if (KEY_FINANCIAMENTO.some((k) => c.includes(norm(k)))) return 'financiamento';
   return 'operacional';
 }
 
-function slotDespesaOperacional(categoryName?: string | null): string {
-  const c = norm(categoryName || '');
+function slotDespesaOperacional(group?: string | null, name?: string | null): string {
+  const g = (group || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  if (g) {
+    if (g.includes('custo fixo')) return 'Custo Fixo';
+    if (g.includes('custo variavel')) return 'Custo Variável';
+    if (g.includes('comissao')) return 'Comissões';
+    if (g.includes('imposto')) return 'Impostos';
+    if (g.includes('operacao financeira')) return 'Operação Financeira';
+    return OPERACIONAIS_DESPESA[OPERACIONAIS_DESPESA.length - 1].label;
+  }
+  // Fallback: keyword no nome
+  const c = norm(name || '');
   for (const s of OPERACIONAIS_DESPESA) {
     if (s.chave === null) continue;
     if (c.includes(s.chave)) return s.label;
@@ -641,9 +659,9 @@ function DFC({ transactions, loading }: { transactions: Array<any>; loading?: bo
 
     const soma = (arr: any[]) => arr.reduce((s, x) => s + x.amount, 0);
 
-    const op = realizadas.filter((t) => grupoDaCategoria(t.category_name) === 'operacional');
-    const inv = realizadas.filter((t) => grupoDaCategoria(t.category_name) === 'investimento');
-    const fin = realizadas.filter((t) => grupoDaCategoria(t.category_name) === 'financiamento');
+    const op = realizadas.filter((t) => grupoDaCategoria({ group: t.category_group, name: t.category_name }) === 'operacional');
+    const inv = realizadas.filter((t) => grupoDaCategoria({ group: t.category_group, name: t.category_name }) === 'investimento');
+    const fin = realizadas.filter((t) => grupoDaCategoria({ group: t.category_group, name: t.category_name }) === 'financiamento');
 
     const opRec = op.filter((t) => t.type === 'income');
     const opDesp = op.filter((t) => t.type !== 'income');
@@ -662,7 +680,7 @@ function DFC({ transactions, loading }: { transactions: Array<any>; loading?: bo
     const despesasOperacionais = OPERACIONAIS_DESPESA.map((slot) => ({
       label: slot.label,
       value: opDesp
-        .filter((t) => slotDespesaOperacional(t.category_name) === slot.label)
+        .filter((t) => slotDespesaOperacional(t.category_group, t.category_name) === slot.label)
         .reduce((s, t) => s + t.amount, 0),
     }));
 
@@ -835,36 +853,140 @@ export default function DashboardFinanceiro() {
     };
   }, [transactions, saldos]);
 
-  // Gráfico: receita vs despesa realizadas, últimos 6 meses
+  // Gráfico: Receitas vs Despesas realizadas — agregado por período selecionado
+  const CHART_PERIODS: { key: string; label: string }[] = [
+    { key: '7d', label: 'Diário (7d)' },
+    { key: '30d', label: 'Diário (30d)' },
+    { key: 'weekly', label: 'Semanal' },
+    { key: 'monthly', label: 'Mensal' },
+    { key: 'quarterly', label: 'Trimestral' },
+    { key: 'biannual', label: 'Semestral' },
+    { key: 'annual', label: 'Anual' },
+    { key: 'custom', label: 'Personalizado' },
+  ];
+  const [chartPeriod, setChartPeriod] = useState('30d');
+  const [chartStart, setChartStart] = useState('');
+  const [chartEnd, setChartEnd] = useState('');
+
   const chartData = useMemo(() => {
-    const labels: string[] = [];
-    const map = new Map<string, { receita: number; despesa: number }>();
     const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      map.set(key, { receita: 0, despesa: 0 });
-      labels.push(key);
+    // Janela [from, to] + granularidade
+    let from: Date;
+    let to: Date = now;
+    let grain: 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year';
+
+    if (chartPeriod === '7d') {
+      from = new Date(now); from.setDate(now.getDate() - 6); from.setHours(0,0,0,0); grain = 'day';
+    } else if (chartPeriod === '30d') {
+      from = new Date(now); from.setDate(now.getDate() - 29); from.setHours(0,0,0,0); grain = 'day';
+    } else if (chartPeriod === 'weekly') {
+      from = new Date(now); from.setDate(now.getDate() - 27); from.setHours(0,0,0,0); grain = 'day';
+    } else if (chartPeriod === 'monthly') {
+      from = new Date(now.getFullYear(), now.getMonth(), 1); grain = 'day';
+    } else if (chartPeriod === 'quarterly') {
+      from = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3), 1); grain = 'month';
+    } else if (chartPeriod === 'biannual') {
+      // últimos 6 meses
+      from = new Date(now.getFullYear(), now.getMonth() - 5, 1); grain = 'semester';
+    } else if (chartPeriod === 'annual') {
+      from = new Date(now.getFullYear() - 1, now.getMonth(), 1); grain = 'month';
+    } else if (chartPeriod === 'custom') {
+      from = chartStart ? new Date(`${chartStart}T00:00:00`) : new Date(now.getFullYear(), now.getMonth(), 1);
+      if (chartEnd) to = new Date(`${chartEnd}T23:59:59`);
+      const days = Math.round((to.getTime() - from.getTime()) / 86400000) + 1;
+      grain = days > 365 ? 'year' : days > 95 ? 'month' : days > 45 ? 'quarter' : 'month';
+      // granularidade conservadora para janelas grandes
+      if (days <= 45) grain = 'day';
+      else if (days <= 95) grain = 'week';
+    } else {
+      from = new Date(now.getFullYear(), now.getMonth(), 1); grain = 'day';
     }
-    transactions
-      .filter((t) => t.is_realized)
-      .forEach((t) => {
-        const d = (t.date || t.paid_date || '')?.substring(0, 7);
-        if (d && map.has(d)) {
-          const bucket = map.get(d)!;
-          if (t.type === 'income') bucket.receita += t.amount;
-          else bucket.despesa += t.amount;
-        }
-      });
-    return labels.map((key) => {
-      const d = new Date(key + '-01');
-      return {
-        mês: d.toLocaleDateString('pt-BR', { month: 'short' }),
-        Receitas: Math.round(map.get(key)!.receita),
-        Despesas: Math.round(map.get(key)!.despesa),
-      };
+
+    const buckets: { label: string; key: string; Receitas: number; Despesas: number }[] = [];
+    const index = new Map<string, number>();
+
+    const push = (key: string, label: string) => {
+      if (!index.has(key)) {
+        index.set(key, buckets.length);
+        buckets.push({ label, key, Receitas: 0, Despesas: 0 });
+      }
+    };
+
+    const fmt = (d: Date, g: typeof grain, offset = 0) => {
+      const dd = new Date(d); dd.setDate(dd.getDate() + offset);
+      if (g === 'day') {
+        const k = `${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`;
+        push(k, dd.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+      } else if (g === 'week') {
+        // semana = inicia na segunda-feira
+        const dow = (dd.getDay() + 6) % 7;
+        const monday = new Date(dd); monday.setDate(dd.getDate() - dow);
+        const k = `W${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+        push(k, `S ${monday.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`);
+      } else if (g === 'month') {
+        const k = `${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}`;
+        push(k, dd.toLocaleDateString('pt-BR', { month: 'short' }));
+      } else if (g === 'quarter') {
+        const q = Math.floor(dd.getMonth()/3) + 1;
+        push(`Q${dd.getFullYear()}-${q}`, `T${q}/${String(dd.getFullYear()).slice(2)}`);
+      } else if (g === 'semester') {
+        const s = dd.getMonth() < 6 ? 1 : 2;
+        push(`S${dd.getFullYear()}-${s}`, `${s === 1 ? '1º' : '2º'} Sem ${String(dd.getFullYear()).slice(2)}`);
+      } else {
+        push(`${dd.getFullYear()}`, String(dd.getFullYear()));
+      }
+    };
+
+    // garante linha do tempo contínua (sem buracos)
+    if (grain === 'day' || grain === 'week') {
+      const totalDays = Math.round((to.getTime() - from.getTime()) / 86400000) + 1;
+      for (let i = 0; i < totalDays; i++) fmt(from, grain, i);
+    } else if (grain === 'month') {
+      let c = new Date(from.getFullYear(), from.getMonth(), 1);
+      const last = new Date(to.getFullYear(), to.getMonth(), 1);
+      while (c <= last) { fmt(c, 'month'); c = new Date(c.getFullYear(), c.getMonth()+1, 1); }
+    } else if (grain === 'quarter') {
+      let c = from;
+      while (c <= to) { fmt(c, 'quarter'); c = new Date(c.getFullYear(), c.getMonth()+3, 1); }
+    } else if (grain === 'semester') {
+      fmt(to, 'semester');
+    } else {
+      let c = from;
+      while (c <= to) { fmt(c, 'year'); c = new Date(c.getFullYear()+1, 0, 1); }
+    }
+
+    transactions.filter((t) => t.is_realized).forEach((t) => {
+      const dStr = t.date || t.paid_date;
+      if (!dStr) return;
+      const d = new Date(dStr + (dStr.length === 10 ? 'T12:00:00' : ''));
+      if (isNaN(d.getTime())) return;
+      if (d < from || d > to) return;
+      const label = (() => {
+        if (grain === 'day' || grain === 'week') {
+          const dd = new Date(d);
+          if (grain === 'day') {
+            const k = `${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`;
+            return k;
+          }
+          const dow = (dd.getDay() + 6) % 7;
+          const monday = new Date(dd); monday.setDate(dd.getDate() - dow);
+          return `W${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+        } else if (grain === 'month') return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        else if (grain === 'quarter') return `Q${d.getFullYear()}-${Math.floor(d.getMonth()/3)+1}`;
+        else if (grain === 'semester') return `S${d.getFullYear()}-${d.getMonth()<6?1:2}`;
+        return `${d.getFullYear()}`;
+      })();
+      const idx = index.get(label);
+      if (idx === undefined) return;
+      if (t.type === 'income') buckets[idx].Receitas += t.amount;
+      else buckets[idx].Despesas += t.amount;
     });
-  }, [transactions]);
+
+    return buckets.map(({ Receitas, Despesas, label }) => ({
+      label, Receitas: Math.round(Receitas), Despesas: Math.round(Despesas),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions, chartPeriod, chartStart, chartEnd]);
 
   const recentes = transactions.slice(0, 8);
 
@@ -925,30 +1047,64 @@ export default function DashboardFinanceiro() {
         <Card className="lg:col-span-2">
           <CardHeader
             title="Receitas vs Despesas"
-            subtitle="Valores realizados nos últimos 6 meses"
+            subtitle="Valores realizados no período selecionado"
           />
-          <div className="p-5 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} barGap={6}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="mês" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} />
-                <Tooltip
-                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                  contentStyle={{
-                    backgroundColor: '#0a0e15',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 12,
-                    fontSize: 13,
-                    color: '#fff',
-                  }}
-                  formatter={(value: any) => formatCurrency(Number(value))}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="Receitas" fill="#00FFCC" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="Despesas" fill="#FB7185" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="p-5 space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {CHART_PERIODS.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setChartPeriod(p.key)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-xs font-bold border transition-all',
+                    chartPeriod === p.key
+                      ? 'bg-[#00FFCC]/10 text-[#00FFCC] border-[#00FFCC]/40'
+                      : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/[0.08] hover:text-white'
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {chartPeriod === 'custom' && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <input type="date" value={chartStart} onChange={(e) => setChartStart(e.target.value)} className={dateInputCls} />
+                <span className="text-slate-500 text-xs">até</span>
+                <input type="date" value={chartEnd} onChange={(e) => setChartEnd(e.target.value)} className={dateInputCls} />
+              </div>
+            )}
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gradReceitas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#00FFCC" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#00FFCC" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="gradDespesas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FB7185" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#FB7185" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={12} />
+                  <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} width={44} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#0a0e15',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 12,
+                      fontSize: 13,
+                      color: '#fff',
+                    }}
+                    formatter={(value: any) => formatCurrency(Number(value))}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="Receitas" stroke="#00FFCC" strokeWidth={2.5} fill="url(#gradReceitas)" dot={false} activeDot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="Despesas" stroke="#FB7185" strokeWidth={2.5} fill="url(#gradDespesas)" dot={false} activeDot={{ r: 4 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </Card>
 

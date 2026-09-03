@@ -32,6 +32,7 @@ export interface FinancialTransaction {
   updated_at: string;
   // Campos resolvidos no front-end (joins manuais)
   category_name?: string;
+  category_group?: string;
   bank_name?: string;
   card_name?: string;
 }

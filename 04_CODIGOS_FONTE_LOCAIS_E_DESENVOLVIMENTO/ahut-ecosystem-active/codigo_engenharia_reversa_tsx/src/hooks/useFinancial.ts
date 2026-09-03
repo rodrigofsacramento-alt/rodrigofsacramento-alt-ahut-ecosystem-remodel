@@ -36,12 +36,12 @@ export function useFinancialTransactions() {
 
       // Resolve nomes de categoria / banco / cartão via tabelas de referência
       const [cats, banks, cards] = await Promise.all([
-        supabase.from('financial_categories').select('id, name'),
+        supabase.from('financial_categories').select('id, name, category'),
         supabase.from('financial_banks').select('id, name'),
         supabase.from('financial_cards').select('id, name'),
       ]);
 
-      const catMap = new Map((cats.data || []).map((r: any) => [r.id, r.name]));
+      const catMap = new Map((cats.data || []).map((r: any) => [r.id, { name: r.name, group: r.category }]));
       const bankMap = new Map((banks.data || []).map((r: any) => [r.id, r.name]));
       const cardMap = new Map((cards.data || []).map((r: any) => [r.id, r.name]));
 
@@ -63,7 +63,8 @@ export function useFinancialTransactions() {
         source: row.source ?? null,
         created_at: row.created_at,
         updated_at: row.updated_at,
-        category_name: row.category_id ? catMap.get(row.category_id) : undefined,
+        category_name: row.category_id ? catMap.get(row.category_id)?.name : undefined,
+        category_group: row.category_id ? catMap.get(row.category_id)?.group : undefined,
         bank_name: row.bank_id ? bankMap.get(row.bank_id) : undefined,
         card_name: row.card_id ? cardMap.get(row.card_id) : undefined,
       }));
