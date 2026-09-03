@@ -11,7 +11,7 @@
 - ✅ **Deploy nos 4 destinos oficiais** (VPS html, VPS crm, Hostinger `/ahut/`, legacy) — verificado sha `26d262d834d9`. Backups `.pre_dupfix` preservados.
 - ✅ **PROD validado ao vivo:** `forms:1, emails:1, pws:1, root_children:4, body_white:false, PAGE_ERRORS:nenhum` — **login 1 form, tema claro Estate.ia mantido, sem tela branca, sem duplicata.**
 - ✅ **Commit + push** `cf6c7d6` no GitHub `origin/remodel` (bundle patched + backups versionados).
-- 🔄 **Próximo (ordem usuário, 2º erro):** `Cannot destructure property 'error' of '(intermediate value)' as it is undefined` — fix null-safe `_rr&&_rr.error` no fluxo de submit.
+- 🔄 **Próximo (ordem usuário, 2º erro):** ~~`Cannot destructure property 'error' of '(intermediate value)' as it is undefined`~~ → **✅ RESOLVIDO 03/09**. Destructuring null-safe `?.error` nos awaits de auth do `Login-CbFMVaJO.js` (submit `Promise.race` + OAuth `L()`). Prova: 0 destructuring inseguro em await (era 2). Deploy 4 destinos sha `cb940b67f25d`, commit `7ce1b3e` pushado. **AMBos os fixes no ar** (zombie `26d262d` + destructuring `cb940b`), PROD `forms:1 emails:1 pws:1 PAGE_ERRORS:nenhum`.
 - ✅ **BUG-UI-001** — Inversão Visual Grupos (isAgentSender) + Legenda lead mostrava nome do grupo: corrigido. 10 perfis atualizados no DB. Backend patched. **status: executado**
 - ✅ **TCK-2026-093** — Hotfixes produção: áudio, textarea, isAgentSender (solicitado 24/08, entregue 26/08)
 - ✅ **TCK-2026-092** — Correção de áudios WhatsApp: pipeline WebM→OGG, retry 2x, timeout 60s, `.single()` fix
