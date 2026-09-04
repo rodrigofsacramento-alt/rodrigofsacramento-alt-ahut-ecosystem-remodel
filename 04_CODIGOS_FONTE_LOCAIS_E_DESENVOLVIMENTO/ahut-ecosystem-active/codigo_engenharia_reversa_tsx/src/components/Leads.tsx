@@ -23,7 +23,8 @@ import { cn } from '../lib/utils';
 import { useLeads, useCreateLead, useUpdateLead, Lead } from '../hooks/useLeads';
 import { useAuth } from '../hooks/useAuth';
 
-const ESTAGIOS = ['Lead Cadastrado', 'Primeiro Atendimento', 'Visita Agendada', 'Proposta Enviada', 'Imóvel Escolhido', 'Convertido'];
+// FUNIL ÚNICO QUBITS — 12 ESTÁGIOS EXATOS (fonte única)
+const ESTAGIOS = ['Contato Cadastrado', 'Primeiro Atendimento / Qualificação', 'Qualificado', 'Follow Up', 'Buscar Imóveis', 'Agendamento Visita/Reunião', 'Visita/Reunião Agendada', 'Match Pronto', 'Apresentar Imóveis', 'Imóvel Escolhido', 'Proposta Solicitada', 'Vendido'];
 
 function getInitials(name?: string) {
   if (!name) return '?';
@@ -42,7 +43,7 @@ export default function Leads() {
   const updateLead = useUpdateLead();
 
   const [newLead, setNewLead] = useState({
-    name: '', phone: '', email: '', source: 'Site', stage: 'Lead Cadastrado', notes: '', budget: ''
+    name: '', phone: '', email: '', source: 'Site', stage: 'Contato Cadastrado', notes: '', budget: ''
   });
 
   const filteredLeads = leads.filter((lead) => {
@@ -52,8 +53,8 @@ export default function Leads() {
     return matchesStatus && matchesGroup;
   });
 
-  const ativos = leads.filter((l) => l.stage !== 'Convertido').length;
-  const convertidos = leads.filter((l) => l.stage === 'Convertido').length;
+  const ativos = leads.filter((l) => l.stage !== 'Vendido').length;
+  const convertidos = leads.filter((l) => l.stage === 'Vendido').length;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +73,7 @@ export default function Leads() {
       tags: []
     });
     setShowModal(false);
-    setNewLead({ name: '', phone: '', email: '', source: 'Site', stage: 'Lead Cadastrado', notes: '', budget: '' });
+    setNewLead({ name: '', phone: '', email: '', source: 'Site', stage: 'Contato Cadastrado', notes: '', budget: '' });
   };
 
   const handleMoveStage = (lead: Lead, stage: string) => {
@@ -175,7 +176,7 @@ export default function Leads() {
                     onChange={(e) => handleMoveStage(lead, e.target.value)}
                     className={cn(
                       "text-[10px] font-bold px-2 py-0.5 rounded-full border outline-none cursor-pointer",
-                      lead.stage === 'Convertido' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                      lead.stage === 'Vendido' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
                       "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
                     )}
                   >

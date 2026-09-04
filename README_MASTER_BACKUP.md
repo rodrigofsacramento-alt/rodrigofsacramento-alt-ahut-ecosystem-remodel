@@ -46,6 +46,15 @@
   - **Preservação:** nenhum lead em estágio avançado (Agendamento/Proposta/Convertido) foi tocado.
   - **Idempotência:** cláusula `AND stage <> 'A Selecionar'` evita reprocessamento.
 - **Arquivo de migração:** `04_.../ahut-ecosystem-active/codigo_engenharia_reversa_tsx/supabase/migration_saneamento_leads_funil.sql`
-- **Próxima fase (aguardando aceite):** funil único de **12 estágios** (`1 Contato Cadastrado → 12 Vendido`, com **"Qualificado"** como gatilho de injeção concatenada) + data-binding bidirecional + `current_stage` invisível na UI.
-- **Autor:** Squad Ahut Tech (JARVIS orquestra / APOLLO executa / AURA valida).
+### FASE 2 — FUNIL ÚNICO QUBITS: DATA-BINDING + GATILHO "QUALIFICADO" (aceite GO 4/4)
+- **Régua nova (12 estágios exatos):** `1 Contato Cadastrado → 2 Primeiro Atendimento / Qualificação → 3 Qualificado ⭐ (gatilho) → 4 Follow Up → 5 Buscar Imóveis → 6 Agendamento Visita/Reunião → 7 Visita/Reunião Agendada → 8 Match Pronto → 9 Apresentar Imóveis → 10 Imóvel Escolhido → 11 Proposta Solicitada → 12 Vendido` (+`A Selecionar` legados).
+- **Arquitetura (fonte única, "nunca diverge"):** `conversations.stage` espelha `leads.stage` na MESMA transação via trigger `trg_sync_conv_stage`. Gatilho `trg_lead_qualificado` (BEFORE INSERT OR UPDATE OF stage em conversations) cria/carreia o cartão de lead concatenado (nome+telefone+conversation_id) quando a conversa vira "Qualificado"; `conversations.lead_id` + `leads.conversation_id` = binding bidirecional. `current_stage` (IA) preservado como 'INTRO', invisível na UI.
+- **Migração aplicada PROD (`ptochsyoyatsydfysacc`):** check constraint nova (12 + A Selecionar), `conversations.stage` (default Contato Cadastrado), `conversations.lead_id` FK, `leads.conversation_id` FK, 4 índices, 2 functions + 2 triggers.
+- **Testes transacionais (ROLLBACK):** Qualificado→lead criado concatenado (`Samir Jorge`); espelho lead→convers `Follow Up`/`Follow Up` (`nao_divergem=t`); `current_stage` INTRO preservado.
+- **Código:** dropdown 12 estágios no header do Atendimento (`handleStageChange`) + `ESTAGIOS` 12 no Leads.tsx; tsc + vite build OK.
+- **Arquivo migração:** `supabase/migration_funil_data_binding.sql`.
+- **Autor:** Squad Ahut Tech (JARVIS/APOLLO/ADA/ATOM/AURA).
+
+### NOTA GERAL (MISSÃO 1 + FASE 2)
+- **Autores:** Squad Ahut Tech (JARVIS orquestra / APOLLO executa / AURA valida / ADA+ATOM frontend).
   
