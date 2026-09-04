@@ -1,9 +1,12 @@
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
 import './load-env.js';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { supabase } from './supabase.js';
 import { startSession, stopSession, sendMessage, getActiveSocket, isSessionStarting, isSocketFullyConnected } from './session-manager.js';
 import { startSupabaseRealtimeSync } from './realtime-sync.js';
+import { startAudioRecoveryWorker } from './audio-recovery.js';
 import { pino } from 'pino';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
@@ -186,6 +189,7 @@ async function main() {
 
   // Start realtime listener for CRM changes
   startSupabaseRealtimeSync();
+  startAudioRecoveryWorker();
 
   // Initial poll
   await pollSessions();

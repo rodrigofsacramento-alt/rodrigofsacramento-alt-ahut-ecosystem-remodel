@@ -15,6 +15,9 @@ import { pino } from 'pino';
 import { randomUUID } from 'node:crypto';
 import { rm, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
+import * as fsNative from 'node:fs';
+import ffmpeg from 'fluent-ffmpeg';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -92,7 +95,11 @@ function resolveWhatsappDisplayName(
   existingContactName: string | null | undefined,
   phone: string,
 ) {
-  return cleanWhatsappName(pushName)
+  const name = cleanWhatsappName(pushName);
+  if (name && name.includes(" - ") && name.split(" ").length > 3) {
+    return phone || "Membro do Grupo";
+  }
+  return name
     || cleanWhatsappName(existingContactName)
     || phone
     || 'Cliente WhatsApp';
@@ -332,11 +339,40 @@ async function findAuthUserByEmail(email: string) {
   return null;
 }
 
+// Converte buffer de qualquer formato de áudio para Ogg Opus via FFmpeg (obrigatório para WhatsApp + compatibilidade web)
+async function convertAudioBufferToOgg(inputBuffer: Buffer): Promise<Buffer> {
+  const tempInput = path.join(tmpdir(), `recv_in_${Date.now()}_${randomUUID().substring(0,8)}.tmp`);
+  const tempOutput = path.join(tmpdir(), `recv_out_${Date.now()}_${randomUUID().substring(0,8)}.ogg`);
+  fsNative.writeFileSync(tempInput, inputBuffer);
+  return new Promise<Buffer>((resolve, reject) => {
+    ffmpeg(tempInput)
+      .toFormat('ogg')
+      .audioCodec('libopus')
+      .audioChannels(1)
+      .audioFrequency(48000)
+      .outputOptions(['-b:a 32k', '-application voip', '-vbr on'])
+      .on('end', () => {
+        try {
+          const out = fsNative.readFileSync(tempOutput);
+          try { fsNative.unlinkSync(tempInput); } catch (_) {}
+          try { fsNative.unlinkSync(tempOutput); } catch (_) {}
+          resolve(out);
+        } catch (e) { reject(e); }
+      })
+      .on('error', (err: Error) => {
+        try { fsNative.unlinkSync(tempInput); } catch (_) {}
+        try { fsNative.unlinkSync(tempOutput); } catch (_) {}
+        reject(err);
+      })
+      .save(tempOutput);
+  });
+}
+
 // Helper to download media from Baileys and upload to Supabase Storage
 async function downloadAndUploadMedia(sock: WASocket, msg: any, messageType: string) {
   try {
     logger.info({ messageId: msg.key.id, type: messageType }, 'Baixando mídia do WhatsApp...');
-    const buffer = await downloadMediaMessage(
+    let buffer = await downloadMediaMessage(
       msg,
       'buffer',
       {},
@@ -344,7 +380,7 @@ async function downloadAndUploadMedia(sock: WASocket, msg: any, messageType: str
         logger: pino({ level: 'warn' }),
         reuploadRequest: sock.updateMediaMessage
       }
-    );
+    ) as Buffer;
 
     if (!buffer) {
       logger.error('Não foi possível obter o buffer do download da mídia');
@@ -363,8 +399,18 @@ async function downloadAndUploadMedia(sock: WASocket, msg: any, messageType: str
       ext = 'mp4';
       contentType = 'video/mp4';
     } else if (messageType === 'audio') {
+      // ⚠️ OBRIGATÓRIO: converter WebM → Ogg Opus via FFmpeg.
+      // O Baileys entrega WebM bruto. Salvar como .ogg sem converter quebra
+      // o player web (Safari/iOS) e o WhatsApp do cliente.
+      try {
+        logger.info({ messageId: msg.key.id }, 'Convertendo áudio recebido: WebM → Ogg Opus via FFmpeg...');
+        buffer = await convertAudioBufferToOgg(buffer);
+        logger.info({ messageId: msg.key.id, size: buffer.length }, 'Áudio convertido com sucesso para Ogg Opus.');
+      } catch (convErr: any) {
+        logger.error({ err: convErr?.message, messageId: msg.key.id }, 'FFmpeg falhou na conversão de áudio recebido — usando buffer raw como fallback.');
+      }
       ext = 'ogg';
-      contentType = 'audio/ogg';
+      contentType = 'audio/ogg; codecs=opus';
     } else if (messageType === 'document') {
       const doc = message?.documentMessage;
       ext = doc?.fileName?.split('.').pop() || 'bin';
@@ -875,6 +921,23 @@ async function findOrCreateParticipantProfile(
 
     if (profileLookupError) throw profileLookupError;
     if (existingProfile?.id) return existingProfile.id;
+
+    // 1.5 Check if profile exists via whatsapp_contacts remote_jid_alt (LID migration)
+    if (participantJid.endsWith('@lid')) {
+      const { data: altContact } = await supabase
+        .from('whatsapp_contacts')
+        .select('profile_id')
+        .eq('tenant_id', session.tenant_id)
+        .eq('remote_jid_alt', participantJid)
+        .maybeSingle();
+      if (altContact?.profile_id) {
+        await supabase
+          .from('profiles')
+          .update({ phone })
+          .eq('id', altContact.profile_id);
+        return altContact.profile_id;
+      }
+    }
 
     // 2. Check if profile exists by synthetic email
     const displayName = resolveWhatsappDisplayName(pushName, null, phone);
@@ -1971,12 +2034,21 @@ export async function startSession(session: SessionRecord) {
             .eq('id', conversationId);
         }
       } else {
-        // Se for mensagem de saída (enviada pelo celular pessoal pareado ou pelo CRM)
+        // Se for mensagem de saida (enviada pelo celular pessoal pareado ou pelo CRM)
+        // Task1 fix 'Nao Lidos': resposta do atendente limpa a rastreabilidade de nao lida.
+        const { data: _outConv } = await supabase
+          .from('conversations')
+          .select('status')
+          .eq('id', conversationId)
+          .maybeSingle();
+        const _outStatus = (_outConv?.status === 'pending') ? 'active' : (_outConv?.status || 'active');
         await supabase
           .from('conversations')
           .update({ 
             last_message_at: new Date().toISOString(), 
-            updated_at: new Date().toISOString() 
+            updated_at: new Date().toISOString(),
+            unread_count: 0,
+            status: _outStatus
           })
           .eq('id', conversationId);
       }
@@ -2030,6 +2102,72 @@ export async function stopSession(tenantId: string, sessionName: string, deleteA
 
 export async function sendMessage(tenantId: string, sessionName: string, phoneNumber: string, content: string) {
   const sessionKey = `${tenantId}:${sessionName}`;
+
+  /**
+   * HELPER DE RETRY RESILIENTE (backport do DEV 31/08/2026)
+   * O envio de mídia/áudio via Baileys falha com UND_ERR_CONNECT_TIMEOUT e
+   * "Bad MAC Error" quando o WebSocket cai momentaneamente.
+   * Este helper tenta reenviar até MAX_TRIES, reconectando a sessão se preciso.
+   */
+  const MAX_TRIES = 3;
+  const RETRY_DELAY_MS = 1200;
+
+  const getSock = (key: string) => activeSockets.get(key);
+
+  const reconnectSession = async (key: string): Promise<void> => {
+    const sock = getSock(key);
+    if (sock) { try { sock.end(undefined); } catch {} }
+    activeSockets.delete(key);
+    // small wait so the SDK can restart the websocket cleanly
+    await new Promise(r => setTimeout(r, 400));
+    try {
+      // Fetch the canonical SessionRecord from DB to pass to startSession
+      const { data: sessionRows } = await supabase
+        .from('whatsapp_sessions')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('session_name', sessionName)
+        .limit(1);
+      const sessionRec = sessionRows && sessionRows.length > 0 ? sessionRows[0] : null;
+      if (sessionRec) {
+        await startSession(sessionRec as any);
+      } else {
+        logger.warn({ tenantId, sessionName }, 'Reconnect: sessão não encontrada no banco para religar');
+      }
+    } catch (e: any) {
+      logger.warn({ err: e?.message }, 'Falha na reconexão da sessão durante retry');
+    }
+  };
+
+  const withRetry = async (fn: () => Promise<any>): Promise<any> => {
+    let lastErr: any;
+    for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+      const socket = getSock(sessionKey);
+      if (!socket) {
+        throw new Error('Sessão não encontrada ou não conectada');
+      }
+      try {
+        const r = await fn();
+        if (attempt > 1) {
+          logger.info({ attempt }, 'Envio recuperado apos tentativas anteriores');
+        }
+        return r;
+      } catch (err: any) {
+        lastErr = err;
+        const msg = err?.cause?.message || err?.message || String(err);
+        const retryable = /CONNECT_TIMEOUT|UND_ERR|Bad MAC|fetch failed|ECONN|ETIMEDOUT|socket closed|connection/i.test(msg);
+        if (retryable && attempt < MAX_TRIES) {
+          logger.warn({ attempt, err: msg }, 'Falha transitória no envio, tentando novamente...');
+          await reconnectSession(sessionKey);
+          await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+        } else {
+          break;
+        }
+      }
+    }
+    throw lastErr;
+  };
+
   const sock = activeSockets.get(sessionKey);
   if (!sock) {
     throw new Error('Sessão não encontrada ou não conectada');
@@ -2077,20 +2215,149 @@ export async function sendMessage(tenantId: string, sessionName: string, phoneNu
       return await sock.sendMessage(jid, { video: { url: urlLine } });
     }
     if (content.startsWith('[Audio]')) {
-      logger.info({ jid, url: urlLine }, 'Enviando áudio nativo via WhatsApp...');
-      return await sock.sendMessage(jid, { audio: { url: urlLine }, mimetype: 'audio/mp4', ptt: true });
+      logger.info({ jid, url: urlLine }, 'Baixando e convertendo áudio para OGG Opus nativo do WhatsApp e CRM...');
+      try {
+        const response = await fetch(urlLine);
+        if (!response.ok) throw new Error(`HTTP ${response.status} ao baixar áudio: ${urlLine}`);
+        const rawBuffer = Buffer.from(await response.arrayBuffer());
+
+        // Converte para OGG Opus via ffmpeg
+        const oggBuffer = await convertBufferToWhatsAppAudio(rawBuffer);
+        let waveform: number[] = [];
+        try {
+          waveform = generateWaveform(oggBuffer);
+        } catch (wfErr) {
+          logger.warn({ wfErr }, 'Aviso: Falha ao gerar waveform, usando padrão');
+        }
+
+        // Extrai conversation_id dinâmico da URL
+        const urlParts = urlLine.split('/');
+        const fileNameWithExt = urlParts[urlParts.length - 1] || `audio_${Date.now()}.webm`;
+        const convId = urlParts[urlParts.length - 2] || 'general';
+        const oggFileName = fileNameWithExt.replace(/\.[^/.]+$/, "") + ".ogg";
+        const oggFileKey = `${convId}/${oggFileName}`;
+
+        // Faz upload do .ogg no Supabase Storage para o player do CRM
+        try {
+          const { error: upErr } = await supabase.storage
+            .from('chat-attachments')
+            .upload(oggFileKey, oggBuffer, {
+              contentType: 'audio/ogg; codecs=opus',
+              cacheControl: '3600',
+              upsert: true
+            });
+
+          if (!upErr) {
+            const oggUrl = `https://ptochsyoyatsydfysacc.supabase.co/storage/v1/object/public/chat-attachments/${oggFileKey}`;
+            logger.info({ oggUrl }, 'OGG salvo com sucesso no Supabase Storage');
+
+            // Atualiza a tabela messages do CRM com a URL .ogg
+            const { data: matchedMsgs } = await supabase
+              .from('messages')
+              .select('id')
+              .eq('conversation_id', convId)
+              .ilike('content', `%${fileNameWithExt}%`)
+              .limit(1);
+
+            if (matchedMsgs && matchedMsgs.length > 0) {
+              await supabase
+                .from('messages')
+                .update({ content: `[Audio] ${oggFileName}\n${oggUrl}` })
+                .eq('id', matchedMsgs[0].id);
+              logger.info({ msgId: matchedMsgs[0].id }, 'Mensagem no CRM atualizada para tocar .ogg');
+            }
+          }
+        } catch (storageErr) {
+          logger.error({ storageErr }, 'Aviso: Erro no processo de salvar .ogg no Storage');
+        }
+
+        // Envia áudio PTT nativo com waveform para o WhatsApp
+        const sendPayload: any = {
+          audio: oggBuffer,
+          mimetype: 'audio/ogg; codecs=opus',
+        };
+        // CORREÇÃO DINÂMICA (Jarvis 02/09): quando o arquivo tem o marcador '_no_ptt_',
+        // o envio é a REMODELAÇÃO do áudio (sem ptt nem waveform) — é o que destrava o
+        // celular do destinatário quando o PTT aparece como 'indisponível'.
+        // Envios NORMAIS (sem o marcador) continuam como voice message (ptt:true), igual antes.
+        const isNoPtt = urlLine && (urlLine.includes('_no_ptt_') || urlLine.includes('_teste_'));
+        if (isNoPtt) {
+          logger.info({ jid, url: urlLine }, 'REENVIO CORRIGIDO SEM PTT/WAVEFORM (formato que destrava o celular do destinatario)');
+        } else {
+          sendPayload.ptt = true;
+          if (waveform && waveform.length > 0) {
+            sendPayload.waveform = Buffer.from(waveform);
+          }
+        }
+        return await withRetry(() => sock.sendMessage(jid, sendPayload).then(res => { const id = res?.key?.id; if (id) logger.info({ jid, keyId: id }, 'Audio PTT enviado'); return res; }));
+
+      } catch (err: any) {
+        logger.error({ jid, url: urlLine, err: err?.message || err }, 'Falha na conversão de áudio, enviando raw fallback');
+        const rawBuf = Buffer.from(await (await fetch(urlLine)).arrayBuffer());
+        return await withRetry(() => sock.sendMessage(jid, { audio: rawBuf, mimetype: 'audio/ogg; codecs=opus', ptt: true }).then(res => { const id = res?.key?.id; if (id) logger.info({ jid, keyId: id }, 'Audio raw fallback enviado'); return res; }));
+      }
     }
     if (content.startsWith('[Arquivo]')) {
       const fileName = content.replace(/\[Arquivo\]\s*/, '').split('\n')[0] || 'Arquivo';
       logger.info({ jid, url: urlLine, fileName }, 'Enviando documento nativo via WhatsApp...');
-      return await sock.sendMessage(jid, { document: { url: urlLine }, fileName, mimetype: 'application/octet-stream' });
+      return await withRetry(() => sock.sendMessage(jid, { document: { url: urlLine }, fileName, mimetype: 'application/octet-stream' }));
     }
   }
 
-  const result = await sock.sendMessage(jid, { text: content });
+  const result = await withRetry(() => sock.sendMessage(jid, { text: content }));
   return result;
 }
 
 export function getActiveSocket(tenantId: string, sessionName: string): WASocket | undefined {
   return activeSockets.get(`${tenantId}:${sessionName}`);
+}
+
+
+/**
+ * Converte um buffer de áudio (WEBM, MP3, WAV, etc.) para o formato oficial do WhatsApp
+ * (OGG com codec Opus, mono 1 canal, 48kHz, VoIP profile).
+ */
+export async function convertBufferToWhatsAppAudio(inputBuffer: Buffer): Promise<Buffer> {
+  const fsNative = await import('fs');
+  const pathNative = await import('path');
+  const osNative = await import('os');
+  const { execSync } = await import('child_process');
+
+  const tempInput = pathNative.join(osNative.tmpdir(), `wa_in_${Date.now()}_${Math.random().toString(36).substring(7)}.tmp`);
+  const tempOutput = pathNative.join(osNative.tmpdir(), `wa_out_${Date.now()}_${Math.random().toString(36).substring(7)}.ogg`);
+  fsNative.writeFileSync(tempInput, inputBuffer);
+
+  try {
+    execSync(`ffmpeg -y -i "${tempInput}" -c:a libopus -ac 1 -ar 48000 -b:a 32k -application voip -vbr on -vn "${tempOutput}"`);
+    const outputBuffer = fsNative.readFileSync(tempOutput);
+    try { fsNative.unlinkSync(tempInput); } catch {}
+    try { fsNative.unlinkSync(tempOutput); } catch {}
+    return outputBuffer;
+  } catch (err) {
+    try { fsNative.unlinkSync(tempInput); } catch {}
+    try { fsNative.unlinkSync(tempOutput); } catch {}
+    throw err;
+  }
+}
+
+/**
+ * Gera os 64 bytes de visualização de onda sonora (Waveform) para o player do WhatsApp
+ */
+export function generateWaveform(audioBuffer: Buffer): number[] {
+  const waveform = new Array(64).fill(0);
+  const chunkSize = Math.floor(audioBuffer.length / 64);
+  if (chunkSize <= 0) return waveform;
+  for (let i = 0; i < 64; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, audioBuffer.length);
+    let sum = 0;
+    let count = 0;
+    for (let j = start; j < end; j += 4) {
+      sum += Math.abs(audioBuffer[j] || 0);
+      count++;
+    }
+    const avg = count > 0 ? sum / count : 30;
+    waveform[i] = Math.min(100, Math.max(10, Math.floor((avg / 255) * 100)));
+  }
+  return waveform;
 }
