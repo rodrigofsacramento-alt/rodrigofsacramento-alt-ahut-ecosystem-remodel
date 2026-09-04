@@ -876,13 +876,23 @@ export default function Atendimento() {
                         : ''}
                     </span>
                   </div>
-                  {/* Responsável */}
-                  <span className={cn(
-                    'text-[10px] font-medium',
-                    chat.agent_id ? 'text-emerald-600' : 'text-slate-400'
-                  )}>
-                    {chat.agent_id ? 'Atribuído' : 'Não atribuído'}
-                  </span>
+                  {/* Responsável + Indicador de Estágio (READ-ONLY, MISSÃO 1) */}
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <span className={cn(
+                      'text-[10px] font-medium',
+                      chat.agent_id ? 'text-emerald-600' : 'text-slate-400'
+                    )}>
+                      {chat.agent_id ? 'Atribuído' : 'Não atribuído'}
+                    </span>
+                    {!isGroup && (
+                      <span
+                        className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/5 text-slate-300/70 border border-white/10 whitespace-nowrap"
+                        title={`Estágio do funil: ${chat.stage || 'Contato Cadastrado'}`}
+                      >
+                        {chat.stage || 'Contato Cadastrado'}
+                      </span>
+                    )}
+                  </div>
                   {/* Badges */}
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     {isGroup && (
