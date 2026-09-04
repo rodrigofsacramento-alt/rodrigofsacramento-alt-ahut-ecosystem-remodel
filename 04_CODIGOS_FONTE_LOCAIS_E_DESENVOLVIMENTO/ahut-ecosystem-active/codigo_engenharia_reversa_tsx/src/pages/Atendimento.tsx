@@ -686,7 +686,7 @@ export default function Atendimento() {
   }, [conversations, agents]);
 
   return (
-    <div className="flex h-[calc(100vh-80px)] w-full overflow-hidden glass-neon-card rounded-3xl">
+    <div className="flex h-[calc(100vh-80px)] w-full overflow-hidden glass-neon-card rounded-3xl relative">
       
       {/* ── 1. SIDEBAR CONVERSAS ── */}
       {/* FASE 0: mobile alterna lista <-> chat (padrão WhatsApp). Em mobile com chat
@@ -879,8 +879,8 @@ export default function Atendimento() {
         {activeChat ? (
           <>
             {/* Header do Chat */}
-            <div className="h-16 border-b border-cyan-900/30 px-3 md:px-6 flex items-center justify-between shrink-0 bg-white/5">
-              <div className="flex items-center gap-2 md:gap-4 min-w-0">
+            <div className="min-h-16 border-b border-cyan-900/30 px-3 md:px-6 py-2 flex items-center justify-between flex-wrap gap-y-2 shrink-0 bg-white/5">
+              <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1 md:flex-initial">
                 {isMobile && (
                   <button
                     onClick={() => setActiveChatId(null)}
@@ -890,11 +890,11 @@ export default function Atendimento() {
                     <ArrowLeft className="w-5 h-5" />
                   </button>
                 )}
-                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-white/10 text-white">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-white/10 text-white shrink-0">
                   {isGroupActiveChat ? <Users className="w-5 h-5" /> : (activeChat.client?.full_name || 'C').charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <div className="min-w-0">
+                  <h3 className="text-sm md:text-base font-bold text-white flex items-center gap-2 truncate">
                     {activeChat.client?.full_name || activeChat.client?.name || (isGroupActiveChat ? 'Grupo WhatsApp' : 'Cliente')}
                   </h3>
                   <p className="text-xs text-slate-400 font-medium">
@@ -904,40 +904,40 @@ export default function Atendimento() {
               </div>
 
               {/* Ações do Header */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center flex-wrap justify-end gap-2 md:gap-4">
+                <div className="flex items-center gap-1.5 md:gap-2">
                   <button
                     onClick={handleAccept}
                     disabled={acceptConversation.isPending}
-                    className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+                    className="px-2.5 md:px-3 py-1.5 text-[11px] font-bold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
                     title="Aceitar atendimento"
                   >
                     Aceitar
                   </button>
                   <button
                     onClick={() => setShowTransferModal(true)}
-                    className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                    className="px-2.5 md:px-3 py-1.5 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
                     title="Transferir conversa para outro corretor"
                   >
                     Transferir
                   </button>
                   <button
                     onClick={handleIgnore}
-                    className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                    className="px-2.5 md:px-3 py-1.5 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
                     title="Ignorar conversa"
                   >
                     Ignorar
                   </button>
                 </div>
-                <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/30">
+                <div className="flex items-center gap-2 bg-emerald-500/10 px-2.5 md:px-3 py-1.5 rounded-full border border-emerald-500/30">
                   <Bot className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-bold text-emerald-600 mr-2">IA</span>
+                  <span className="text-xs font-bold text-emerald-600 mr-1 md:mr-2">IA</span>
                   <div className="w-8 h-4 bg-emerald-500 rounded-full relative cursor-pointer">
                     <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white/5 rounded-full"></div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 border-l border-cyan-900/30 pl-4">
+                <div className="flex items-center gap-1 md:border-l md:border-cyan-900/30 md:pl-4">
                   {isGroupActiveChat && (
                     <button
                       className={cn('p-2 rounded-full transition-colors', showParticipants ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-300 hover:bg-white/5')}
@@ -1273,7 +1273,10 @@ export default function Atendimento() {
 
       {/* ── 3. SIDEBAR DIREITA: PARTICIPANTES DO GRUPO (BUG FIX 1) ── */}
       {activeChat && isGroupActiveChat && showParticipants && (
-        <div className="w-72 border-l border-cyan-900/30 bg-white/5 flex flex-col shrink-0">
+        <div className={cn(
+          "border-l border-cyan-900/30 bg-white/5 flex flex-col shrink-0",
+          isMobile ? "absolute right-0 top-0 bottom-0 w-[85%] max-w-xs z-30 shadow-2xl overflow-y-auto" : "w-72"
+        )}>
           <div className="p-4 border-b border-white/5 flex items-center justify-between">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Users className="w-4 h-4 text-cyan-500" /> Participantes
@@ -1318,7 +1321,10 @@ export default function Atendimento() {
 
       {/* ── 3b. SIDEBAR DIREITA: NOTAS ── */}
       {activeChat && showNotes && (
-        <div className="w-72 border-l border-cyan-900/30 bg-white/5 flex flex-col shrink-0">
+        <div className={cn(
+          "border-l border-cyan-900/30 bg-white/5 flex flex-col shrink-0",
+          isMobile ? "absolute right-0 top-0 bottom-0 w-[85%] max-w-xs z-30 shadow-2xl overflow-y-auto" : "w-72"
+        )}>
           <div className="p-4 border-b border-white/5 flex items-center justify-between">
             <h3 className="text-sm font-bold text-white">Anotações Internas</h3>
             <button onClick={() => setShowNotes(false)} className="text-slate-400 hover:text-slate-300">
