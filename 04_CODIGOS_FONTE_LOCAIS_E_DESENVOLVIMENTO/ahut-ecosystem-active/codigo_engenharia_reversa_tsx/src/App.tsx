@@ -53,19 +53,37 @@ const queryClient = new QueryClient({
 
 function AppLayout({ children, title, subtitle, dark, onOpenWhatsApp }: { children: React.ReactNode; title: string; subtitle?: string; dark?: boolean; onOpenWhatsApp?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   useReminders();
   const useDark = dark !== false;
   const { isMobile } = useResponsive();
+  const location = useLocation();
 
   // Auto-collapse sidebar on mobile
   useEffect(() => { if (isMobile) setCollapsed(true); }, [isMobile]);
+  // Quando muda de mobile->desktop, fecha o drawer
+  useEffect(() => { if (!isMobile) setSidebarOpen(false); }, [isMobile]);
+  // Fecha o drawer ao trocar de rota
+  const closeSidebar = () => setSidebarOpen(false);
+  useEffect(() => { closeSidebar(); }, [location?.pathname]);
 
   return (
     <div className={`flex min-h-screen relative ${useDark ? 'bg-transparent text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {useDark && <NeuralBackground />}
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} onOpenWhatsApp={onOpenWhatsApp} />
+      <Sidebar
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        onOpenWhatsApp={onOpenWhatsApp}
+        mobileOpen={sidebarOpen}
+        isMobile={isMobile}
+        onCloseMobile={closeSidebar}
+      />
       <div className="flex-1 flex flex-col min-w-0 relative" style={{ zIndex: 1 }}>
-        <Header title={title} subtitle={subtitle} />
+        <Header
+          title={title}
+          subtitle={subtitle}
+          onToggleSidebar={isMobile ? () => setSidebarOpen(!sidebarOpen) : undefined}
+        />
         <motion.main
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

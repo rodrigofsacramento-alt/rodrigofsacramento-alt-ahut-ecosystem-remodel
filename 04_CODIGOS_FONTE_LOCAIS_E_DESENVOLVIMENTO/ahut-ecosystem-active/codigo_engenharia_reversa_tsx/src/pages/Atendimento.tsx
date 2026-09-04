@@ -42,7 +42,8 @@ import {
   TrendingUp,
   Target,
   Award,
-  Smartphone
+  Smartphone,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -63,6 +64,7 @@ import {
 } from '../hooks/useWhatsapp';
 import WhatsAppConnectionModal from '../components/WhatsAppConnectionModal';
 import { cn } from '../lib/utils';
+import { useResponsive } from '../hooks/useResponsive';
 
 // ── INTERFACES ──────────────────────────────────
 
@@ -165,6 +167,7 @@ export default function Atendimento() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const conversationParam = searchParams.get('conversation');
+  const { isMobile } = useResponsive();
 
   const { profile, user } = useAuth();
   const isAgent = profile?.role === 'agent' || profile?.role === 'admin' || profile?.role === 'manager';
@@ -686,7 +689,15 @@ export default function Atendimento() {
     <div className="flex h-[calc(100vh-80px)] w-full overflow-hidden glass-neon-card rounded-3xl">
       
       {/* ── 1. SIDEBAR CONVERSAS ── */}
-      <div className="w-80 border-r border-cyan-900/30 flex flex-col shrink-0 bg-white/5">
+      {/* FASE 0: mobile alterna lista <-> chat (padrão WhatsApp). Em mobile com chat
+          aberto (activeChatId) a lista fica oculta; sem chat aberto ocupa a tela toda.
+          Em desktop mantém a coluna fixa w-80 ao lado do chat. */}
+      <div className={cn(
+        "border-r border-cyan-900/30 flex-col bg-white/5",
+        isMobile
+          ? (activeChatId ? "hidden" : "flex w-full")
+          : "flex w-80 shrink-0"
+      )}>
         <div className="p-4 space-y-4 border-b border-white/5">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-white">Conversas</h2>
@@ -861,12 +872,24 @@ export default function Atendimento() {
       </div>
 
       {/* ── 2. ÁREA CENTRAL: CHAT ── */}
-      <div className="flex-1 flex flex-col h-full bg-white/5 relative">
+      <div className={cn(
+        "flex-col h-full bg-white/5 relative",
+        isMobile && !activeChatId ? "hidden" : "flex-1 flex"
+      )}>
         {activeChat ? (
           <>
             {/* Header do Chat */}
-            <div className="h-16 border-b border-cyan-900/30 px-6 flex items-center justify-between shrink-0 bg-white/5">
-              <div className="flex items-center gap-4">
+            <div className="h-16 border-b border-cyan-900/30 px-3 md:px-6 flex items-center justify-between shrink-0 bg-white/5">
+              <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                {isMobile && (
+                  <button
+                    onClick={() => setActiveChatId(null)}
+                    aria-label="Voltar para conversas"
+                    className="p-2 -ml-1 rounded-full text-slate-300 hover:bg-white/5 transition-colors shrink-0"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                )}
                 <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-white/10 text-white">
                   {isGroupActiveChat ? <Users className="w-5 h-5" /> : (activeChat.client?.full_name || 'C').charAt(0).toUpperCase()}
                 </div>

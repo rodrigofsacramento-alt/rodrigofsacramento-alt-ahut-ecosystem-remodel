@@ -16,6 +16,7 @@ import {
   Bell,
   Monitor,
   Megaphone,
+  Menu,
   HandCoins,
   Contact,
   GraduationCap,
@@ -100,9 +101,15 @@ interface SidebarProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   onOpenWhatsApp?: () => void;
+  /** Mobile drawer: open/closed */
+  mobileOpen?: boolean;
+  /** True cuando la sidebar se muestra como drawer off-canvas (mobile) */
+  isMobile?: boolean;
+  /** Cierra el drawer mobile (ej. al navegar) */
+  onCloseMobile?: () => void;
 }
 
-export function Sidebar({ collapsed, setCollapsed, onOpenWhatsApp }: SidebarProps) {
+export function Sidebar({ collapsed, setCollapsed, onOpenWhatsApp, mobileOpen, isMobile, onCloseMobile }: SidebarProps) {
   const location = useLocation();
   const { profile } = useAuth();
   const { t } = useLanguage();
@@ -114,12 +121,39 @@ export function Sidebar({ collapsed, setCollapsed, onOpenWhatsApp }: SidebarProp
     return true;
   });
 
+  /**
+   * FASE 0 — Sidebar responsive off-canvas:
+   * - Desktop (lg+): barra lateral fija (colapsable w-20/w-64), como hoy.
+   * - Mobile (<lg): drawer deslizante desde la izquierda; oculta por defecto
+   *   (translate-x negativo) y se abre con el hamburger del Header. Backdrop
+   *   oscuro para cerrarlo. Al navegar se cierra solo (onCloseMobile).
+   */
+  const asideClasses = cn(
+    "flex flex-col transition-all duration-300 h-screen sticky top-0 z-20",
+    // Desktop: ancho según colapso
+    "lg:w-64",
+    collapsed ? "lg:w-20" : "lg:w-64",
+    // Mobile: off-canvas (ancho fijo 280px, fuera de pantalla salvo abierto)
+    "fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300",
+    mobileOpen ? "translate-x-0" : "-translate-x-full",
+    // Recupera flujo normal en desktop
+    "lg:transform-none lg:static lg:z-20",
+    "bg-[#07090e]/85 backdrop-blur-2xl border-r border-white/[0.06] shadow-2xl"
+  );
+
+  // Backdrop solo en modo drawer mobile abierto
+  const showBackdrop = isMobile && mobileOpen;
+
   return (
-    <aside className={cn(
-      "flex flex-col transition-all duration-300 h-screen sticky top-0 z-20",
-      collapsed ? "w-20" : "w-64",
-      "bg-[#07090e]/85 backdrop-blur-2xl border-r border-white/[0.06] shadow-2xl"
-    )}>
+    <>
+    {showBackdrop && (
+      <div
+        onClick={onCloseMobile}
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+        aria-hidden="true"
+      />
+    )}
+    <aside className={asideClasses}>
       {/* Brand Header */}
       <div className="p-5 flex items-center justify-between gap-3">
         <QubitsLogo collapsed={collapsed} />
@@ -208,17 +242,32 @@ export function Sidebar({ collapsed, setCollapsed, onOpenWhatsApp }: SidebarProp
         )}
       </div>
     </aside>
+    </>
   );
 }
 
-export function Header({ title, subtitle }: { title: string; subtitle?: string }) {
+export function Header({ title, subtitle, onToggleSidebar }: { title: string; subtitle?: string; onToggleSidebar?: () => void }) {
   const { t } = useLanguage();
   
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-[#07090e]/70 backdrop-blur-2xl border-b border-white/[0.06] sticky top-0 z-10">
-      <div>
-        <h1 className="text-xl font-bold font-display text-white tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs text-slate-400 mt-0.5 font-light">{subtitle}</p>}
+    <header className={cn(
+      "flex items-center justify-between gap-2 px-4 md:px-6 py-3 md:py-4 bg-[#07090e]/70 backdrop-blur-2xl border-b border-white/[0.06] sticky top-0 z-10",
+      onToggleSidebar ? "pl-14" : ""
+    )}>
+      <div className="flex items-center gap-2.5 min-w-0">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            aria-label="Menu de navegación"
+            className="p-2 rounded-xl hover:bg-white/5 transition-colors shrink-0"
+          >
+            <Menu className="w-5 h-5 text-slate-300" />
+          </button>
+        )}
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-xl font-bold font-display text-white tracking-tight truncate">{title}</h1>
+          {subtitle && <p className="text-xs text-slate-400 mt-0.5 font-light truncate">{subtitle}</p>}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
